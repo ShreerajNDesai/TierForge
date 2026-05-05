@@ -11,7 +11,12 @@ const api = {
   deleteGame: (id: string) => ipcRenderer.invoke('delete-game', id),
   scanPC: () => ipcRenderer.invoke('scan-pc'),
   getExtendedDetails: (id: string) => ipcRenderer.invoke('get-extended-details', id),
-  updateGameData: (id: string, notes: string, status: string) => ipcRenderer.invoke('update-game-data', id, notes, status)
+  updateGameData: (id: string, notes: string, status: string) => ipcRenderer.invoke('update-game-data', id, notes, status),
+  
+  // Window Controls
+  windowMinimize: () => ipcRenderer.invoke('window-minimize'),
+  windowMaximize: () => ipcRenderer.invoke('window-maximize'),
+  windowClose: () => ipcRenderer.invoke('window-close')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

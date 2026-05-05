@@ -12,6 +12,11 @@ declare global {
       scanPC: () => Promise<boolean>;
       getExtendedDetails: (id: string) => Promise<any>;
       updateGameData: (id: string, notes: string, status: string) => Promise<boolean>;
+      
+      // Window Controls
+      windowMinimize: () => Promise<void>;
+      windowMaximize: () => Promise<void>;
+      windowClose: () => Promise<void>;
     }
   }
 }

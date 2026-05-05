@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { 
   Gamepad2, LayoutGrid, Trophy, Bot, BarChart2, Settings, 
@@ -34,6 +34,35 @@ export default function App() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [activeTab, setActiveTab] = useState('tierlist');
   const [bgMode, setBgMode] = useState<'video'|'image'>((localStorage.getItem('bgMode') as 'video'|'image') || 'video');
+  const [sortOrder, setSortOrder] = useState<'none' | 'asc' | 'desc'>('none');
+  const [filterStatus, setFilterStatus] = useState<'All' | 'Playing' | 'Completed' | 'Backlog'>('All');
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+
+  const filteredAndSortedCollection = useMemo(() => {
+    let result = [...data.collection];
+    if (filterStatus !== 'All') {
+      result = result.filter(item => item.status === filterStatus);
+    }
+    if (sortOrder === 'asc') {
+      result.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortOrder === 'desc') {
+      result.sort((a, b) => b.title.localeCompare(a.title));
+    }
+    return result;
+  }, [data.collection, filterStatus, sortOrder]);
+
+  const handleSortClick = () => {
+    if (sortOrder === 'none') setSortOrder('asc');
+    else if (sortOrder === 'asc') setSortOrder('desc');
+    else setSortOrder('none');
+  };
+
+  const handleFilterClick = () => {
+    if (filterStatus === 'All') setFilterStatus('Playing');
+    else if (filterStatus === 'Playing') setFilterStatus('Completed');
+    else if (filterStatus === 'Completed') setFilterStatus('Backlog');
+    else setFilterStatus('All');
+  };
 
   const toggleMute = () => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
@@ -219,7 +248,7 @@ export default function App() {
         <div>
           <div className="flex items-center gap-3 p-8 text-2xl font-black text-white tracking-wide">
             <Gamepad2 className="text-indigo-500" size={32} />
-            GameTrack
+            TierForge
           </div>
           
           <nav className="px-5 space-y-1 mt-2">
@@ -271,10 +300,10 @@ export default function App() {
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
         
         {/* HEADER */}
-        <header className="h-20 flex items-center justify-between px-10 shrink-0">
+        <header className="h-20 flex items-center justify-between px-10 shrink-0" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
           <div className="flex-1"></div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
             <div className="flex items-center relative w-72 group">
               <Search className="absolute left-3.5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={16} />
               <input 
@@ -327,9 +356,9 @@ export default function App() {
             </div>
             
             <div className="flex items-center gap-4 pl-6 border-l border-slate-800/80 text-slate-500">
-              <Minus size={16} className="cursor-pointer hover:text-white transition" />
-              <Square size={12} className="cursor-pointer hover:text-white transition" />
-              <X size={16} className="cursor-pointer hover:text-white transition" />
+              <Minus size={16} className="cursor-pointer hover:text-white transition" onClick={() => window.api.windowMinimize()} />
+              <Square size={12} className="cursor-pointer hover:text-white transition" onClick={() => window.api.windowMaximize()} />
+              <X size={16} className="cursor-pointer hover:text-white transition hover:text-red-500" onClick={() => window.api.windowClose()} />
             </div>
           </div>
         </header>
@@ -463,11 +492,11 @@ export default function App() {
                 </div>
                 
                 <div className="flex items-center gap-2.5">
-                  <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-[13px] font-medium border border-slate-700/80 text-slate-300 hover:bg-slate-800/80 transition">
-                    <Filter size={14} /> Filter
+                  <button onClick={handleFilterClick} className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-[13px] font-medium border transition ${filterStatus !== 'All' ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' : 'border-slate-700/80 text-slate-300 hover:bg-slate-800/80'}`}>
+                    <Filter size={14} /> {filterStatus === 'All' ? 'Filter' : filterStatus}
                   </button>
-                  <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-[13px] font-medium border border-slate-700/80 text-slate-300 hover:bg-slate-800/80 transition">
-                    <ArrowUpDown size={14} /> Sort <ChevronDown size={14} className="ml-1 text-slate-500" />
+                  <button onClick={handleSortClick} className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-[13px] font-medium border transition ${sortOrder !== 'none' ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' : 'border-slate-700/80 text-slate-300 hover:bg-slate-800/80'}`}>
+                    <ArrowUpDown size={14} /> {sortOrder === 'none' ? 'Sort' : sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
                   </button>
                   <div className="flex items-center border border-slate-700/80 rounded-lg p-0.5 ml-1 bg-[#121620]/50">
                     <button className="p-1.5 bg-slate-700/80 text-white rounded-md shadow-sm"><Grid size={15} /></button>
@@ -479,7 +508,7 @@ export default function App() {
               <Droppable droppableId="collection" direction="horizontal">
                 {(provided, snapshot) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} className={`flex flex-wrap gap-[18px] min-h-[190px] p-2 -ml-2 rounded-2xl transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-500/5' : ''}`}>
-                    {data.collection.map((item: any, index: number) => (
+                    {filteredAndSortedCollection.map((item: any, index: number) => (
                       <Draggable key={item.id} draggableId={item.id} index={index}>
                         {(provided, snapshot) => (
                           <div
@@ -605,16 +634,36 @@ export default function App() {
               <img src={selectedGame.img} alt={selectedGame.title} className="w-80 rounded-2xl shadow-2xl border border-white/10" />
               <div className="w-full space-y-2">
                 <label className="text-xs font-bold text-white/50 uppercase tracking-wider pl-1">Play Status</label>
-                <select 
-                  value={gameDetails?.status || 'Backlog'}
-                  onChange={(e) => handleSaveGameData('status', e.target.value)}
-                  className="w-full bg-black/40 border border-white/20 text-white text-base rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 backdrop-blur-md shadow-lg transition"
-                >
-                  <option value="Backlog" className="bg-[#0B0E14]">Backlog</option>
-                  <option value="Playing" className="bg-[#0B0E14]">Playing</option>
-                  <option value="Completed" className="bg-[#0B0E14]">Completed</option>
-                  <option value="Abandoned" className="bg-[#0B0E14]">Abandoned</option>
-                </select>
+                <div className="relative">
+                  <div 
+                    onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                    className="w-full flex items-center justify-between bg-black/40 border border-white/20 text-white text-base rounded-xl px-4 py-3 cursor-pointer hover:bg-black/60 hover:border-indigo-500/50 backdrop-blur-md shadow-lg transition"
+                  >
+                    <span>{gameDetails?.status || 'Backlog'}</span>
+                    <ChevronDown size={18} className={`transition-transform duration-200 ${isStatusDropdownOpen ? 'rotate-180 text-indigo-400' : 'text-slate-400'}`} />
+                  </div>
+                  
+                  {isStatusDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-[#0B0E14]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] overflow-hidden z-[300] flex flex-col py-1">
+                      {['Backlog', 'Playing', 'Completed', 'Abandoned'].map(status => (
+                        <div 
+                          key={status}
+                          onClick={() => {
+                            handleSaveGameData('status', status);
+                            setIsStatusDropdownOpen(false);
+                          }}
+                          className={`px-4 py-3 text-sm cursor-pointer transition flex items-center gap-2 ${
+                            (gameDetails?.status || 'Backlog') === status 
+                              ? 'bg-indigo-600/20 text-indigo-300 font-semibold border-l-2 border-indigo-500' 
+                              : 'text-slate-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent'
+                          }`}
+                        >
+                          {status}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
