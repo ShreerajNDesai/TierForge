@@ -338,12 +338,9 @@ const CinematicModal = () => {
                 </div>
               )}
 
-              {/* Series Timeline */}
+              {/* Series Timeline & AI Canon Order */}
               <div className="mt-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white/80">
-                    {aiTimeline ? 'Story Canon Play Order' : (gameDetails?.seriesName ? `${gameDetails.seriesName} (Timeline)` : 'Series Timeline')}
-                  </h3>
+                <div className="flex items-center justify-end mb-4">
                   <button 
                     onClick={async () => { 
                       setIsTimelineLoading(true); 
@@ -357,10 +354,10 @@ const CinematicModal = () => {
                       }
                     }} 
                     disabled={isTimelineLoading}
-                    className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 rounded-lg text-sm font-bold flex items-center gap-2 transition-all disabled:opacity-50"
+                    className="px-6 py-3 bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-500 hover:to-pink-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] border border-purple-400/50 rounded-xl text-sm font-black tracking-wide flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                   >
-                    <Sparkles size={16} className={isTimelineLoading ? "animate-pulse" : ""} /> 
-                    {isTimelineLoading ? "Consulting lore archives..." : "Generate Canon Play Order"}
+                    <Sparkles size={18} className={isTimelineLoading ? "animate-pulse" : ""} /> 
+                    {isTimelineLoading ? "Consulting lore archives..." : "✨ Generate Canon Play Order"}
                   </button>
                 </div>
 
@@ -372,56 +369,34 @@ const CinematicModal = () => {
                   </div>
                 )}
 
-                {!isTimelineLoading && aiTimeline && (
-                  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar items-start">
-                    {aiTimeline.map((miniGame: any) => (
-                      <div 
-                        key={miniGame.id}
-                        className="flex flex-col gap-2 shrink-0 w-24 group"
-                        onClick={() => handleGameClick(miniGame)}
-                      >
-                        <img 
-                          src={miniGame.img} 
-                          className={`w-24 h-36 rounded-xl object-cover cursor-pointer transition-all duration-300 ${
-                            miniGame.isCurrent 
-                              ? 'border-4 border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.6)] scale-105 opacity-100' 
-                              : 'opacity-50 group-hover:opacity-100 border border-white/10 hover:border-white/30'
-                          }`}
-                          alt={miniGame.title}
-                        />
-                        <span className={`text-[10px] font-black text-center ${miniGame.isCurrent ? 'text-yellow-400' : 'text-slate-500'}`}>
-                          {miniGame.title}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {!isTimelineLoading && !aiTimeline && gameDetails?.seriesList && gameDetails.seriesList.length > 1 && (
-                  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar items-start">
-                    {gameDetails.seriesList.map((miniGame: any) => {
-                      const isCurrent = miniGame.id === selectedGame.id.toString();
-                      return (
+                {aiTimeline && (
+                  <div className="mb-8 bg-black/40 border border-purple-500/20 rounded-2xl p-6 shadow-inner relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                    <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-6 flex items-center gap-3">
+                      <Sparkles size={24} className="text-purple-400"/> Canon Story Play Order
+                    </h3>
+                    <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar items-start">
+                      {aiTimeline.map((miniGame: any) => (
                         <div 
                           key={miniGame.id}
-                          className="flex flex-col gap-2 shrink-0 w-24 group"
+                          className="flex flex-col gap-2 shrink-0 w-28 group"
                           onClick={() => handleGameClick(miniGame)}
                         >
                           <img 
                             src={miniGame.img} 
-                            className={`w-24 h-36 rounded-xl object-cover cursor-pointer transition-all duration-300 ${
-                              isCurrent 
-                                ? 'border-4 border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.6)] scale-105 opacity-100' 
-                                : 'opacity-50 group-hover:opacity-100 border border-white/10 hover:border-white/30'
+                            className={`w-28 h-40 rounded-xl object-cover cursor-pointer transition-all duration-300 ${
+                              miniGame.isCurrent 
+                                ? 'border-4 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.6)] scale-110 opacity-100' 
+                                : 'opacity-60 hover:opacity-100 border border-white/10 hover:border-white/30 hover:scale-105'
                             }`}
                             alt={miniGame.title}
                           />
-                          <span className={`text-[10px] font-black text-center ${isCurrent ? 'text-indigo-400' : 'text-slate-500'}`}>
-                            {miniGame.year === 9999 ? 'TBA' : miniGame.year}
+                          <span className={`text-xs font-black text-center mt-1 ${miniGame.isCurrent ? 'text-purple-400' : 'text-slate-400 group-hover:text-white transition-colors'}`}>
+                            {miniGame.title}
                           </span>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -447,6 +422,35 @@ const CinematicModal = () => {
                         </span>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Related Games */}
+              {gameDetails?.seriesList && gameDetails.seriesList.length > 1 && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-bold text-white/80 mb-4 mt-8">
+                    {gameDetails.seriesName} (Related Games)
+                  </h3>
+                  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar items-start">
+                    {gameDetails.seriesList.map((miniGame: any) => {
+                      return (
+                        <div 
+                          key={miniGame.id}
+                          className="flex flex-col gap-2 shrink-0 w-24 group"
+                          onClick={() => handleGameClick(miniGame)}
+                        >
+                          <img 
+                            src={miniGame.img} 
+                            className="w-24 h-36 rounded-xl object-cover cursor-pointer transition-all duration-300 opacity-60 hover:opacity-100 border border-white/10 hover:border-white/30"
+                            alt={miniGame.title}
+                          />
+                          <span className="text-[10px] font-black text-center text-slate-500">
+                            {miniGame.year === 9999 ? 'TBA' : miniGame.year}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
