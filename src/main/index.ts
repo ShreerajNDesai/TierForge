@@ -1,11 +1,13 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { join, basename } from 'path'
+import { exec } from 'child_process'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { initDB } from './database'
-import { searchGames, getGameExtendedDetails } from './api'
-import { getAllGames, addGame, updateGameTier, deleteGame, updateGameData } from './database'
+import { searchGames, getGameExtendedDetails, getHowLongToBeat, getDiscoverGames } from './api'
+import { getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime } from './database'
 import { scanLocalGames } from './scanner'
+import { analyzeLibraryImage, bulkImportGames, getAIRecommendations, getGameDeals, getGlobalRankings, getScrapedRankings } from './api'
 
 function createWindow(): void {
   // Create the browser window.
@@ -23,6 +25,7 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
+    mainWindow.maximize()
     mainWindow.show()
   })
 
@@ -87,34 +90,138 @@ app.whenReady().then(() => {
     return true;
   });
 
+  ipcMain.handle('get-time-to-beat', (_, name) => {
+    return getHowLongToBeat(name);
+  });
+
+  ipcMain.handle('get-discover-games', async (_, filterType, offset) => {
+    const localIds = getAllGames().map((g: any) => g.id);
+    return await getDiscoverGames(localIds, filterType, offset);
+  });
+
   // 8. Scan PC for Steam Games
   ipcMain.handle('scan-pc', async () => {
     const games = scanLocalGames();
     console.log(`Found ${games.length} games locally.`);
     
-    for (const gameName of games) {
+    for (const game of games) {
       try {
-        console.log(`Searching IGDB for: ${gameName}`);
-        const results = await searchGames(gameName);
+        console.log(`Searching IGDB for: ${game.name}`);
+        const results = await searchGames(game.name);
         if (results && results.length > 0) {
           // Prefer an exact match if available, otherwise fallback to the first result
           let bestHit = results[0];
           const exactMatch = results.find(
-            (r: any) => r.title.toLowerCase() === gameName.toLowerCase()
+            (r: any) => r.title.toLowerCase() === game.name.toLowerCase()
           );
           
           if (exactMatch) {
             bestHit = exactMatch;
           }
           
-          addGame(bestHit.id, bestHit.title, bestHit.image_url);
+          addGame(bestHit.id, bestHit.title, bestHit.image_url, game.path);
         }
         await new Promise(resolve => setTimeout(resolve, 300));
       } catch (err) {
-        console.error(`Failed to process scanned game ${gameName}:`, err);
+        console.error(`Failed to process scanned game ${game.name}:`, err);
       }
     }
     return true;
+  });
+
+  // Game launcher with automatic playtime tracking
+  ipcMain.handle('launch-game', async (_, exePath: string, gameId: string) => {
+    const win = BrowserWindow.getFocusedWindow()
+    const exeName = basename(exePath)
+
+    // Launch the game
+    exec(`"${exePath}"`, (err) => {
+      if (err) console.error('Launch error:', err)
+    })
+
+    const startTime = Date.now()
+
+    // Notify frontend: game started
+    if (win) win.webContents.send('game-started', gameId)
+
+    // Poll for process termination every 3 seconds
+    const pollInterval = setInterval(() => {
+      exec(`tasklist /FI "IMAGENAME eq ${exeName}" /NH`, (err, stdout) => {
+        if (err || !stdout.toLowerCase().includes(exeName.toLowerCase())) {
+          clearInterval(pollInterval)
+
+          const elapsedMs = Date.now() - startTime
+          const elapsedMinutes = Math.max(1, Math.round(elapsedMs / 60000))
+
+          addPlaytime(gameId, elapsedMinutes)
+
+          const totalPlaytime = getPlaytime(gameId)
+
+          // Notify frontend: game stopped
+          if (win) win.webContents.send('game-stopped', gameId, totalPlaytime)
+        }
+      })
+    }, 3000)
+
+    return true
+  })
+
+  ipcMain.handle('get-playtime', (_, gameId: string) => {
+    return getPlaytime(gameId)
+  })
+
+  ipcMain.handle('get-setting', (_, key) => {
+    return getSetting(key);
+  });
+
+  ipcMain.handle('save-setting', (_, key, value) => {
+    saveSetting(key, value);
+    return true;
+  });
+
+  ipcMain.handle('browse-image', async () => {
+    const res = await dialog.showOpenDialog({ filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }] });
+    return res.filePaths[0] || null;
+  });
+
+  ipcMain.handle('analyze-image', async (_, imagePath, apiKey) => {
+    const games = await analyzeLibraryImage(imagePath, apiKey);
+    if (games && games.length > 0) {
+      await bulkImportGames(games);
+      return games;
+    }
+    return [];
+  });
+
+  ipcMain.handle('bulk-import-text', async (_, text: string) => {
+    const games = text.split(/[\n,]+/).map(g => g.trim()).filter(g => g.length > 0);
+    if (games.length > 0) {
+      await bulkImportGames(games);
+      return games;
+    }
+    return [];
+  });
+
+  ipcMain.handle('get-ai-recommendations', async () => {
+    const apiKey = getSetting('geminiKey');
+    if (!apiKey) return { error: 'NO_API_KEY', recommendations: [] };
+    const allGames = getAllGames();
+    return await getAIRecommendations(apiKey, allGames);
+  });
+
+  ipcMain.handle('get-game-deals', async (_, title: string) => {
+    return await getGameDeals(title);
+  });
+
+  ipcMain.handle('open-external', async (_, url: string) => {
+    await shell.openExternal(url);
+    return true;
+  });
+
+  ipcMain.handle('get-global-rankings', async () => {
+    const key = getSetting('rawg_key');
+    if (!key) return { error: 'NO_RAWG_KEY', overall: [], rpg: [], shooter: [], action: [] };
+    return await getGlobalRankings(key);
   });
 
   // Set app user model id for windows
@@ -172,3 +279,7 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+ipcMain.handle('get-scraped-rankings', async () => {
+    return await getScrapedRankings();
+  });
