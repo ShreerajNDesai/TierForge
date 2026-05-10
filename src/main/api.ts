@@ -32,7 +32,7 @@ export async function searchGames(query: string) {
     const response = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: { 'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID, 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
-      body: 'search "' + cleanQuery + '"; fields name, cover.image_id, follows, rating_count; where parent_game = null; limit 20;'
+      body: 'search "' + cleanQuery + '"; fields name, cover.image_id, rating_count, total_rating_count, first_release_date; where game_type = (0,8,9); limit 40;'
     });
     const data = await response.json();
     if (!Array.isArray(data)) return [];
@@ -41,10 +41,21 @@ export async function searchGames(query: string) {
       const bName = (b.name || '').toLowerCase();
       const aExact = aName === queryLower;
       const bExact = bName === queryLower;
+      
+      // 1. Prioritize exact matches over fuzzy matches
       if (aExact && !bExact) return -1;
       if (!aExact && bExact) return 1;
-      const aPop = (a.follows || 0) + (a.rating_count || 0);
-      const bPop = (b.follows || 0) + (b.rating_count || 0);
+      
+      // 2. TIE-BREAKER: If both are exact matches (e.g. Original vs Remake), prioritize the NEWEST game
+      if (aExact && bExact) {
+        const aDate = a.first_release_date || 0;
+        const bDate = b.first_release_date || 0;
+        return bDate - aDate; // Sorts newest to oldest
+      }
+      
+      // 3. If neither is exact, fallback to massive popularity
+      const aPop = (a.total_rating_count || a.rating_count || 0);
+      const bPop = (b.total_rating_count || b.rating_count || 0);
       return bPop - aPop;
     });
     return sortedData.map((game: any) => {
@@ -62,7 +73,7 @@ export async function getGameExtendedDetails(gameId: string) {
     const response = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: { 'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID, 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
-      body: 'where id = ' + gameId + '; fields rating, rating_count, summary, storyline, first_release_date, genres.name, platforms.name, screenshots.image_id, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, game_modes.name, player_perspectives.name, themes.name, collection.name, collection.games.name, collection.games.cover.image_id, collection.games.first_release_date, dlcs.name, dlcs.cover.image_id, dlcs.first_release_date, expansions.name, expansions.cover.image_id, expansions.first_release_date, game_engines.name, alternative_names.name, videos.video_id, videos.name;'
+      body: 'where id = ' + gameId + '; fields rating, rating_count, summary, storyline, first_release_date, genres.name, platforms.name, screenshots.image_id, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, game_modes.name, player_perspectives.name, themes.name, collections.name, collections.games.name, collections.games.cover.image_id, collections.games.first_release_date, dlcs.name, dlcs.cover.image_id, dlcs.first_release_date, expansions.name, expansions.cover.image_id, expansions.first_release_date, game_engines.name, alternative_names.name, videos.video_id, videos.name;'
     });
     const data = await response.json();
     if (!data || data.length === 0) return null;
@@ -73,7 +84,7 @@ export async function getGameExtendedDetails(gameId: string) {
       year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : 9999
     });
     const dlcList = [...(game.dlcs || []), ...(game.expansions || [])].map(mapMiniGame).sort((a, b) => a.year - b.year);
-    const seriesList = (game.collection?.games || []).map(mapMiniGame).sort((a, b) => a.year - b.year);
+    const seriesList = (game.collections?.[0]?.games || []).map(mapMiniGame).sort((a, b) => a.year - b.year);
     let background_url = '';
     if (game.screenshots && game.screenshots.length > 0) background_url = 'https://images.igdb.com/igdb/image/upload/t_1080p/' + game.screenshots[Math.floor(Math.random() * game.screenshots.length)].image_id + '.jpg';
     const videos = game.videos ? game.videos.map((v: any) => ({ id: v.video_id, name: v.name })) : [];
@@ -90,7 +101,7 @@ export async function getGameExtendedDetails(gameId: string) {
       gameModes: game.game_modes ? game.game_modes.map((m: any) => m.name).join(', ') : '-',
       perspectives: game.player_perspectives ? game.player_perspectives.map((p: any) => p.name).join(', ') : '-',
       themes: game.themes ? game.themes.map((t: any) => t.name).join(', ') : '-',
-      series: game.collection ? game.collection.name : '-', seriesName: game.collection?.name || '',
+      series: game.collections ? game.collections.map((c: any) => c.name).join(', ') : '-', seriesName: game.collections?.[0]?.name || '',
       seriesList, dlcList, engines: game.game_engines ? game.game_engines.map((e: any) => e.name).join(', ') : '-',
       altNames: game.alternative_names ? game.alternative_names.map((a: any) => a.name).slice(0, 3).join(', ') : '-',
       gallery: game.screenshots ? game.screenshots.map((s: any) => 'https://images.igdb.com/igdb/image/upload/t_1080p/' + s.image_id + '.jpg') : [],
@@ -197,12 +208,12 @@ export async function getDiscoverGames(existingIds: string[], filterType: string
     const now = Math.floor(Date.now() / 1000); const sixMonthsAgo = now - (6 * 30 * 24 * 60 * 60);
     const isGenre = !!IGDB_GENRE_MAP[filterType.toLowerCase()];
     switch(filterType) {
-      case 'new': whereClause = 'first_release_date > ' + sixMonthsAgo + ' & first_release_date < ' + now + ' & rating > 70'; sortClause = 'sort first_release_date desc;'; break;
-      case 'upcoming': whereClause = 'first_release_date > ' + now; sortClause = 'sort hypes desc;'; break;
-      case 'highly_rated': whereClause = 'rating > 85 & rating_count > 200 & parent_game = null'; sortClause = 'sort rating desc;'; break;
+      case 'new': whereClause = 'first_release_date > ' + sixMonthsAgo + ' & first_release_date < ' + now + ' & rating > 70 & game_type = (0,8,9)'; sortClause = 'sort first_release_date desc;'; break;
+      case 'upcoming': whereClause = 'first_release_date > ' + now + ' & game_type = (0,8,9)'; sortClause = 'sort hypes desc;'; break;
+      case 'highly_rated': whereClause = 'rating > 85 & rating_count > 200 & game_type = (0,8,9)'; sortClause = 'sort rating desc;'; break;
       default:
-        if (isGenre) { whereClause = IGDB_GENRE_MAP[filterType.toLowerCase()] + ' & rating > 75 & rating_count > 50'; limit = 100; }
-        else { whereClause = 'rating > 80 & rating_count > 100'; sortClause = 'sort rating desc;'; }
+        if (isGenre) { whereClause = IGDB_GENRE_MAP[filterType.toLowerCase()] + ' & rating > 75 & rating_count > 50 & game_type = (0,8,9)'; limit = 100; }
+        else { whereClause = 'rating > 80 & rating_count > 100 & game_type = (0,8,9)'; sortClause = 'sort rating desc;'; }
         break;
     }
     if (existingIds && existingIds.length > 0) whereClause += ' & id != (' + existingIds.join(',') + ')';
@@ -238,7 +249,7 @@ export async function getSmartAIPlayOrder(gameTitle: string, apiKey: string) {
     const response = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: { 'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID, 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
-      body: `search "${franchisePrefix}"; fields name, follows, rating_count, alternative_names.name; where parent_game = null; limit 50;`
+      body: `search "${franchisePrefix}"; fields name, rating_count, total_rating_count, alternative_names.name; where game_type = (0,8,9); limit 50;`
     });
     const data = await response.json();
     if (!Array.isArray(data)) return [];
@@ -287,6 +298,7 @@ Return ONLY a raw JSON array of strings containing the perfectly clean game titl
           });
         }
         await new Promise(r => setTimeout(r, 250));
+        
       } catch (e) {}
     }
     return enriched;
