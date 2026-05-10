@@ -19,8 +19,24 @@ const COMMON_GAME_DIRS = [
   'C:\\Program Files (x86)\\GOG Galaxy\\Games'
 ];
 
-export function scanLocalGames(): string[] {
-  const games: Set<string> = new Set(); // Use a Set to avoid duplicates
+function findExecutable(dirPath: string): string {
+  try {
+    const files = fs.readdirSync(dirPath);
+    let exe = files.find(f => f.toLowerCase().endsWith('.exe'));
+    if (exe) return path.join(dirPath, exe);
+
+    const binariesDir = path.join(dirPath, 'Binaries', 'Win64');
+    if (fs.existsSync(binariesDir)) {
+      const bFiles = fs.readdirSync(binariesDir);
+      let bExe = bFiles.find(f => f.toLowerCase().endsWith('.exe'));
+      if (bExe) return path.join(binariesDir, bExe);
+    }
+  } catch (e) {}
+  return '';
+}
+
+export function scanLocalGames(): { name: string, path: string }[] {
+  const games: Map<string, { name: string, path: string }> = new Map();
 
   // 1. Scan Steam
   if (fs.existsSync(STEAM_PATH)) {
@@ -28,6 +44,7 @@ export function scanLocalGames(): string[] {
       const files = fs.readdirSync(STEAM_PATH);
       for (const file of files) {
         if (file.startsWith('appmanifest_') && file.endsWith('.acf')) {
+          const appId = file.replace('appmanifest_', '').replace('.acf', '');
           const filePath = path.join(STEAM_PATH, file);
           const content = fs.readFileSync(filePath, 'utf-8');
           
@@ -39,7 +56,7 @@ export function scanLocalGames(): string[] {
             // Filter out tools
             const isTool = IGNORE_KEYWORDS.some(keyword => gameName.includes(keyword));
             if (!isTool) {
-              games.add(gameName);
+              games.set(gameName, { name: gameName, path: `steam://rungameid/${appId}` });
             }
           }
         }
@@ -61,7 +78,10 @@ export function scanLocalGames(): string[] {
             const gameName = item.name;
             // Ignore hidden folders or obvious non-games
             if (!gameName.startsWith('.') && !IGNORE_KEYWORDS.some(k => gameName.includes(k))) {
-              games.add(gameName);
+              if (!games.has(gameName)) {
+                const exePath = findExecutable(path.join(dir, gameName));
+                games.set(gameName, { name: gameName, path: exePath });
+              }
             }
           }
         }
@@ -71,5 +91,5 @@ export function scanLocalGames(): string[] {
     }
   }
 
-  return Array.from(games);
+  return Array.from(games.values());
 }

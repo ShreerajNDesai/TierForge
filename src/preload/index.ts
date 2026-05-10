@@ -12,11 +12,34 @@ const api = {
   scanPC: () => ipcRenderer.invoke('scan-pc'),
   getExtendedDetails: (id: string) => ipcRenderer.invoke('get-extended-details', id),
   updateGameData: (id: string, notes: string, status: string) => ipcRenderer.invoke('update-game-data', id, notes, status),
+  getTimeToBeat: (name: string) => ipcRenderer.invoke('get-time-to-beat', name),
+  getDiscoverGames: (filterType: string, offset: number) => ipcRenderer.invoke('get-discover-games', filterType, offset),
+  launchGame: (path: string, gameId: string) => ipcRenderer.invoke('launch-game', path, gameId),
+  getPlaytime: (gameId: string) => ipcRenderer.invoke('get-playtime', gameId),
+  onGameStarted: (callback: (gameId: string) => void) => {
+    ipcRenderer.on('game-started', (_, gameId) => callback(gameId));
+    return () => ipcRenderer.removeAllListeners('game-started');
+  },
+  onGameStopped: (callback: (gameId: string, totalPlaytime: number) => void) => {
+    ipcRenderer.on('game-stopped', (_, gameId, totalPlaytime) => callback(gameId, totalPlaytime));
+    return () => ipcRenderer.removeAllListeners('game-stopped');
+  },
+  getSetting: (key: string) => ipcRenderer.invoke('get-setting', key),
+  saveSetting: (key: string, value: string) => ipcRenderer.invoke('save-setting', key, value),
+  browseImage: () => ipcRenderer.invoke('browse-image'),
+  analyzeImage: (imagePath: string, apiKey: string) => ipcRenderer.invoke('analyze-image', imagePath, apiKey),
+  bulkImportText: (text: string) => ipcRenderer.invoke('bulk-import-text', text),
+  getAIRecommendations: () => ipcRenderer.invoke('get-ai-recommendations'),
   
   // Window Controls
   windowMinimize: () => ipcRenderer.invoke('window-minimize'),
   windowMaximize: () => ipcRenderer.invoke('window-maximize'),
-  windowClose: () => ipcRenderer.invoke('window-close')
+  windowClose: () => ipcRenderer.invoke('window-close'),
+  getGameDeals: (title: string) => ipcRenderer.invoke('get-game-deals', title),
+  openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
+  getScrapedRankings: () => ipcRenderer.invoke('get-scraped-rankings'),
+  getGlobalRankings: () => ipcRenderer.invoke('get-global-rankings')
+  
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
