@@ -1,0 +1,192 @@
+import React, { useState } from 'react';
+import { Check, Plus, Search, ChevronDown } from 'lucide-react';
+import { useGlobal } from '../context/GlobalContext';
+
+const Discover = () => {
+  const {
+    discoverFilter,
+    setDiscoverFilter,
+    setDiscoverOffset,
+    setHasMoreDiscover,
+    isDiscoverLoading,
+    discoverGames,
+    discoverOffset,
+    handleGameClick,
+    data,
+    handleAddGame,
+    hasMoreDiscover
+  } = useGlobal();
+
+  const [showGenreMenu, setShowGenreMenu] = useState(false);
+
+  const handleDiscoverScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 100 && !isDiscoverLoading && hasMoreDiscover) {
+      setDiscoverOffset(prev => prev + 30);
+    }
+  };
+
+  const primaryFilters = [
+    { id: 'trending', label: '🔥 Trending' },
+    { id: 'highly_rated', label: '🏆 Masterpieces' },
+    { id: 'new', label: '✨ New Releases' },
+    { id: 'upcoming', label: '📅 Upcoming' },
+    { id: 'rpg', label: '🗡️ RPGs' },
+    { id: 'shooter', label: '🔫 Shooters' },
+    { id: 'indie', label: '💎 Indie' }
+  ];
+
+  const extendedGenres = [
+    { id: 'action', label: 'Action' },
+    { id: 'action_rpg', label: 'Action RPG' },
+    { id: 'adventure', label: 'Adventure' },
+    { id: 'arcade', label: 'Arcade' },
+    { id: 'auto_battler', label: 'Auto Battler' },
+    { id: 'battle_royale', label: 'Battle Royale' },
+    { id: 'beat_em_up', label: 'Beat em up' },
+    { id: 'card_game', label: 'Card Game' },
+    { id: 'city_builder', label: 'City Builder' },
+    { id: 'crpg', label: 'CRPG' },
+    { id: 'fighting', label: 'Fighting' },
+    { id: 'fps', label: 'FPS' },
+    { id: 'gacha', label: 'Gacha' },
+    { id: 'hack_and_slash', label: 'Hack and Slash' },
+    { id: 'horror', label: 'Horror' },
+    { id: 'jrpg', label: 'JRPG' },
+    { id: 'mmorpg', label: 'MMORPG' },
+    { id: 'moba', label: 'MOBA' },
+    { id: 'metroidvania', label: 'Metroidvania' },
+    { id: 'open_world', label: 'Open World' },
+    { id: 'party', label: 'Party' },
+    { id: 'platformer', label: 'Platformer' },
+    { id: 'puzzle', label: 'Puzzle' },
+    { id: 'racing', label: 'Racing' },
+    { id: 'rts', label: 'RTS' },
+    { id: 'roguelike', label: 'Roguelike' },
+    { id: 'sandbox', label: 'Sandbox' },
+    { id: 'simulation', label: 'Simulation' },
+    { id: 'soulslike', label: 'Soulslike' },
+    { id: 'sports', label: 'Sports' },
+    { id: 'stealth', label: 'Stealth' },
+    { id: 'strategy', label: 'Strategy' },
+    { id: 'survival', label: 'Survival' },
+    { id: 'tactical', label: 'Tactical RPG' },
+    { id: 'tower_defense', label: 'Tower Defense' },
+    { id: 'visual_novel', label: 'Visual Novel' }
+  ];
+
+  const handleFilterSelect = (id: string) => {
+    setDiscoverFilter(id);
+    setDiscoverOffset(0);
+    setHasMoreDiscover(true);
+    setShowGenreMenu(false);
+  };
+
+  return (
+    <div 
+      onScroll={handleDiscoverScroll}
+      className="flex-1 overflow-y-auto px-10 pb-12 pt-6 relative custom-scrollbar"
+    >
+      <div className="flex justify-between items-end mb-6 px-1">
+        <div>
+          <h1 className="text-[34px] font-extrabold text-white flex items-center gap-4 tracking-tight leading-none mb-2">
+            Discover <span className="text-[10px] bg-indigo-500/10 text-indigo-300 px-2.5 py-1 rounded-md font-semibold border border-indigo-500/20 tracking-wide uppercase align-middle relative -top-1">Find new games</span>
+          </h1>
+          <p className="text-slate-400 text-[15px]">Explore the IGDB database for your next adventure</p>
+        </div>
+      </div>
+
+      {/* Filter Row */}
+      <div className="flex gap-3 overflow-x-auto pb-4 mb-2 flex-nowrap no-scrollbar items-center">
+        {primaryFilters.map(filter => (
+          <button
+            key={filter.id}
+            onClick={() => handleFilterSelect(filter.id)}
+            className={`px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap shrink-0 transition-all ${
+              discoverFilter === filter.id 
+                ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]' 
+                : 'bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300'
+            }`}
+          >
+            {filter.label}
+          </button>
+        ))}
+        
+        <button 
+          onClick={() => setShowGenreMenu(!showGenreMenu)} 
+          className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 shrink-0 ${
+            showGenreMenu 
+              ? 'bg-indigo-500 text-white border-indigo-400' 
+              : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30'
+          }`}
+        >
+          <Search size={16} /> Browse All Genres <ChevronDown size={16} className={`transition-transform duration-300 ${showGenreMenu ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
+
+      {/* Mega Menu Dropdown */}
+      {showGenreMenu && (
+        <div className="w-full bg-[#121620]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-8 mb-8 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {extendedGenres.map(genre => (
+              <button
+                key={genre.id}
+                onClick={() => handleFilterSelect(genre.id)}
+                className={`px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all border ${
+                  discoverFilter === genre.id
+                    ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
+                    : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {genre.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Grid */}
+      <div className="grid grid-cols-5 gap-6">
+        {(isDiscoverLoading && discoverOffset === 0) ? (
+          Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="animate-pulse bg-white/5 rounded-2xl h-72 border border-white/5"></div>
+          ))
+        ) : (
+          <>
+            {discoverGames.map(game => (
+              <div 
+                key={game.id} 
+                onClick={() => handleGameClick(game)}
+                className="group relative cursor-pointer"
+              >
+                <div className="w-full h-72 rounded-2xl overflow-hidden shadow-lg border border-slate-700/50 group-hover:border-indigo-500/50 transition duration-300 relative">
+                  <img src={game.image_url} alt={game.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                    {data.collection.some((g: any) => g.id === game.id.toString()) || 
+                     Object.values(data.tiers).some((tier: any) => tier.items.some((g: any) => g.id === game.id.toString())) ? (
+                      <div className="ml-auto bg-green-500/20 p-1.5 rounded-full border border-green-500/40">
+                        <Check size={20} className="text-green-400" />
+                      </div>
+                    ) : (
+                      <Plus size={24} className="text-white hover:text-indigo-400 transition ml-auto" onClick={(e) => { e.stopPropagation(); handleAddGame(game); }} />
+                    )}
+                  </div>
+                </div>
+                <div className="mt-3 text-center">
+                  <h3 className="text-sm font-semibold text-slate-200 group-hover:text-indigo-300 transition line-clamp-1">{game.title}</h3>
+                </div>
+              </div>
+            ))}
+            {isDiscoverLoading && discoverOffset > 0 && (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={`loading-more-${i}`} className="animate-pulse bg-white/5 rounded-2xl h-72 border border-white/5"></div>
+              ))
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Discover;

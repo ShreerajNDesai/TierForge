@@ -37,9 +37,11 @@ const api = {
   windowClose: () => ipcRenderer.invoke('window-close'),
   getGameDeals: (title: string) => ipcRenderer.invoke('get-game-deals', title),
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
-  getScrapedRankings: () => ipcRenderer.invoke('get-scraped-rankings'),
-  getGlobalRankings: () => ipcRenderer.invoke('get-global-rankings')
-  
+  getScrapedRankings: (category: string) => ipcRenderer.invoke('get-scraped-rankings', category),
+  getGlobalRankings: () => ipcRenderer.invoke('get-global-rankings'),
+  getCachedRankings: (categoryId: string) => ipcRenderer.invoke('get-cached-rankings', categoryId),
+  clearRankingsCache: (categoryId: string) => ipcRenderer.invoke('clear-rankings-cache', categoryId),
+  getAIPlayOrder: (gameId: string, gameTitle: string) => ipcRenderer.invoke('get-ai-play-order', gameId, gameTitle)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

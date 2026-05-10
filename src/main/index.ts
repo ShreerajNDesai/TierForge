@@ -3,11 +3,22 @@ import { join, basename } from 'path'
 import { exec } from 'child_process'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { initDB } from './database'
-import { searchGames, getGameExtendedDetails, getHowLongToBeat, getDiscoverGames } from './api'
-import { getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime } from './database'
+import { initDB, getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime, clearRankingsCache } from './database'
 import { scanLocalGames } from './scanner'
-import { analyzeLibraryImage, bulkImportGames, getAIRecommendations, getGameDeals, getGlobalRankings, getScrapedRankings } from './api'
+import { 
+  searchGames, 
+  getGameExtendedDetails, 
+  getHowLongToBeat, 
+  getDiscoverGames,
+  analyzeLibraryImage, 
+  bulkImportGames, 
+  getAIRecommendations, 
+  getGameDeals, 
+  getGlobalRankings, 
+  getScrapedRankings, 
+  getCachedRankings,
+  getSmartAIPlayOrder
+} from './api'
 
 function createWindow(): void {
   // Create the browser window.
@@ -219,9 +230,22 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('get-global-rankings', async () => {
-    const key = getSetting('rawg_key');
-    if (!key) return { error: 'NO_RAWG_KEY', overall: [], rpg: [], shooter: [], action: [] };
-    return await getGlobalRankings(key);
+    return await getGlobalRankings();
+  });
+
+  ipcMain.handle('get-cached-rankings', async (_, categoryId) => {
+    return await getCachedRankings(categoryId);
+  });
+
+  ipcMain.handle('clear-rankings-cache', (_, categoryId) => {
+    clearRankingsCache(categoryId);
+    return true;
+  });
+
+  ipcMain.handle('get-ai-play-order', async (_, _gameId, gameTitle) => {
+    const key = getSetting('geminiKey');
+    if (!key) throw new Error('No Gemini API Key found in settings.');
+    return await getSmartAIPlayOrder(gameTitle, key);
   });
 
   // Set app user model id for windows
@@ -280,6 +304,6 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-ipcMain.handle('get-scraped-rankings', async () => {
-    return await getScrapedRankings();
+ipcMain.handle('get-scraped-rankings', async (_, categoryId) => {
+    return await getScrapedRankings(categoryId || 'overall');
   });
