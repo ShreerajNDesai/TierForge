@@ -24,7 +24,10 @@ declare global {
       analyzeImage: (imagePath: string, apiKey: string) => Promise<string[]>;
       bulkImportText: (text: string) => Promise<string[]>;
       getAIRecommendations: () => Promise<{ error: string | null; recommendations: any[] }>;
-      getScrapedRankings: () => Promise<any>;
+      getScrapedRankings: (category: string) => Promise<any[]>;
+      getCachedRankings: (categoryId: string) => Promise<any[]>;
+      clearRankingsCache: (categoryId: string) => Promise<boolean>;
+      getAIPlayOrder: (gameId: string, gameTitle: string) => Promise<any[]>;
       
       // Window Controls
       windowMinimize: () => Promise<void>;

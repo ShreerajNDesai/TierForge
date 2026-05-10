@@ -27,6 +27,14 @@ export function initDB() {
       value TEXT
     );
   `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS rankings_cache (
+      category_id TEXT PRIMARY KEY,
+      games_json TEXT NOT NULL,
+      last_updated INTEGER NOT NULL
+    );
+  `);
   
   // Safe migrations for existing databases
   try {
@@ -44,6 +52,11 @@ export function initDB() {
   try {
     db.exec("ALTER TABLE games ADD COLUMN playtime_minutes INTEGER DEFAULT 0");
   } catch (e) { /* Column might already exist */ }
+  
+  // One-time cache clear for Discover category overhaul
+  try {
+    db.prepare('DELETE FROM rankings_cache WHERE category_id IN ("discover_trending", "discover_masterpieces", "highly_rated")').run();
+  } catch (e) { /* Table might not exist yet */ }
   
   console.log('Database initialized at:', dbPath);
 }
@@ -109,4 +122,20 @@ export function getPlaytime(id: string): number {
   const stmt = db.prepare('SELECT playtime_minutes FROM games WHERE id = ?');
   const result = stmt.get(id) as any;
   return result ? (result.playtime_minutes || 0) : 0;
+}
+
+// Rankings Cache Functions
+export function getCachedRanking(categoryId: string) {
+  const stmt = db.prepare('SELECT * FROM rankings_cache WHERE category_id = ?');
+  return stmt.get(categoryId) as any;
+}
+
+export function updateRankingsCache(categoryId: string, gamesJson: string) {
+  const stmt = db.prepare('INSERT OR REPLACE INTO rankings_cache (category_id, games_json, last_updated) VALUES (?, ?, ?)');
+  stmt.run(categoryId, gamesJson, Date.now());
+}
+
+export function clearRankingsCache(categoryId: string) {
+  const stmt = db.prepare('DELETE FROM rankings_cache WHERE category_id = ?');
+  stmt.run(categoryId);
 }
