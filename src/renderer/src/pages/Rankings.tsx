@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trophy, RefreshCw, Crown, Diamond, Gamepad2, Star, Search, X, ChevronDown } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 
@@ -15,6 +15,11 @@ const Rankings = () => {
 
   const [showMegaMenu, setShowMegaMenu] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dynamicGenres, setDynamicGenres] = useState<{id: string, label: string}[]>([]);
+
+  useEffect(() => {
+    window.api.getSteamTags().then(setDynamicGenres);
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -99,17 +104,17 @@ const Rankings = () => {
             </div>
             <div className="p-8 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {hardcoreGenres.map(genre => (
+                {dynamicGenres.map(genre => (
                   <button
-                    key={genre}
-                    onClick={() => handleGenreSelect(genre.toLowerCase())}
+                    key={genre.id}
+                    onClick={() => handleGenreSelect(genre.id)}
                     className={`px-4 py-3 rounded-xl text-left text-sm font-bold transition-all border ${
-                      rankingsGenre === genre.toLowerCase()
+                      rankingsGenre === genre.id
                         ? 'bg-yellow-600 border-yellow-400 text-white'
                         : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
                     }`}
                   >
-                    {genre}
+                    {genre.label}
                   </button>
                 ))}
               </div>
@@ -190,7 +195,7 @@ const Rankings = () => {
                       <p className="text-slate-400 text-xs truncate mb-2">{game.genres}</p>
                       <div className="flex items-center gap-1.5">
                         <Star size={14} className="text-yellow-400" fill="currentColor" />
-                        <span className="text-yellow-400 font-black text-sm">Critics Choice</span>
+                        <span className="text-sky-400 font-black text-sm">Overwhelmingly Positive</span>
                       </div>
                     </div>
                   </div>

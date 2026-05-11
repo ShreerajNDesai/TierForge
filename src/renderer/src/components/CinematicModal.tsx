@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gamepad2, Clock, ChevronDown, Star, Monitor, Tag, ExternalLink, PlayCircle, Volume2, VolumeX, X, Sparkles } from 'lucide-react';
+import { Gamepad2, Clock, ChevronDown, Star, Monitor, Tag, ExternalLink, PlayCircle, Volume2, VolumeX, X, Sparkles, MessageSquare, Globe, Book } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 
 const CinematicModal = () => {
@@ -14,6 +14,7 @@ const CinematicModal = () => {
     setVideoError,
     iframeRef,
     currentVideoId,
+    setCurrentVideoId,
     defaultMuted,
     runningGameId,
     gamePlaytime,
@@ -32,6 +33,7 @@ const CinematicModal = () => {
 
   const [aiTimeline, setAiTimeline] = useState<any[] | null>(null);
   const [isTimelineLoading, setIsTimelineLoading] = useState(false);
+  const [steamDetails, setSteamDetails] = useState<any>(null);
 
   const gameplayVideo = gameDetails?.videos?.find((v: any) => v.name.toLowerCase().includes('gameplay'));
   const isWatchingGameplay = gameplayVideo && currentVideoId === gameplayVideo.id;
@@ -39,7 +41,16 @@ const CinematicModal = () => {
 
   useEffect(() => {
     setAiTimeline(null);
+    setSteamDetails(null);
   }, [selectedGame]);
+
+  useEffect(() => {
+    if (gameDetails?.steamId) {
+      window.api.getSteamDetails(gameDetails.steamId).then(setSteamDetails).catch(() => setSteamDetails(null));
+    } else {
+      setSteamDetails(null);
+    }
+  }, [gameDetails]);
 
   if (!selectedGame) return null;
 
@@ -149,6 +160,17 @@ const CinematicModal = () => {
             
             <div className="flex items-center gap-4 text-xl font-medium text-white/70 mb-12">
               <span className="bg-white/10 px-3 py-1 rounded-lg border border-white/10 backdrop-blur-sm">{gameDetails ? gameDetails.year : '...'}</span>
+              
+              {gameDetails?.ageRating && (
+                <span className="flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-lg border border-white/10 backdrop-blur-sm">
+                  {gameDetails.ageRating.rating_cover_url ? (
+                    <img src={gameDetails.ageRating.rating_cover_url.startsWith('//') ? `https:${gameDetails.ageRating.rating_cover_url}` : gameDetails.ageRating.rating_cover_url} alt="Age Rating" className="h-6 object-contain" />
+                  ) : (
+                    <span className="text-sm font-bold text-white">{gameDetails.ageRating.rating === 11 ? 'M' : gameDetails.ageRating.rating}</span>
+                  )}
+                </span>
+              )}
+
               {gameDetails?.rating && (
                 <span className="flex items-center gap-1.5 bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-lg border border-indigo-500/30 backdrop-blur-sm">
                   <Star size={18} className="fill-indigo-400" />
@@ -237,7 +259,7 @@ const CinematicModal = () => {
 
               {/* Details Grid */}
               <div className="bg-black/30 border border-white/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
-                <div className="grid grid-cols-4 gap-6 mb-6">
+                <div className="grid grid-cols-5 gap-6 mb-6">
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Main Developers</h4>
                     <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.developers : '-'}</p>
@@ -249,6 +271,10 @@ const CinematicModal = () => {
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Game Modes</h4>
                     <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.gameModes : '-'}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Multiplayer</h4>
+                    <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.multiplayer : '-'}</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Perspectives</h4>
@@ -276,6 +302,41 @@ const CinematicModal = () => {
                 </div>
               </div>
 
+              {/* Community & Links */}
+              {gameDetails?.websites && gameDetails.websites.length > 0 && (
+                <div className="bg-black/30 border border-white/10 backdrop-blur-md rounded-2xl p-5 shadow-inner">
+                  <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <Globe size={14} className="text-sky-400" />
+                    Community & Links
+                  </h3>
+                  <div className="flex gap-3 flex-wrap">
+                    {gameDetails.websites.map((site: any, i: number) => {
+                      let icon = <Globe size={14} className="text-white/70 group-hover:text-white" />;
+                      let label = 'Website';
+                      if (site.category === 1) label = 'Official Site';
+                      else if (site.category === 2 || site.category === 3) { icon = <Book size={14} className="text-white/70 group-hover:text-white" />; label = 'Wiki'; }
+                      else if (site.category === 14) { icon = <MessageSquare size={14} className="text-orange-400 group-hover:text-orange-300" />; label = 'Reddit'; }
+                      else if (site.category === 18) { icon = <MessageSquare size={14} className="text-indigo-400 group-hover:text-indigo-300" />; label = 'Discord'; }
+                      else if (site.category === 13) label = 'Steam';
+                      else if (site.category === 9) { icon = <PlayCircle size={14} className="text-red-400 group-hover:text-red-300" />; label = 'YouTube'; }
+                      else return null;
+
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => window.api.openExternal(site.url)}
+                          className="group flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-sky-500/40 rounded-full px-4 py-2 transition-all hover:shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                        >
+                          {icon}
+                          <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{label}</span>
+                          <ExternalLink size={10} className="text-slate-500 group-hover:text-sky-400 ml-1" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Story / Storyline */}
               <div className="bg-black/30 border border-white/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
                 <h3 className="text-sm font-bold text-white/70 tracking-wide mb-3">Overview</h3>
@@ -289,6 +350,38 @@ const CinematicModal = () => {
                   </>
                 )}
               </div>
+
+              {/* Steam PC Requirements */}
+              {steamDetails?.pcRequirements && (
+                <div className="bg-black/30 border border-white/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
+                  <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <Monitor size={14} className="text-sky-400" />
+                    Can My PC Run This?
+                  </h3>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-5 backdrop-blur-sm">
+                      <h4 className="text-xs font-black text-slate-500 uppercase mb-4 tracking-widest border-b border-white/5 pb-2">Minimum Requirements</h4>
+                      <div 
+                        className="text-[11px] leading-relaxed text-slate-400 steam-specs-container"
+                        dangerouslySetInnerHTML={{ __html: steamDetails.pcRequirements.minimum }}
+                      />
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-5 backdrop-blur-sm">
+                      <h4 className="text-xs font-black text-indigo-400/70 uppercase mb-4 tracking-widest border-b border-white/5 pb-2">Recommended Specs</h4>
+                      <div 
+                        className="text-[11px] leading-relaxed text-slate-400 steam-specs-container"
+                        dangerouslySetInnerHTML={{ __html: steamDetails.pcRequirements.recommended }}
+                      />
+                    </div>
+                  </div>
+                  <style>{`
+                    .steam-specs-container ul { list-style: none; padding: 0; }
+                    .steam-specs-container li { margin-bottom: 6px; }
+                    .steam-specs-container strong { color: #94a3b8; font-weight: 800; margin-right: 4px; }
+                    .steam-specs-container br { display: none; }
+                  `}</style>
+                </div>
+              )}
 
               {/* Image Gallery */}
               {gameDetails?.gallery && gameDetails.gallery.length > 0 && (

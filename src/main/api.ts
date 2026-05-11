@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { addGame, getSetting, getCachedRanking, updateRankingsCache, clearRankingsCache } from './database';
+import { addGame, getSetting, getCachedRanking, updateRankingsCache, clearRankingsCache, syncSteamGame } from './database';
 import { BrowserWindow } from 'electron';
 
 const DEFAULT_CLIENT_ID = '3mejs4touc121msgxhw5mxy31medg3';
@@ -73,11 +73,20 @@ export async function getGameExtendedDetails(gameId: string) {
     const response = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: { 'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID, 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
-      body: 'where id = ' + gameId + '; fields rating, rating_count, summary, storyline, first_release_date, genres.name, platforms.name, screenshots.image_id, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, game_modes.name, player_perspectives.name, themes.name, collections.name, collections.games.name, collections.games.cover.image_id, collections.games.first_release_date, dlcs.name, dlcs.cover.image_id, dlcs.first_release_date, expansions.name, expansions.cover.image_id, expansions.first_release_date, game_engines.name, alternative_names.name, videos.video_id, videos.name;'
+      body: 'where id = ' + gameId + '; fields rating, rating_count, summary, storyline, first_release_date, genres.name, platforms.name, screenshots.image_id, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, game_modes.name, player_perspectives.name, themes.name, collections.name, collections.games.name, collections.games.cover.image_id, collections.games.first_release_date, dlcs.name, dlcs.cover.image_id, dlcs.first_release_date, expansions.name, expansions.cover.image_id, expansions.first_release_date, game_engines.name, alternative_names.name, videos.video_id, videos.name, multiplayer_modes.onlinecoop, multiplayer_modes.onlinemax, multiplayer_modes.offlinecoop, multiplayer_modes.offlinemax, age_ratings.category, age_ratings.rating, age_ratings.rating_cover_url, websites.url, websites.category, external_games.category, external_games.external_game_source, external_games.uid;'
     });
     const data = await response.json();
     if (!data || data.length === 0) return null;
     const game = data[0];
+
+    let steamId = null;
+    if (game.external_games && Array.isArray(game.external_games)) {
+      const steamEntry = game.external_games.find((eg: any) => eg.category === 1 || eg.external_game_source === 1);
+      if (steamEntry && steamEntry.uid) {
+        steamId = steamEntry.uid;
+      }
+    }
+
     const mapMiniGame = (g: any) => ({
       id: g.id.toString(), title: g.name,
       img: g.cover ? 'https://images.igdb.com/igdb/image/upload/t_cover_big/' + g.cover.image_id + '.jpg' : 'https://placehold.co/150x200/2d3748/fff?text=No+Cover',
@@ -90,7 +99,26 @@ export async function getGameExtendedDetails(gameId: string) {
     const videos = game.videos ? game.videos.map((v: any) => ({ id: v.video_id, name: v.name })) : [];
     let video_id = '';
     if (videos.length > 0) { const trailer = videos.find((v: any) => v.name.toLowerCase().includes('trailer')); video_id = trailer ? trailer.id : videos[0].id; }
+    
+    let multiplayer = '-';
+    if (game.multiplayer_modes && game.multiplayer_modes.length > 0) {
+      const mode = game.multiplayer_modes[0];
+      const modesList: string[] = [];
+      if (mode.onlinecoop) modesList.push(`Online Co-op (Max: ${mode.onlinemax || '?'})`);
+      if (mode.offlinecoop) modesList.push(`Local Co-op (Max: ${mode.offlinemax || '?'})`);
+      if (modesList.length > 0) multiplayer = modesList.join(' | ');
+      else multiplayer = 'Multiplayer Supported';
+    }
+
+    const websites = game.websites ? game.websites.map((w: any) => ({ url: w.url, category: w.category })) : [];
+    
+    let ageRating = null;
+    if (game.age_ratings && game.age_ratings.length > 0) {
+      ageRating = game.age_ratings.find((r: any) => r.category === 1) || game.age_ratings.find((r: any) => r.category === 2) || game.age_ratings[0];
+    }
+
     return {
+      steamId,
       summary: game.summary || 'No summary available.', storyline: game.storyline || '',
       genres: game.genres ? game.genres.map((g: any) => g.name).join(', ') : 'Unknown',
       platforms: game.platforms ? game.platforms.map((p: any) => p.name) : [],
@@ -105,8 +133,26 @@ export async function getGameExtendedDetails(gameId: string) {
       seriesList, dlcList, engines: game.game_engines ? game.game_engines.map((e: any) => e.name).join(', ') : '-',
       altNames: game.alternative_names ? game.alternative_names.map((a: any) => a.name).slice(0, 3).join(', ') : '-',
       gallery: game.screenshots ? game.screenshots.map((s: any) => 'https://images.igdb.com/igdb/image/upload/t_1080p/' + s.image_id + '.jpg') : [],
-      rating: game.rating ? Math.round(game.rating) : null, ratingCount: game.rating_count || 0
+      rating: game.rating ? Math.round(game.rating) : null, ratingCount: game.rating_count || 0,
+      multiplayer, websites, ageRating
     };
+  } catch (error) { return null; }
+}
+
+export async function getSteamAppDetails(steamId: string) {
+  try {
+    const res = await fetch(`https://store.steampowered.com/api/appdetails?appids=${steamId}`);
+    const data = await res.json();
+    if (data[steamId] && data[steamId].success) {
+      const appData = data[steamId].data;
+      return {
+        pcRequirements: appData.pc_requirements ? {
+          minimum: appData.pc_requirements.minimum || '',
+          recommended: appData.pc_requirements.recommended || ''
+        } : null
+      };
+    }
+    return null;
   } catch (error) { return null; }
 }
 
@@ -121,28 +167,53 @@ export async function getHowLongToBeat(gameName: string) {
   } catch (error) { return null; }
 }
 
-// SCRAPER CONSTANTS
-const IMDB_MAP: Record<string, string> = {
-  overall: 'https://www.imdb.com/search/title/?title_type=video_game&num_votes=5000,&sort=user_rating,desc',
-  action: 'https://www.imdb.com/search/title/?title_type=video_game&genres=action&num_votes=5000,&sort=user_rating,desc',
-  adventure: 'https://www.imdb.com/search/title/?title_type=video_game&genres=adventure&num_votes=5000,&sort=user_rating,desc',
-  horror: 'https://www.imdb.com/search/title/?title_type=video_game&genres=horror&num_votes=5000,&sort=user_rating,desc',
-  sci_fi: 'https://www.imdb.com/search/title/?title_type=video_game&genres=sci-fi&num_votes=5000,&sort=user_rating,desc',
-  family: 'https://www.imdb.com/search/title/?title_type=video_game&genres=family&num_votes=5000,&sort=user_rating,desc'
-};
+let cachedSteamTags: Record<string, string> | null = null;
+let cachedDisplayTags: { id: string, label: string }[] | null = null;
 
-const STEAM_TAG_MAP: Record<string, string> = {
-  'action': '19', 'action-adventure': '4106', 'action rpg': '4231', 'adventure': '21', 'artillery': '4667', 'auto battler': '1716', 'battle royale': '1769', 'beat em up': '4150', 'board game': '1738', 'card game': '1666', 'casual': '597', 'city builder': '4328', 'construction and management simulation': '12472', 'crpg': '4474', 'dungeon crawl': '1720', 'educational': '1036', 'fighting': '1743', 'fps': '1663', 'gacha': '11132', 'grand strategy': '1751', 'graphic adventure': '4342', 'hack and slash': '1646', 'hero shooter': '12140', 'hidden object': '1730', 'horror': '1667', 'idle': '1115', 'interactive movie': '4255', 'jrpg': '4434', 'life simulation': '4436', 'light gun shooter': '12057', 'mmorpg': '1754', 'moba': '1707', 'monster-taming': '12386', 'music': '1621', 'narrative': '1742', 'open world': '1695', 'party': '17428', 'physics': '3964', 'pinball': '4057', 'platformer': '1625', 'point-and-click': '1698', 'puzzle': '1664', 'puzzle-platformer': '29914', 'racing': '699', 'rts': '1670', 'rtt': '25085', 'rhythm': '1752', 'roguelike': '1716', 'roguelite': '3959', 'rpg': '122', 'sandbox': '1697', 'shmup': '1641', 'shooter': '1770', 'simulation': '599', 'social deduction': '2551', 'soulslike': '4252', 'sports': '701', 'stealth': '1687', 'strategy': '9', 'survival': '1662', 'survival horror': '3971', 'tactical rpg': '1717', 'text adventure': '1756', 'tps': '1693', 'tower defense': '1669', 'traditional puzzle': '4148', 'trivia': '1702', 'tbs': '1677', 'tbt': '14139', 'typing': '1110', 'vehicle simulation': '5931', 'visual novel': '3799', 'wargame': '4684'
-};
+export async function fetchSteamTags() {
+  if (cachedSteamTags) return cachedSteamTags;
+  try {
+    const res = await fetch('https://store.steampowered.com/tagdata/populartags/english', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0 Safari/537.36',
+        'Referer': 'https://store.steampowered.com/',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+    const data = await res.json();
+    cachedSteamTags = {};
+    cachedDisplayTags = [];
+    for (const tag of data) {
+      if (tag.name) {
+        const normalized = tag.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        cachedSteamTags[normalized] = tag.tagid.toString();
+        cachedDisplayTags.push({ id: normalized, label: tag.name });
+      }
+    }
+    return cachedSteamTags;
+  } catch (error) {
+    return {};
+  }
+}
+
+export async function getDisplayTags() {
+  if (!cachedDisplayTags) await fetchSteamTags();
+  return cachedDisplayTags || [];
+}
 
 const IGDB_GENRE_MAP: Record<string, string> = {
-  'rpg': 'genres = (12)', 'shooter': 'genres = (5)', 'indie': 'genres = (32)', 'action': 'genres = (31)', 'adventure': 'genres = (31)',
-  'strategy': 'genres = (15)', 'fighting': 'genres = (4)', 'racing': 'genres = (10)', 'sports': 'genres = (14)', 'simulation': 'genres = (13)',
-  'platformer': 'genres = (8)', 'puzzle': 'genres = (9)', 'hack_and_slash': 'genres = (25)', 'arcade': 'genres = (33)', 'visual_novel': 'genres = (34)',
-  'card_game': 'genres = (35)', 'moba': 'genres = (36)', 'point_and_click': 'genres = (2)', 'music': 'genres = (7)', 'tactical': 'genres = (24)',
-  'quiz_trivia': 'genres = (26)', 'pinball': 'genres = (30)', 'horror': 'themes = (19)', 'fantasy': 'themes = (20)', 'sci_fi': 'themes = (18)',
-  'stealth': 'themes = (28)', 'survival': 'themes = (21)', 'open_world': 'keywords = (1001, 131, 237, 239)', 'soulslike': 'keywords = (14620, 14619, 14618)',
-  'metroidvania': 'keywords = (122, 1025, 411)', 'roguelike': 'keywords = (1102, 1101, 102)', 'jrpg': 'keywords = (1460, 202, 401)', 'beat_em_up': 'keywords = (226, 439)'
+  'pinball': 'genres = (30)', 'adventure': 'genres = (31)', 'indie': 'genres = (32)', 'arcade': 'genres = (33)',
+  'visual_novel': 'genres = (34)', 'card_board_game': 'genres = (35)', 'moba': 'genres = (36)', 'point_and_click': 'genres = (2)',
+  'fighting': 'genres = (4)', 'shooter': 'genres = (5)', 'music': 'genres = (7)', 'platform': 'genres = (8)',
+  'puzzle': 'genres = (9)', 'racing': 'genres = (10)', 'rts': 'genres = (11)', 'rpg': 'genres = (12)',
+  'simulator': 'genres = (13)', 'sport': 'genres = (14)', 'strategy': 'genres = (15)', 'tbs': 'genres = (16)',
+  'tactical': 'genres = (24)', 'hack_and_slash': 'genres = (25)', 'quiz_trivia': 'genres = (26)',
+  'action': 'themes = (1)', 'fantasy': 'themes = (17)', 'sci_fi': 'themes = (18)', 'horror': 'themes = (19)',
+  'thriller': 'themes = (20)', 'survival': 'themes = (21)', 'historical': 'themes = (22)', 'stealth': 'themes = (23)',
+  'comedy': 'themes = (27)', 'business': 'themes = (28)', 'drama': 'themes = (31)', 'non_fiction': 'themes = (32)',
+  'sandbox': 'themes = (33)', 'educational': 'themes = (34)', 'kids': 'themes = (35)', 'open_world': 'themes = (38)',
+  'warfare': 'themes = (39)', 'party': 'themes = (40)', '4x': 'themes = (41)', 'erotic': 'themes = (42)',
+  'mystery': 'themes = (43)', 'romance': 'themes = (44)'
 };
 
 // HELPER SCRAPER FUNCTIONS
@@ -178,19 +249,39 @@ async function scrapeSteamDiscover(url: string): Promise<string[]> {
   });
 }
 
+async function fetchSteamTrending(offset: number): Promise<string[]> {
+  try {
+    const res = await fetch(`https://store.steampowered.com/search/results/?query&start=${offset}&count=50&filter=popularnew&category1=998&infinite=1`);
+    const data = await res.json();
+    if (!data || !data.results_html) return [];
+    const html = data.results_html;
+    const titles: string[] = [];
+    const regex = /<span class="title">([^<]+)<\/span>/g;
+    let match;
+    while ((match = regex.exec(html)) !== null) {
+      titles.push(match[1]);
+    }
+    return titles.filter(text => { const lower = text.toLowerCase(); return text.length > 0 && !lower.includes("bundle") && !lower.includes("pack") && !lower.includes("collection") && !lower.includes("season pass") && !lower.includes("expansion") && !lower.includes("dlc") && !lower.includes("franchise"); });
+  } catch(e) {
+    return [];
+  }
+}
+
 // MAIN EXPORTED FUNCTIONS
 export async function getDiscoverGames(existingIds: string[], filterType: string = 'trending', offset: number = 0) {
   try {
     const token = await getAccessToken();
     if (!token) return [];
-    if ((filterType === 'trending' || filterType === 'popular') && offset === 0) {
-      const cacheKey = 'discover_trending';
-      const cached = getCachedRanking(cacheKey);
-      if (cached) return JSON.parse(cached.games_json).filter((g: any) => !existingIds.includes(g.id.toString()));
-      const url = 'https://store.steampowered.com/search/?filter=popularnew&category1=998&ignore_preferences=1&supportedlang=english&ndl=1';
-      const titles = await scrapeSteamDiscover(url);
+    if (filterType === 'trending' || filterType === 'popular') {
+      const cacheKey = offset === 0 ? 'discover_trending' : null;
+      if (cacheKey) {
+        const cached = getCachedRanking(cacheKey);
+        if (cached) return JSON.parse(cached.games_json).filter((g: any) => !existingIds.includes(g.id.toString()));
+      }
+      
+      const titles = await fetchSteamTrending(offset);
       if (titles && titles.length > 0) {
-        const uniqueTitles = [...new Set(titles)].slice(0, 40);
+        const uniqueTitles = [...new Set(titles)].slice(0, 30);
         const enriched: any[] = [];
         for (const title of uniqueTitles) {
           const results = await searchGames(title);
@@ -198,34 +289,41 @@ export async function getDiscoverGames(existingIds: string[], filterType: string
           await new Promise(r => setTimeout(r, 250));
         }
         const finalArray = enriched.filter(g => !existingIds.includes(g.id.toString()));
-        updateRankingsCache(cacheKey, JSON.stringify(finalArray));
-        return finalArray.slice(0, 30);
+        if (cacheKey) updateRankingsCache(cacheKey, JSON.stringify(finalArray));
+        return finalArray;
       }
+      return [];
     }
+    
     if (filterType === 'highly_rated' && offset === 0) clearRankingsCache('discover_highly_rated');
     else { const cached = getCachedRanking('discover_' + filterType); if (cached && offset === 0) return JSON.parse(cached.games_json).filter((g: any) => !existingIds.includes(g.id.toString())); }
+    
     let whereClause = ''; let sortClause = ''; let limit = 30;
     const now = Math.floor(Date.now() / 1000); const sixMonthsAgo = now - (6 * 30 * 24 * 60 * 60);
     const isGenre = !!IGDB_GENRE_MAP[filterType.toLowerCase()];
+    
     switch(filterType) {
-      case 'new': whereClause = 'first_release_date > ' + sixMonthsAgo + ' & first_release_date < ' + now + ' & rating > 70 & game_type = (0,8,9)'; sortClause = 'sort first_release_date desc;'; break;
+      case 'new': whereClause = 'first_release_date > ' + sixMonthsAgo + ' & first_release_date < ' + now + ' & game_type = (0,8,9) & total_rating_count > 0'; sortClause = 'sort total_rating_count desc;'; break;
       case 'upcoming': whereClause = 'first_release_date > ' + now + ' & game_type = (0,8,9)'; sortClause = 'sort hypes desc;'; break;
       case 'highly_rated': whereClause = 'rating > 85 & rating_count > 200 & game_type = (0,8,9)'; sortClause = 'sort rating desc;'; break;
       default:
-        if (isGenre) { whereClause = IGDB_GENRE_MAP[filterType.toLowerCase()] + ' & rating > 75 & rating_count > 50 & game_type = (0,8,9)'; limit = 100; }
+        if (isGenre) { whereClause = IGDB_GENRE_MAP[filterType.toLowerCase()] + ' & rating > 60 & rating_count > 10 & game_type = (0,8,9)'; sortClause = 'sort total_rating_count desc;'; limit = 200; }
         else { whereClause = 'rating > 80 & rating_count > 100 & game_type = (0,8,9)'; sortClause = 'sort rating desc;'; }
         break;
     }
+    
     if (existingIds && existingIds.length > 0) whereClause += ' & id != (' + existingIds.join(',') + ')';
     const response = await fetch('https://api.igdb.com/v4/games', { method: 'POST', headers: { 'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID, 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }, body: 'where ' + whereClause + '; fields name, cover.image_id; limit ' + limit + '; offset ' + offset + '; ' + sortClause });
     let data = await response.json();
     if (isGenre && Array.isArray(data)) { data = data.sort(() => 0.5 - Math.random()); data = data.slice(0, 30); }
     if (!Array.isArray(data)) return [];
+    
     const result = data.map((game: any) => {
       let imageUrl = 'https://placehold.co/150x200/2d3748/fff?text=No+Cover';
       if (game.cover && game.cover.image_id) imageUrl = 'https://images.igdb.com/igdb/image/upload/t_1080p/' + game.cover.image_id + '.jpg';
       return { id: game.id.toString(), title: game.name, image_url: imageUrl };
     });
+    
     if (offset === 0 && result.length > 0) updateRankingsCache('discover_' + filterType, JSON.stringify(result));
     return result;
   } catch (error) { return []; }
@@ -372,20 +470,49 @@ export async function getGameDeals(gameTitle: string) {
   } catch (err) { return []; }
 }
 
+export async function syncSteamLibrary(steamId: string, apiKey: string) {
+  try {
+    const res = await fetch(`http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${apiKey}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1&format=json`);
+    const data: any = await res.json();
+    if (data.response && data.response.games) {
+      const games = data.response.games;
+      for (const game of games) {
+        const imageUrl = `https://steamcdn-a.akamaihd.net/steam/apps/${game.appid}/library_600x900.jpg`;
+        syncSteamGame(game.appid.toString(), game.name, imageUrl, game.playtime_forever);
+      }
+      return games.length;
+    }
+    return 0;
+  } catch (error) {
+    return 0;
+  }
+}
+
 export async function getScrapedRankings(category: string): Promise<any[]> {
   const cleanCategory = category.toLowerCase().trim();
   const cached = getCachedRanking(cleanCategory);
   if (cached) { const data = JSON.parse(cached.games_json); if (data && data.length > 0) return data; }
-  let titles: string[] = [];
-  if (IMDB_MAP[cleanCategory]) titles = await scrapeBrowser(IMDB_MAP[cleanCategory], 'h3.ipc-title__text, .lister-item-header a');
-  else if (STEAM_TAG_MAP[cleanCategory]) titles = await scrapeBrowser('https://store.steampowered.com/search/?tags=' + STEAM_TAG_MAP[cleanCategory] + '&filter=topsellers&category1=998', '#search_resultsRows .search_result_row .title');
-  else titles = await scrapeBrowser(IMDB_MAP.overall, 'h3.ipc-title__text, .lister-item-header a');
+  
+  const tags = await fetchSteamTags();
+  const reqNormalized = cleanCategory.replace(/[^a-z0-9]/g, '');
+  
+  let steamUrl = '';
+  if (reqNormalized === 'overall' || reqNormalized === 'allgames') {
+    steamUrl = 'https://store.steampowered.com/search/?category1=998&ignore_preferences=1&supportedlang=english&ndl=1';
+  } else if (tags[reqNormalized]) {
+    steamUrl = `https://store.steampowered.com/search/?tags=${tags[reqNormalized]}&category1=998&ignore_preferences=1&supportedlang=english&ndl=1`;
+  } else {
+    steamUrl = `https://store.steampowered.com/search/?term=${encodeURIComponent(category)}&category1=998&ignore_preferences=1&supportedlang=english&ndl=1`;
+  }
+  
+  const titles = await scrapeSteamDiscover(steamUrl);
   if (!titles || titles.length === 0) return [];
+  
   const uniqueTitles = [...new Set(titles)].slice(0, 20);
   const enriched: any[] = [];
   for (const title of uniqueTitles) {
     const results = await searchGames(title);
-    if (results && results.length > 0) enriched.push({ id: results[0].id, title: results[0].title, img: results[0].image_url, rating: 'Critics Choice', genres: category.toUpperCase() });
+    if (results && results.length > 0) enriched.push({ id: results[0].id, title: results[0].title, img: results[0].image_url, rating: 'Steam', genres: category });
     await new Promise(r => setTimeout(r, 200));
   }
   if (enriched.length > 0) updateRankingsCache(cleanCategory, JSON.stringify(enriched));

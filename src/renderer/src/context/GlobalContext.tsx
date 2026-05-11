@@ -74,6 +74,10 @@ interface GlobalContextType {
   setIsImporting: React.Dispatch<React.SetStateAction<boolean>>;
   geminiKey: string;
   setGeminiKey: React.Dispatch<React.SetStateAction<string>>;
+  steamKey: string;
+  setSteamKey: React.Dispatch<React.SetStateAction<string>>;
+  steamId: string;
+  setSteamId: React.Dispatch<React.SetStateAction<string>>;
   rawgKey: string;
   setRawgKey: React.Dispatch<React.SetStateAction<string>>;
   igdbClientId: string;
@@ -157,6 +161,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [importText, setImportText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [geminiKey, setGeminiKey] = useState('');
+  const [steamKey, setSteamKey] = useState('');
+  const [steamId, setSteamId] = useState('');
   const [rawgKey, setRawgKey] = useState('');
   const [igdbClientId, setIgdbClientId] = useState('');
   const [igdbClientSecret, setIgdbClientSecret] = useState('');
@@ -178,6 +184,12 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     window.api.getSetting('geminiKey').then((key: string | null) => {
       if (key) setGeminiKey(key);
+    });
+    window.api.getSetting('steamKey').then((key: string | null) => {
+      if (key) setSteamKey(key);
+    });
+    window.api.getSetting('steamId').then((id: string | null) => {
+      if (id) setSteamId(id);
     });
     window.api.getSetting('rawg_key').then((key: string | null) => {
       if (key) setRawgKey(key);
@@ -310,7 +322,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setDiscoverGames(prev => [...prev, ...games]);
         }
-        setHasMoreDiscover(games.length === 30);
+        setHasMoreDiscover(games.length > 0);
         setIsDiscoverLoading(false);
       });
     }
@@ -542,7 +554,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     libraryGames, setLibraryGames, librarySearch, setLibrarySearch,
     suggestedGame, setSuggestedGame, showImportModal, setShowImportModal,
     importText, setImportText, isImporting, setIsImporting,
-    geminiKey, setGeminiKey, rawgKey, setRawgKey, igdbClientId, setIgdbClientId,
+    geminiKey, setGeminiKey, steamKey, setSteamKey, steamId, setSteamId, rawgKey, setRawgKey, igdbClientId, setIgdbClientId,
     igdbClientSecret, setIgdbClientSecret, globalRankings, setGlobalRankings,
     rankingsLoading, setRankingsLoading, rankingsGenre, setRankingsGenre,
     scrapedRankings, setScrapedRankings, oracleRecs, setOracleRecs,
