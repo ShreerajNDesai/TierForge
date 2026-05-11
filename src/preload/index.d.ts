@@ -28,6 +28,9 @@ declare global {
       getCachedRankings: (categoryId: string) => Promise<any[]>;
       clearRankingsCache: (categoryId: string) => Promise<boolean>;
       getAIPlayOrder: (gameId: string, gameTitle: string) => Promise<any[]>;
+      syncSteam: (steamId: string, apiKey: string) => Promise<number>;
+      getSteamDetails: (steamId: string) => Promise<any>;
+      getSteamTags: () => Promise<any[]>;
       
       // Window Controls
       windowMinimize: () => Promise<void>;

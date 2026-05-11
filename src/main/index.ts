@@ -17,7 +17,10 @@ import {
   getGlobalRankings, 
   getScrapedRankings, 
   getCachedRankings,
-  getSmartAIPlayOrder
+  getSmartAIPlayOrder,
+  syncSteamLibrary,
+  getSteamAppDetails,
+  getDisplayTags
 } from './api'
 
 function createWindow(): void {
@@ -246,6 +249,18 @@ app.whenReady().then(() => {
     const key = getSetting('geminiKey');
     if (!key) throw new Error('No Gemini API Key found in settings.');
     return await getSmartAIPlayOrder(gameTitle, key);
+  });
+
+  ipcMain.handle('sync-steam', async (_, steamId, apiKey) => {
+    return await syncSteamLibrary(steamId, apiKey);
+  });
+
+  ipcMain.handle('get-steam-details', async (_, steamId) => {
+    return await getSteamAppDetails(steamId);
+  });
+
+  ipcMain.handle('get-steam-tags', async () => {
+    return await getDisplayTags();
   });
 
   // Set app user model id for windows

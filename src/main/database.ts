@@ -56,6 +56,7 @@ export function initDB() {
   // One-time cache clear for Discover category overhaul
   try {
     db.prepare('DELETE FROM rankings_cache WHERE category_id IN ("discover_trending", "discover_masterpieces", "highly_rated")').run();
+    db.exec("DELETE FROM rankings_cache"); // Wipe cache to fix hallucinated Steam Tag IDs and IMDb removal
   } catch (e) { /* Table might not exist yet */ }
   
   console.log('Database initialized at:', dbPath);
@@ -133,6 +134,17 @@ export function getCachedRanking(categoryId: string) {
 export function updateRankingsCache(categoryId: string, gamesJson: string) {
   const stmt = db.prepare('INSERT OR REPLACE INTO rankings_cache (category_id, games_json, last_updated) VALUES (?, ?, ?)');
   stmt.run(categoryId, gamesJson, Date.now());
+}
+
+export function syncSteamGame(id: string, title: string, imageUrl: string, playtimeMinutes: number) {
+  const stmt = db.prepare(`
+    INSERT INTO games (id, title, image_url, tier, status, playtime_minutes) 
+    VALUES (?, ?, ?, 'unranked', 'Backlog', ?)
+    ON CONFLICT(id) DO UPDATE SET 
+    playtime_minutes = MAX(playtime_minutes, excluded.playtime_minutes),
+    image_url = excluded.image_url
+  `);
+  stmt.run(id, title, imageUrl, playtimeMinutes);
 }
 
 export function clearRankingsCache(categoryId: string) {

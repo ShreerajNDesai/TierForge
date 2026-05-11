@@ -7,10 +7,16 @@ const ImportHubModal = () => {
     showImportModal,
     setShowImportModal,
     isImporting,
+    setIsImporting,
     handleAIImport,
     importText,
     setImportText,
-    handleTextImport
+    handleTextImport,
+    steamKey,
+    setSteamKey,
+    steamId,
+    setSteamId,
+    loadGames
   } = useGlobal();
 
   if (!showImportModal) return null;
@@ -70,6 +76,61 @@ const ImportHubModal = () => {
                 <Plus size={14} /> Import List
               </button>
             </div>
+          </div>
+
+          {/* Steam Sync Section */}
+          <div className="p-6 rounded-2xl border-2 border-indigo-500/30 bg-indigo-500/5 mb-8">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <RefreshCw size={20} className="text-indigo-400" />
+              Steam Account Sync
+            </h3>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1.5 ml-1">Steam Web API Key</label>
+                <input 
+                  type="password"
+                  value={steamKey}
+                  onChange={(e) => {
+                    setSteamKey(e.target.value);
+                    window.api.saveSetting('steamKey', e.target.value);
+                  }}
+                  placeholder="Enter API Key..."
+                  className="w-full bg-black/40 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1.5 ml-1">Steam64 ID</label>
+                <input 
+                  type="text"
+                  value={steamId}
+                  onChange={(e) => {
+                    setSteamId(e.target.value);
+                    window.api.saveSetting('steamId', e.target.value);
+                  }}
+                  placeholder="Enter Steam64 ID..."
+                  className="w-full bg-black/40 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition"
+                />
+              </div>
+            </div>
+            <button 
+              onClick={async () => {
+                if (!steamKey || !steamId) {
+                  alert('Please enter both your Steam API Key and Steam64 ID.');
+                  return;
+                }
+                setIsImporting(true);
+                const count = await window.api.syncSteam(steamId, steamKey);
+                alert(`Successfully synced ${count} games from Steam!`);
+                await loadGames();
+                setIsImporting(false);
+                setShowImportModal(false);
+              }}
+              disabled={isImporting}
+              className="w-full py-4 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 disabled:opacity-50 text-white font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 active:scale-[0.98]"
+            >
+              <RefreshCw size={20} className={isImporting ? 'animate-spin' : ''} />
+              Sync Steam Library
+            </button>
           </div>
 
           {isImporting && (

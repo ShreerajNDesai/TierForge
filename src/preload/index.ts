@@ -41,7 +41,10 @@ const api = {
   getGlobalRankings: () => ipcRenderer.invoke('get-global-rankings'),
   getCachedRankings: (categoryId: string) => ipcRenderer.invoke('get-cached-rankings', categoryId),
   clearRankingsCache: (categoryId: string) => ipcRenderer.invoke('clear-rankings-cache', categoryId),
-  getAIPlayOrder: (gameId: string, gameTitle: string) => ipcRenderer.invoke('get-ai-play-order', gameId, gameTitle)
+  getAIPlayOrder: (gameId: string, gameTitle: string) => ipcRenderer.invoke('get-ai-play-order', gameId, gameTitle),
+  syncSteam: (steamId: string, apiKey: string) => ipcRenderer.invoke('sync-steam', steamId, apiKey),
+  getSteamDetails: (steamId: string) => ipcRenderer.invoke('get-steam-details', steamId),
+  getSteamTags: () => ipcRenderer.invoke('get-steam-tags')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
