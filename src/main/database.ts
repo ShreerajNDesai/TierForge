@@ -6,6 +6,10 @@ import path from 'path';
 const dbPath = path.join(app.getPath('userData'), 'tierforge.db');
 const db = new Database(dbPath);
 
+export function getDbPath() {
+  return dbPath;
+}
+
 export function initDB() {
   // Create the table if it doesn't exist
   db.exec(`

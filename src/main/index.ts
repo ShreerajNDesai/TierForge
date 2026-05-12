@@ -3,7 +3,7 @@ import { join, basename } from 'path'
 import { exec } from 'child_process'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { initDB, getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime, clearRankingsCache } from './database'
+import { initDB, getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime, clearRankingsCache, getDbPath } from './database'
 import { scanLocalGames } from './scanner'
 import { 
   searchGames, 
@@ -26,6 +26,7 @@ import {
   generateGamerProfile,
   backfillMissingMetadata
 } from './api'
+import { GDRIVE_CLIENT_ID, GDRIVE_CLIENT_SECRET, GDRIVE_REDIRECT_URI, GDRIVE_SCOPE } from './driveConfig'
 
 function createWindow(): void {
   // Create the browser window.
@@ -388,6 +389,271 @@ app.whenReady().then(() => {
     if (win) win.close();
   });
 
+  // Backup System
+  ipcMain.handle('browse-backup-folder', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Choose Cloud Sync / Backup Folder',
+      properties: ['openDirectory'],
+      buttonLabel: 'Select Folder'
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
+  });
+
+  ipcMain.handle('manual-backup', async () => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const backupFolder = getSetting('backup_folder');
+      if (!backupFolder || !fs.existsSync(backupFolder)) return { success: false, message: 'No backup folder configured.' };
+      const dbSrc = getDbPath();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const backupName = `tierforge_backup_${timestamp}.db`;
+      const latestName = 'tierforge_latest.db';
+      fs.copyFileSync(dbSrc, path.join(backupFolder, backupName));
+      fs.copyFileSync(dbSrc, path.join(backupFolder, latestName));
+      return { success: true, message: `Backup saved as ${backupName}` };
+    } catch (e) {
+      return { success: false, message: String(e) };
+    }
+  });
+
+  ipcMain.handle('restore-backup', async () => {
+    try {
+      const fs = require('fs');
+      const result = await dialog.showOpenDialog({
+        title: 'Select TierForge Backup File',
+        filters: [{ name: 'SQLite Database', extensions: ['db'] }],
+        properties: ['openFile'],
+        buttonLabel: 'Restore This Backup'
+      });
+      if (result.canceled || result.filePaths.length === 0) return { success: false, message: 'Cancelled.' };
+      const backupFile = result.filePaths[0];
+      const dbDest = getDbPath();
+      fs.copyFileSync(backupFile, dbDest);
+      return { success: true, message: 'Backup restored. Restart the app to load it.' };
+    } catch (e) {
+      return { success: false, message: String(e) };
+    }
+  });
+
+  ipcMain.handle('get-backup-info', async () => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const backupFolder = getSetting('backup_folder');
+      if (!backupFolder || !fs.existsSync(backupFolder)) return null;
+      const latestPath = path.join(backupFolder, 'tierforge_latest.db');
+      if (!fs.existsSync(latestPath)) return { folder: backupFolder, lastBackup: null, count: 0 };
+      const stats = fs.statSync(latestPath);
+      const backups = fs.readdirSync(backupFolder)
+        .filter((f: string) => f.startsWith('tierforge_backup_') && f.endsWith('.db'));
+      return { folder: backupFolder, lastBackup: stats.mtime.toISOString(), count: backups.length };
+    } catch (e) {
+      return null;
+    }
+  });
+
+  // --- Google Drive API Backup ---
+  ipcMain.handle('google-drive-auth', async () => {
+    try {
+      const clientId = GDRIVE_CLIENT_ID;
+      const clientSecret = GDRIVE_CLIENT_SECRET;
+      const redirectUri = GDRIVE_REDIRECT_URI;
+      if (!clientId || !clientSecret) return { success: false, message: 'Google Drive is not configured for this build.' };
+
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(GDRIVE_SCOPE)}&access_type=offline&prompt=consent`;
+
+      // Start a tiny local server to catch the OAuth callback
+      const http = require('http');
+      return new Promise((resolve) => {
+        const server = http.createServer(async (req: any, res: any) => {
+          const url = new URL(req.url, 'http://localhost:19847');
+          const code = url.searchParams.get('code');
+          if (code) {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end('<html><body style="background:#0B0E14;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;"><h1>✅ Connected! You can close this tab.</h1></body></html>');
+            server.close();
+
+            // Exchange code for tokens
+            try {
+              const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                  code,
+                  client_id: clientId,
+                  client_secret: clientSecret,
+                  redirect_uri: redirectUri,
+                  grant_type: 'authorization_code'
+                })
+              });
+              const tokens = await tokenRes.json();
+              if (tokens.access_token) {
+                saveSetting('gdrive_access_token', tokens.access_token);
+                if (tokens.refresh_token) saveSetting('gdrive_refresh_token', tokens.refresh_token);
+                saveSetting('gdrive_token_expiry', String(Date.now() + (tokens.expires_in || 3600) * 1000));
+                resolve({ success: true, message: 'Google Drive connected!' });
+              } else {
+                resolve({ success: false, message: 'Failed to get access token.' });
+              }
+            } catch (err) {
+              resolve({ success: false, message: 'Token exchange failed.' });
+            }
+          } else {
+            res.writeHead(400);
+            res.end('Missing code');
+            server.close();
+            resolve({ success: false, message: 'Authorization cancelled.' });
+          }
+        });
+        server.listen(19847, () => {
+          shell.openExternal(authUrl);
+        });
+        // Timeout after 2 minutes
+        setTimeout(() => { try { server.close(); } catch(_) {} resolve({ success: false, message: 'Authorization timed out.' }); }, 120000);
+      });
+    } catch (e) {
+      return { success: false, message: String(e) };
+    }
+  });
+
+  async function getValidDriveToken(): Promise<string | null> {
+    const clientId = GDRIVE_CLIENT_ID;
+    const clientSecret = GDRIVE_CLIENT_SECRET;
+    const refreshToken = getSetting('gdrive_refresh_token');
+    const expiry = Number(getSetting('gdrive_token_expiry') || '0');
+    let accessToken = getSetting('gdrive_access_token');
+
+    if (!accessToken || !refreshToken) return null;
+
+    // Refresh if expired or about to expire
+    if (Date.now() > expiry - 60000) {
+      try {
+        const res = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id: clientId!,
+            client_secret: clientSecret!,
+            refresh_token: refreshToken,
+            grant_type: 'refresh_token'
+          })
+        });
+        const data = await res.json();
+        if (data.access_token) {
+          accessToken = data.access_token;
+          saveSetting('gdrive_access_token', accessToken!);
+          saveSetting('gdrive_token_expiry', String(Date.now() + (data.expires_in || 3600) * 1000));
+        } else {
+          return null;
+        }
+      } catch {
+        return null;
+      }
+    }
+    return accessToken;
+  }
+
+  ipcMain.handle('backup-to-drive', async () => {
+    try {
+      const fs = require('fs');
+      const token = await getValidDriveToken();
+      if (!token) return { success: false, message: 'Not connected to Google Drive.' };
+
+      const dbSrc = getDbPath();
+      const fileBuffer = fs.readFileSync(dbSrc);
+      const fileName = 'tierforge_latest.db';
+
+      // Check if file already exists on Drive
+      const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${fileName}'+and+trashed=false&fields=files(id,name)`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const searchData = await searchRes.json();
+      const existingFile = searchData.files && searchData.files.length > 0 ? searchData.files[0] : null;
+
+      if (existingFile) {
+        // Update existing file
+        const updateRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/octet-stream' },
+          body: fileBuffer
+        });
+        if (updateRes.ok) return { success: true, message: 'Backup updated on Google Drive.' };
+        return { success: false, message: 'Failed to update backup on Drive.' };
+      } else {
+        // Create new file
+        const metadata = JSON.stringify({ name: fileName, mimeType: 'application/octet-stream' });
+        const boundary = '---tierforge_boundary';
+        const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/octet-stream\r\n\r\n`;
+        const ending = `\r\n--${boundary}--`;
+        const bodyBuffer = Buffer.concat([Buffer.from(body), fileBuffer, Buffer.from(ending)]);
+        
+        const createRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
+          body: bodyBuffer
+        });
+        if (createRes.ok) return { success: true, message: 'Backup created on Google Drive.' };
+        return { success: false, message: 'Failed to create backup on Drive.' };
+      }
+    } catch (e) {
+      return { success: false, message: String(e) };
+    }
+  });
+
+  ipcMain.handle('restore-from-drive', async () => {
+    try {
+      const fs = require('fs');
+      const token = await getValidDriveToken();
+      if (!token) return { success: false, message: 'Not connected to Google Drive.' };
+
+      const fileName = 'tierforge_latest.db';
+      const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${fileName}'+and+trashed=false&fields=files(id,name,modifiedTime)`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const searchData = await searchRes.json();
+      if (!searchData.files || searchData.files.length === 0) return { success: false, message: 'No backup found on Google Drive.' };
+
+      const fileId = searchData.files[0].id;
+      const downloadRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!downloadRes.ok) return { success: false, message: 'Failed to download backup from Drive.' };
+
+      const buffer = Buffer.from(await downloadRes.arrayBuffer());
+      const dbDest = getDbPath();
+      fs.writeFileSync(dbDest, buffer);
+      return { success: true, message: 'Backup restored from Google Drive. Restart the app to load it.' };
+    } catch (e) {
+      return { success: false, message: String(e) };
+    }
+  });
+
+  ipcMain.handle('check-drive-connection', async () => {
+    const token = await getValidDriveToken();
+    if (!token) return { connected: false };
+    try {
+      const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=user', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { connected: true, email: data.user?.emailAddress || 'Connected' };
+      }
+      return { connected: false };
+    } catch {
+      return { connected: false };
+    }
+  });
+
+  ipcMain.handle('disconnect-drive', () => {
+    saveSetting('gdrive_access_token', '');
+    saveSetting('gdrive_refresh_token', '');
+    saveSetting('gdrive_token_expiry', '');
+    return true;
+  });
+
   createWindow()
 
   app.on('activate', function () {
@@ -401,6 +667,33 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  // Silent auto-backup on close
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const backupFolder = getSetting('backup_folder');
+    if (backupFolder && fs.existsSync(backupFolder)) {
+      const dbSrc = getDbPath();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const backupName = `tierforge_backup_${timestamp}.db`;
+      const latestName = 'tierforge_latest.db';
+      fs.copyFileSync(dbSrc, path.join(backupFolder, backupName));
+      fs.copyFileSync(dbSrc, path.join(backupFolder, latestName));
+      
+      // Keep only the last 10 timestamped backups
+      const backups = fs.readdirSync(backupFolder)
+        .filter((f: string) => f.startsWith('tierforge_backup_') && f.endsWith('.db'))
+        .sort()
+        .reverse();
+      for (let i = 10; i < backups.length; i++) {
+        fs.unlinkSync(path.join(backupFolder, backups[i]));
+      }
+      console.log('Auto-backup saved to:', backupFolder);
+    }
+  } catch (e) {
+    console.error('Auto-backup failed:', e);
+  }
+
   if (process.platform !== 'darwin') {
     app.quit()
   }
