@@ -1,11 +1,12 @@
-import React from 'react';
-import { Search, Check, Plus, UploadCloud, RefreshCw, Download, Bell, BarChart2, Minus, Square, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Check, Plus, UploadCloud, RefreshCw, Download, Bell, BarChart2, Minus, Square, X, Camera, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useGlobal } from '../context/GlobalContext';
 
 const Header = () => {
   const {
     activeTab,
+    setActiveTab,
     librarySearch,
     setLibrarySearch,
     searchQuery,
@@ -18,6 +19,29 @@ const Header = () => {
     handleScanPC,
     isScanning
   } = useGlobal();
+
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleExportClick = (type: 'tierlist' | 'library') => {
+    setShowExportMenu(false);
+    if (activeTab !== type) {
+      setActiveTab(type);
+    }
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent(`trigger-export-${type}`));
+    }, 150);
+  };
 
   return (
     <header className="h-20 flex items-center justify-between px-10 shrink-0" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
@@ -91,6 +115,34 @@ const Header = () => {
           >
             <UploadCloud size={16} /> Import Hub
           </button>
+
+          <div className="relative" ref={exportMenuRef}>
+            <button 
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                showExportMenu ? 'bg-purple-500/30 text-purple-200' : 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 hover:text-purple-200'
+              }`}
+            >
+              <Camera size={16} /> Export Hub <ChevronDown size={14} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showExportMenu && (
+              <div className="absolute top-full right-0 mt-2 w-56 bg-[#151924] border border-slate-700/80 rounded-xl shadow-2xl py-2 z-[200]">
+                <button 
+                  onClick={() => handleExportClick('tierlist')}
+                  className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-indigo-500/20 hover:text-indigo-300 flex items-center gap-3 transition-colors"
+                >
+                  <Camera size={16} className="text-indigo-400" /> Export Tier List
+                </button>
+                <button 
+                  onClick={() => handleExportClick('library')}
+                  className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-purple-500/20 hover:text-purple-300 flex items-center gap-3 transition-colors"
+                >
+                  <ImageIcon size={16} className="text-purple-400" /> Export Library Mosaic
+                </button>
+              </div>
+            )}
+          </div>
           <button 
             onClick={handleScanPC}
             disabled={isScanning}

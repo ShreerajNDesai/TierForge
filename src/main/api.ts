@@ -473,7 +473,7 @@ export async function bulkImportGames(gameNames: string[]) {
   }
 }
 
-export async function getAIRecommendations(apiKey: string, allGames: any[]) {
+export async function getAIRecommendations(apiKey: string, allGames: any[], vibe: string = '', deepCuts: boolean = false) {
   try {
     const lovedGames = allGames.filter((g: any) => ['s', 'a'].includes((g.tier || '').toLowerCase())).map((g: any) => g.title);
     const dislikedGames = allGames.filter((g: any) => ['f', 'dropped', 'd'].includes((g.tier || '').toLowerCase())).map((g: any) => g.title);
@@ -483,9 +483,14 @@ export async function getAIRecommendations(apiKey: string, allGames: any[]) {
       model: 'gemini-2.5-flash',
       tools: [{ googleSearch: {} }] as any
     });
-    const prompt = 'Analyze user tastes: Loved: ' + lovedGames.join(', ') + ', Disliked: ' + dislikedGames.join(', ') + '. Recommend 4 games. Return JSON.';
+    let promptText = `Analyze user tastes: Loved: ${lovedGames.join(', ')}, Disliked: ${dislikedGames.join(', ')}. Recommend 4 games they would enjoy.`;
+    if (vibe) promptText += ` The user is specifically in the mood for: "${vibe}". Find games matching this vibe.`;
+    if (deepCuts) promptText += ` IGNORE all mainstream AAA games. Only recommend hidden gems, obscure titles, or highly-rated indie games.`;
+    
+    const prompt = promptText + ` Return ONLY a JSON array of objects. Each object must have "title" (string) and "reason" (string).`;
     const result = await model.generateContent(prompt);
-    const recommendations = JSON.parse(result.response.text().trim().replace(/```json|```/g, ''));
+    const parsed = JSON.parse(result.response.text().trim().replace(/```json|```|```javascript/gi, ''));
+    const recommendations = Array.isArray(parsed) ? parsed : (parsed.recommendations || parsed.games || []);
     const enriched: any[] = [];
     for (const rec of recommendations) {
       const results = await searchGames(rec.title);
@@ -495,6 +500,53 @@ export async function getAIRecommendations(apiKey: string, allGames: any[]) {
     }
     return { error: null, recommendations: enriched };
   } catch (err) { return { error: String(err), recommendations: [] }; }
+}
+
+export async function getAICompatibility(apiKey: string, allGames: any[], targetGame: string) {
+  try {
+    const lovedGames = allGames.filter((g: any) => ['s', 'a'].includes((g.tier || '').toLowerCase())).map((g: any) => g.title);
+    const dislikedGames = allGames.filter((g: any) => ['f', 'dropped', 'd'].includes((g.tier || '').toLowerCase())).map((g: any) => g.title);
+    if (!targetGame) return { error: 'NO_GAME_PROVIDED', score: 0, review: '' };
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', tools: [{ googleSearch: {} }] as any });
+    
+    const prompt = `The user is considering buying "${targetGame}". Their favorite games are: ${lovedGames.join(', ')}. Games they disliked or dropped: ${dislikedGames.join(', ')}. 
+    Analyze compatibility. Return ONLY a JSON object with: 
+    "score" (integer number from 0 to 100), 
+    "review" (a short personalized review explaining why they will or won't like it based on their specific tastes).`;
+    
+    const result = await model.generateContent(prompt);
+    const parsed = JSON.parse(result.response.text().trim().replace(/```json|```|```javascript/gi, ''));
+    return { error: null, score: parsed.score || 0, review: parsed.review || '' };
+  } catch (err) {
+    return { error: String(err), score: 0, review: '' };
+  }
+}
+
+export async function getAIBacklogCure(apiKey: string, allGames: any[]) {
+  try {
+    const backlogGames = allGames.filter((g: any) => g.status === 'Backlog').map((g: any) => g.title);
+    if (backlogGames.length === 0) return { error: 'EMPTY_BACKLOG', title: '', reason: '' };
+    
+    const lovedGames = allGames.filter((g: any) => ['s', 'a'].includes((g.tier || '').toLowerCase())).map((g: any) => g.title);
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', tools: [{ googleSearch: {} }] as any });
+    
+    const prompt = `The user has decision paralysis. Here is their backlog: ${backlogGames.join(', ')}. 
+    Here are their all-time favorite games: ${lovedGames.join(', ')}. 
+    Pick the SINGLE BEST game from their backlog that they need to play tonight. Hype them up. 
+    Return ONLY a JSON object with "title" (the exact game name) and "reason" (the hype text).`;
+    
+    const result = await model.generateContent(prompt);
+    const parsed = JSON.parse(result.response.text().trim().replace(/```json|```|```javascript/gi, ''));
+    
+    const searchRes = await searchGames(parsed.title);
+    const gameInfo = searchRes && searchRes.length > 0 ? searchRes[0] : { id: null, title: parsed.title, image_url: '' };
+    
+    return { error: null, title: parsed.title, reason: parsed.reason, gameInfo };
+  } catch (err) {
+    return { error: String(err), title: '', reason: '' };
+  }
 }
 
 const STORE_MAP: Record<string, string> = {
