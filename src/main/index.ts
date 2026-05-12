@@ -12,7 +12,9 @@ import {
   getDiscoverGames,
   analyzeLibraryImage, 
   bulkImportGames, 
-  getAIRecommendations, 
+  getAIRecommendations,
+  getAICompatibility,
+  getAIBacklogCure,
   getGameDeals, 
   getGlobalRankings, 
   getScrapedRankings, 
@@ -93,6 +95,46 @@ app.whenReady().then(() => {
   ipcMain.handle('delete-game', (_, id) => {
     deleteGame(id);
     return true;
+  });
+
+  // 5.5 Uninstall Game
+  ipcMain.handle('uninstall-game', async (_, gameId, executablePath) => {
+    try {
+      const fs = require('fs');
+      const { shell } = require('electron');
+      
+      if (!executablePath) return false;
+
+      // 1. Steam Protocol
+      if (executablePath.startsWith('steam://')) {
+        const appIdMatch = executablePath.match(/steam:\/\/rungameid\/(\d+)/i);
+        if (appIdMatch && appIdMatch[1]) {
+          const appId = appIdMatch[1];
+          await shell.openExternal(`steam://uninstall/${appId}`);
+          deleteGame(gameId);
+          return true;
+        }
+      }
+
+      // 2. Native OS Fallback
+      if (fs.existsSync(executablePath)) {
+        // Open Add/Remove Programs on Windows
+        if (process.platform === 'win32') {
+          await shell.openExternal('ms-settings:appsfeatures');
+        }
+        
+        // Reveal the game folder to the user
+        shell.showItemInFolder(executablePath);
+        
+        // Remove from the local DB so it disappears from TierForge
+        deleteGame(gameId);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Failed to uninstall game', e);
+      return false;
+    }
   });
 
   // 6. Get extended details
@@ -218,11 +260,25 @@ app.whenReady().then(() => {
     return [];
   });
 
-  ipcMain.handle('get-ai-recommendations', async () => {
+  ipcMain.handle('get-ai-recommendations', async (_, vibe: string = '', deepCuts: boolean = false) => {
     const apiKey = getSetting('geminiKey');
     if (!apiKey) return { error: 'NO_API_KEY', recommendations: [] };
     const allGames = getAllGames();
-    return await getAIRecommendations(apiKey, allGames);
+    return await getAIRecommendations(apiKey, allGames, vibe, deepCuts);
+  });
+
+  ipcMain.handle('get-ai-compatibility', async (_, targetGame: string) => {
+    const apiKey = getSetting('geminiKey');
+    if (!apiKey) return { error: 'NO_API_KEY', score: 0, review: '' };
+    const allGames = getAllGames();
+    return await getAICompatibility(apiKey, allGames, targetGame);
+  });
+
+  ipcMain.handle('get-ai-backlog-cure', async () => {
+    const apiKey = getSetting('geminiKey');
+    if (!apiKey) return { error: 'NO_API_KEY', title: '', reason: '' };
+    const allGames = getAllGames();
+    return await getAIBacklogCure(apiKey, allGames);
   });
 
   ipcMain.handle('get-game-deals', async (_, title: string) => {
@@ -273,6 +329,28 @@ app.whenReady().then(() => {
 
   ipcMain.handle('backfill-metadata', async () => {
     return await backfillMissingMetadata();
+  });
+
+  ipcMain.handle('save-image', async (_, dataUrl: string, defaultPath: string) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return false;
+    
+    const { canceled, filePath } = await dialog.showSaveDialog(win, {
+      title: 'Save Image',
+      defaultPath: defaultPath,
+      filters: [{ name: 'Images', extensions: ['png'] }]
+    });
+
+    if (canceled || !filePath) return false;
+
+    try {
+      const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
+      require('fs').writeFileSync(filePath, base64Data, 'base64');
+      return true;
+    } catch (e) {
+      console.error('Failed to save image', e);
+      return false;
+    }
   });
 
   // Set app user model id for windows

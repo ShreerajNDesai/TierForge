@@ -43,6 +43,7 @@ const Statistics = () => {
   const playingCount = libraryGames.filter((g: any) => g.status === 'Playing').length;
   const backlogCount = libraryGames.filter((g: any) => (g.status || 'Backlog') === 'Backlog').length;
   const droppedCount = libraryGames.filter((g: any) => g.status === 'Abandoned' || g.status === 'Dropped').length;
+  const wishlistCount = libraryGames.filter((g: any) => g.status === 'Wishlist').length;
 
   const tierData = [
     { name: 'S', count: sTierCount, color: '#F43F5E' },
@@ -224,6 +225,7 @@ const Statistics = () => {
             <span className="flex items-center gap-1.5 text-emerald-400"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Completed ({completedGames})</span>
             <span className="flex items-center gap-1.5 text-cyan-400"><div className="w-2 h-2 rounded-full bg-cyan-500"></div>Playing ({playingCount})</span>
             <span className="flex items-center gap-1.5 text-purple-400"><div className="w-2 h-2 rounded-full bg-purple-500"></div>Backlog ({backlogCount})</span>
+            <span className="flex items-center gap-1.5 text-amber-400"><div className="w-2 h-2 rounded-full bg-amber-500"></div>Wishlist ({wishlistCount})</span>
             <span className="flex items-center gap-1.5 text-red-400"><div className="w-2 h-2 rounded-full bg-red-500"></div>Dropped ({droppedCount})</span>
           </div>
         </div>
@@ -245,6 +247,10 @@ const Statistics = () => {
               <div 
                 className="h-full bg-gradient-to-r from-red-500 to-red-400 transition-all duration-700"
                 style={{ width: `${(droppedCount / totalGames) * 100}%` }}
+              ></div>
+              <div 
+                className="h-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-700"
+                style={{ width: `${(wishlistCount / totalGames) * 100}%` }}
               ></div>
             </div>
           )}

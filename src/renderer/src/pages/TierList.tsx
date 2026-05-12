@@ -1,8 +1,32 @@
+import { useEffect } from 'react';
+import * as htmlToImage from 'html-to-image';
 import { Crown, Star, Diamond, LayoutGrid, ThumbsDown, Skull, Ban, Trash2, Menu, Filter, ArrowUpDown, Grid, List, Plus, RefreshCw } from 'lucide-react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useGlobal } from '../context/GlobalContext';
 
 const TierList = () => {
+  const exportTierList = async () => {
+    try {
+      // Small delay to ensure rendering is complete if we just switched tabs
+      await new Promise(r => setTimeout(r, 100));
+      const container = document.getElementById('tierlist-container');
+      if (!container) return;
+      const dataUrl = await htmlToImage.toPng(container, { 
+        quality: 1, 
+        pixelRatio: 2, 
+        backgroundColor: '#0B0E14'
+      });
+      await window.api.saveImage(dataUrl, 'MyTierList.png');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    const handleEvent = () => exportTierList();
+    window.addEventListener('trigger-export-tierlist', handleEvent);
+    return () => window.removeEventListener('trigger-export-tierlist', handleEvent);
+  }, []);
   const {
     data,
     isDraggingItem,
@@ -52,7 +76,7 @@ const TierList = () => {
       </div>
 
       {/* TIER ROWS */}
-      <div className="space-y-4 mb-12 px-1">
+      <div id="tierlist-container" className="space-y-4 mb-12 p-6 bg-[#0B0E14] rounded-2xl">
         {Object.values(data.tiers).map((tier: any) => {
           let TierIcon = Crown;
           if (tier.id === 'a') TierIcon = Star;

@@ -40,8 +40,8 @@ interface GlobalContextType {
   setBgMode: React.Dispatch<React.SetStateAction<'video' | 'image'>>;
   sortOrder: 'none' | 'asc' | 'desc';
   setSortOrder: React.Dispatch<React.SetStateAction<'none' | 'asc' | 'desc'>>;
-  filterStatus: 'All' | 'Playing' | 'Completed' | 'Backlog';
-  setFilterStatus: React.Dispatch<React.SetStateAction<'All' | 'Playing' | 'Completed' | 'Backlog'>>;
+  filterStatus: 'All' | 'Playing' | 'Completed' | 'Backlog' | 'Wishlist';
+  setFilterStatus: React.Dispatch<React.SetStateAction<'All' | 'Playing' | 'Completed' | 'Backlog' | 'Wishlist'>>;
   isStatusDropdownOpen: boolean;
   setIsStatusDropdownOpen: React.Dispatch<React.SetStateAction<boolean>>;
   galleryIndex: number;
@@ -143,7 +143,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [activeTab, setActiveTab] = useState('tierlist');
   const [bgMode, setBgMode] = useState<'video' | 'image'>((localStorage.getItem('bgMode') as 'video' | 'image') || 'video');
   const [sortOrder, setSortOrder] = useState<'none' | 'asc' | 'desc'>('none');
-  const [filterStatus, setFilterStatus] = useState<'All' | 'Playing' | 'Completed' | 'Backlog'>('All');
+  const [filterStatus, setFilterStatus] = useState<'All' | 'Playing' | 'Completed' | 'Backlog' | 'Wishlist'>('All');
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [timeToBeat, setTimeToBeat] = useState<any>(null);
@@ -351,6 +351,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     if (filterStatus === 'All') setFilterStatus('Playing');
     else if (filterStatus === 'Playing') setFilterStatus('Completed');
     else if (filterStatus === 'Completed') setFilterStatus('Backlog');
+    else if (filterStatus === 'Backlog') setFilterStatus('Wishlist');
     else setFilterStatus('All');
   };
 

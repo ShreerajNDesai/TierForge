@@ -9,6 +9,7 @@ declare global {
       addGame: (id: string, title: string, imageUrl: string) => Promise<boolean>;
       updateGameTier: (id: string, tier: string) => Promise<boolean>;
       deleteGame: (id: string) => Promise<boolean>;
+      uninstallGame: (id: string, executablePath: string) => Promise<boolean>;
       scanPC: () => Promise<boolean>;
       getExtendedDetails: (id: string) => Promise<any>;
       updateGameData: (id: string, notes: string, status: string) => Promise<boolean>;
@@ -23,7 +24,9 @@ declare global {
       browseImage: () => Promise<string | null>;
       analyzeImage: (imagePath: string, apiKey: string) => Promise<string[]>;
       bulkImportText: (text: string) => Promise<string[]>;
-      getAIRecommendations: () => Promise<{ error: string | null; recommendations: any[] }>;
+      getAIRecommendations: (vibe?: string, deepCuts?: boolean) => Promise<{ error: string | null; recommendations: any[] }>;
+      getAICompatibility: (targetGame: string) => Promise<{ error: string | null; score: number; review: string }>;
+      getAIBacklogCure: () => Promise<{ error: string | null; title: string; reason: string; gameInfo: any }>;
       getScrapedRankings: (category: string) => Promise<any[]>;
       getCachedRankings: (categoryId: string) => Promise<any[]>;
       clearRankingsCache: (categoryId: string) => Promise<boolean>;
@@ -33,6 +36,7 @@ declare global {
       getSteamTags: () => Promise<any[]>;
       getGamerProfile: (statsJson: string) => Promise<string>;
       backfillMetadata: () => Promise<boolean>;
+      saveImage: (dataUrl: string, defaultPath: string) => Promise<boolean>;
       
       // Window Controls
       windowMinimize: () => Promise<void>;

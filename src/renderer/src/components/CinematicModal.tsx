@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gamepad2, Clock, ChevronDown, Star, Monitor, Tag, ExternalLink, PlayCircle, Volume2, VolumeX, X, Sparkles } from 'lucide-react';
+import { Gamepad2, Clock, ChevronDown, Star, Monitor, Tag, ExternalLink, PlayCircle, Volume2, VolumeX, X, Sparkles, Trash2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 
 const CinematicModal = () => {
@@ -34,6 +34,9 @@ const CinematicModal = () => {
   const [aiTimeline, setAiTimeline] = useState<any[] | null>(null);
   const [isTimelineLoading, setIsTimelineLoading] = useState(false);
   const [steamDetails, setSteamDetails] = useState<any>(null);
+  const [isUninstalling, setIsUninstalling] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{ title: string; message: string; confirmText: string; isDanger?: boolean; onConfirm: () => void } | null>(null);
+  const [alertDialog, setAlertDialog] = useState<{ title: string; message: string } | null>(null);
 
   const gameplayVideoRaw = gameDetails?.videos?.find((v: any) => v.name.toLowerCase().includes('gameplay'));
   const gameplayVideo = gameplayVideoRaw?.id !== gameDetails?.video_id ? gameplayVideoRaw : null;
@@ -134,7 +137,7 @@ const CinematicModal = () => {
                 
                 {isStatusDropdownOpen && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-[#0B0E14]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] overflow-hidden z-[300] flex flex-col py-1">
-                    {['Backlog', 'Playing', 'Completed', 'Abandoned'].map(status => (
+                    {['Backlog', 'Playing', 'Completed', 'Abandoned', 'Wishlist'].map(status => (
                       <div 
                         key={status}
                         onClick={() => {
@@ -151,6 +154,68 @@ const CinematicModal = () => {
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="w-full space-y-2 mt-6">
+              <label className="text-xs font-bold text-red-500/80 uppercase tracking-wider pl-1">Danger Zone</label>
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={() => {
+                    setConfirmDialog({
+                      title: 'Remove from Library',
+                      message: `Are you sure you want to remove ${selectedGame.title} from your TierForge library? This action cannot be undone.`,
+                      confirmText: 'Remove Game',
+                      isDanger: true,
+                      onConfirm: async () => {
+                        try {
+                          await window.api.deleteGame(selectedGame.id.toString());
+                          setSelectedGame(null);
+                        } catch (err) {
+                          setAlertDialog({ title: 'Error', message: 'Failed to remove the game. Please try again later.' });
+                        }
+                      }
+                    });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl px-4 py-2.5 font-semibold transition"
+                >
+                  <Trash2 size={16} /> Remove from Library
+                </button>
+                {selectedGame.executable_path && selectedGame.executable_path.trim() !== '' && (
+                  <button 
+                    onClick={() => {
+                      setConfirmDialog({
+                        title: 'Uninstall PC Game',
+                        message: `Are you sure you want to trigger the uninstaller for ${selectedGame.title}?`,
+                        confirmText: 'Open Uninstaller',
+                        isDanger: true,
+                        onConfirm: async () => {
+                          setIsUninstalling(true);
+                          try {
+                            const success = await window.api.uninstallGame(selectedGame.id.toString(), selectedGame.executable_path);
+                            setTimeout(() => {
+                              setIsUninstalling(false);
+                              if (success) {
+                                setSelectedGame(null);
+                              } else {
+                                setAlertDialog({ title: 'Uninstall Failed', message: 'Failed to launch the uninstaller. The path may be invalid or protected.' });
+                              }
+                            }, 2000);
+                          } catch (err) {
+                            setIsUninstalling(false);
+                            setAlertDialog({ title: 'Uninstall Failed', message: 'An unexpected error occurred while trying to launch the uninstaller.' });
+                          }
+                        }
+                      });
+                    }}
+                    disabled={isUninstalling}
+                    className="w-full flex items-center justify-center gap-2 bg-red-900/40 hover:bg-red-600/40 text-red-300 border border-red-600/50 rounded-xl px-4 py-2.5 font-black uppercase tracking-wider text-xs transition shadow-[0_0_15px_rgba(220,38,38,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUninstalling ? <RefreshCw size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                    {isUninstalling ? 'Opening Uninstaller...' : 'Uninstall PC Game'}
+                  </button>
                 )}
               </div>
             </div>
@@ -600,6 +665,61 @@ const CinematicModal = () => {
           <X size={24} />
         </button>
       </div>
+
+      {/* Custom Confirmation Modal */}
+      {confirmDialog && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#0B0E14] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] max-w-md w-full p-6 flex flex-col gap-4 mx-4">
+            <div className="flex items-center gap-3">
+              {confirmDialog.isDanger ? <AlertTriangle className="text-red-500" size={28} /> : <AlertTriangle className="text-indigo-400" size={28} />}
+              <h2 className="text-xl font-bold text-white">{confirmDialog.title}</h2>
+            </div>
+            <p className="text-slate-300 text-sm leading-relaxed">{confirmDialog.message}</p>
+            <div className="flex justify-end gap-3 mt-4">
+              <button 
+                onClick={() => setConfirmDialog(null)}
+                className="px-5 py-2.5 rounded-xl font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  confirmDialog.onConfirm();
+                  setConfirmDialog(null);
+                }}
+                className={`px-5 py-2.5 rounded-xl font-black tracking-wide shadow-lg transition ${
+                  confirmDialog.isDanger 
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50' 
+                    : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                }`}
+              >
+                {confirmDialog.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Alert Modal */}
+      {alertDialog && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#0B0E14] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] max-w-md w-full p-6 flex flex-col gap-4 mx-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="text-amber-500" size={28} />
+              <h2 className="text-xl font-bold text-white">{alertDialog.title}</h2>
+            </div>
+            <p className="text-slate-300 text-sm leading-relaxed">{alertDialog.message}</p>
+            <div className="flex justify-end mt-4">
+              <button 
+                onClick={() => setAlertDialog(null)}
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black tracking-wide shadow-lg transition"
+              >
+                Okay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
