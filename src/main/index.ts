@@ -27,6 +27,7 @@ import {
   backfillMissingMetadata
 } from './api'
 import { GDRIVE_CLIENT_ID, GDRIVE_CLIENT_SECRET, GDRIVE_REDIRECT_URI, GDRIVE_SCOPE } from './driveConfig'
+import { initDiscord, setBrowsingStatus, setPlayingStatus, disconnectDiscord, getDiscordStatus } from './discord'
 
 function createWindow(): void {
   // Create the browser window.
@@ -67,6 +68,14 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   initDB();
+
+  // Initialize Discord RPC if enabled
+  const isDiscordEnabled = getSetting('discord_rpc') !== 'false'; // Defaults to true
+  if (isDiscordEnabled) {
+    initDiscord();
+    const totalGames = getAllGames().length;
+    setBrowsingStatus(totalGames);
+  }
 
   // --- IPC LISTENERS (The Backend receiving messages) ---
   
@@ -189,7 +198,7 @@ app.whenReady().then(() => {
   });
 
   // Game launcher with automatic playtime tracking
-  ipcMain.handle('launch-game', async (_, exePath: string, gameId: string) => {
+  ipcMain.handle('launch-game', async (_, exePath: string, gameId: string, gameTitle: string) => {
     const win = BrowserWindow.getFocusedWindow()
     const exeName = basename(exePath)
 
@@ -199,6 +208,12 @@ app.whenReady().then(() => {
     })
 
     const startTime = Date.now()
+
+    // Update Discord Status
+    const isDiscordEnabled = getSetting('discord_rpc') !== 'false';
+    if (isDiscordEnabled) {
+      setPlayingStatus(gameTitle, startTime);
+    }
 
     // Notify frontend: game started
     if (win) win.webContents.send('game-started', gameId)
@@ -215,6 +230,12 @@ app.whenReady().then(() => {
           addPlaytime(gameId, elapsedMinutes)
 
           const totalPlaytime = getPlaytime(gameId)
+
+          // Revert Discord Status
+          if (isDiscordEnabled) {
+            const totalGames = getAllGames().length;
+            setBrowsingStatus(totalGames);
+          }
 
           // Notify frontend: game stopped
           if (win) win.webContents.send('game-stopped', gameId, totalPlaytime)
@@ -236,6 +257,21 @@ app.whenReady().then(() => {
   ipcMain.handle('save-setting', (_, key, value) => {
     saveSetting(key, value);
     return true;
+  });
+
+  ipcMain.handle('update-discord-rpc', (_, isEnabled: boolean) => {
+    if (isEnabled) {
+      initDiscord();
+      const totalGames = getAllGames().length;
+      setBrowsingStatus(totalGames);
+    } else {
+      disconnectDiscord();
+    }
+    return true;
+  });
+
+  ipcMain.handle('check-discord-status', () => {
+    return getDiscordStatus();
   });
 
   ipcMain.handle('browse-image', async () => {
@@ -579,7 +615,10 @@ app.whenReady().then(() => {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/octet-stream' },
           body: fileBuffer
         });
-        if (updateRes.ok) return { success: true, message: 'Backup updated on Google Drive.' };
+        if (updateRes.ok) {
+          saveSetting('last_cloud_backup', new Date().toISOString());
+          return { success: true, message: 'Backup updated on Google Drive.' };
+        }
         return { success: false, message: 'Failed to update backup on Drive.' };
       } else {
         // Create new file
@@ -594,7 +633,10 @@ app.whenReady().then(() => {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
           body: bodyBuffer
         });
-        if (createRes.ok) return { success: true, message: 'Backup created on Google Drive.' };
+        if (createRes.ok) {
+          saveSetting('last_cloud_backup', new Date().toISOString());
+          return { success: true, message: 'Backup created on Google Drive.' };
+        }
         return { success: false, message: 'Failed to create backup on Drive.' };
       }
     } catch (e) {

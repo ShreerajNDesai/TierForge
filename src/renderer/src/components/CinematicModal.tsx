@@ -105,7 +105,7 @@ const CinematicModal = () => {
                   <Gamepad2 size={22} className="animate-bounce" /> Game Running...
                 </div>
               ) : (
-                <button onClick={() => window.api.launchGame(selectedGame.executable_path, selectedGame.id.toString())} className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex justify-center items-center gap-3 tracking-widest uppercase border border-indigo-400/50">
+                <button onClick={() => window.api.launchGame(selectedGame.executable_path, selectedGame.id.toString(), selectedGame.title)} className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex justify-center items-center gap-3 tracking-widest uppercase border border-indigo-400/50">
                   <Gamepad2 size={22} /> Play Game
                 </button>
               )

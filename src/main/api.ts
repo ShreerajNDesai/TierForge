@@ -324,20 +324,33 @@ export async function getDiscoverGames(existingIds: string[], filterType: string
         if (cached) return JSON.parse(cached.games_json).filter((g: any) => !existingIds.includes(g.id.toString()));
       }
       
-      const titles = await fetchSteamTrending(offset);
-      if (titles && titles.length > 0) {
-        const uniqueTitles = [...new Set(titles)].slice(0, 30);
-        const enriched: any[] = [];
-        for (const title of uniqueTitles) {
-          const results = await searchGames(title);
-          if (results && results.length > 0) enriched.push(results[0]);
-          await new Promise(r => setTimeout(r, 250));
+      if (offset === 0 || !discoverSteamTitlesCache['trending']) {
+        let allTitles: string[] = [];
+        for (let i = 0; i < 2; i++) {
+          const titles = await fetchSteamTrending(i * 100);
+          allTitles = allTitles.concat(titles);
         }
-        const finalArray = enriched.filter(g => !existingIds.includes(g.id.toString()));
-        if (cacheKey) updateRankingsCache(cacheKey, JSON.stringify(finalArray));
-        return finalArray;
+        discoverSteamTitlesCache['trending'] = [...new Set(allTitles)];
       }
-      return [];
+
+      const trendingTitles = discoverSteamTitlesCache['trending'] || [];
+      const startIndex = Math.floor(offset * 1.5);
+      const titlesChunk = trendingTitles.slice(startIndex, startIndex + 50);
+
+      if (!titlesChunk || titlesChunk.length === 0) return [];
+
+      const enriched: any[] = [];
+      for (const title of titlesChunk) {
+        if (enriched.length >= 30) break;
+        const results = await searchGames(title);
+        if (results && results.length > 0 && !existingIds.includes(results[0].id.toString())) {
+          enriched.push(results[0]);
+        }
+        await new Promise(r => setTimeout(r, 250));
+      }
+
+      if (cacheKey && enriched.length > 0) updateRankingsCache(cacheKey, JSON.stringify(enriched));
+      return enriched;
     }
     
     if (filterType === 'highly_rated' && offset === 0) clearRankingsCache('discover_highly_rated');

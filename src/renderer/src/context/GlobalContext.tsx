@@ -148,7 +148,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [timeToBeat, setTimeToBeat] = useState<any>(null);
   const [discoverGames, setDiscoverGames] = useState<any[]>([]);
-  const [discoverFilter, setDiscoverFilter] = useState('popular');
+  const [discoverFilter, setDiscoverFilter] = useState('trending');
   const [isDiscoverLoading, setIsDiscoverLoading] = useState(false);
   const [discoverOffset, setDiscoverOffset] = useState(0);
   const [hasMoreDiscover, setHasMoreDiscover] = useState(true);
