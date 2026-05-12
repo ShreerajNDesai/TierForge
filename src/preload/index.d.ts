@@ -37,6 +37,15 @@ declare global {
       getGamerProfile: (statsJson: string) => Promise<string>;
       backfillMetadata: () => Promise<boolean>;
       saveImage: (dataUrl: string, defaultPath: string) => Promise<boolean>;
+      browseBackupFolder: () => Promise<string | null>;
+      manualBackup: () => Promise<{ success: boolean; message: string }>;
+      restoreBackup: () => Promise<{ success: boolean; message: string }>;
+      getBackupInfo: () => Promise<{ folder: string; lastBackup: string | null; count: number } | null>;
+      googleDriveAuth: () => Promise<{ success: boolean; message: string }>;
+      backupToDrive: () => Promise<{ success: boolean; message: string }>;
+      restoreFromDrive: () => Promise<{ success: boolean; message: string }>;
+      checkDriveConnection: () => Promise<{ connected: boolean; email?: string }>;
+      disconnectDrive: () => Promise<boolean>;
       
       // Window Controls
       windowMinimize: () => Promise<void>;

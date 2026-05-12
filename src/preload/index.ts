@@ -50,7 +50,16 @@ const api = {
   getSteamTags: () => ipcRenderer.invoke('get-steam-tags'),
   getGamerProfile: (statsJson: string) => ipcRenderer.invoke('get-gamer-profile', statsJson),
   backfillMetadata: () => ipcRenderer.invoke('backfill-metadata'),
-  saveImage: (dataUrl: string, defaultPath: string) => ipcRenderer.invoke('save-image', dataUrl, defaultPath)
+  saveImage: (dataUrl: string, defaultPath: string) => ipcRenderer.invoke('save-image', dataUrl, defaultPath),
+  browseBackupFolder: () => ipcRenderer.invoke('browse-backup-folder'),
+  manualBackup: () => ipcRenderer.invoke('manual-backup'),
+  restoreBackup: () => ipcRenderer.invoke('restore-backup'),
+  getBackupInfo: () => ipcRenderer.invoke('get-backup-info'),
+  googleDriveAuth: () => ipcRenderer.invoke('google-drive-auth'),
+  backupToDrive: () => ipcRenderer.invoke('backup-to-drive'),
+  restoreFromDrive: () => ipcRenderer.invoke('restore-from-drive'),
+  checkDriveConnection: () => ipcRenderer.invoke('check-drive-connection'),
+  disconnectDrive: () => ipcRenderer.invoke('disconnect-drive')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
