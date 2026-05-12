@@ -18,7 +18,7 @@ const TierList = () => {
       });
       await window.api.saveImage(dataUrl, 'MyTierList.png');
     } catch (e) {
-      console.error(e);
+      console.error(e); 
     }
   };
 

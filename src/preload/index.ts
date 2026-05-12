@@ -15,7 +15,7 @@ const api = {
   updateGameData: (id: string, notes: string, status: string) => ipcRenderer.invoke('update-game-data', id, notes, status),
   getTimeToBeat: (name: string) => ipcRenderer.invoke('get-time-to-beat', name),
   getDiscoverGames: (filterType: string, offset: number) => ipcRenderer.invoke('get-discover-games', filterType, offset),
-  launchGame: (path: string, gameId: string) => ipcRenderer.invoke('launch-game', path, gameId),
+  launchGame: (path: string, gameId: string, gameTitle: string) => ipcRenderer.invoke('launch-game', path, gameId, gameTitle),
   getPlaytime: (gameId: string) => ipcRenderer.invoke('get-playtime', gameId),
   onGameStarted: (callback: (gameId: string) => void) => {
     ipcRenderer.on('game-started', (_, gameId) => callback(gameId));
@@ -27,6 +27,8 @@ const api = {
   },
   getSetting: (key: string) => ipcRenderer.invoke('get-setting', key),
   saveSetting: (key: string, value: string) => ipcRenderer.invoke('save-setting', key, value),
+  updateDiscordRpc: (isEnabled: boolean) => ipcRenderer.invoke('update-discord-rpc', isEnabled),
+  checkDiscordStatus: () => ipcRenderer.invoke('check-discord-status'),
   browseImage: () => ipcRenderer.invoke('browse-image'),
   analyzeImage: (imagePath: string, apiKey: string) => ipcRenderer.invoke('analyze-image', imagePath, apiKey),
   bulkImportText: (text: string) => ipcRenderer.invoke('bulk-import-text', text),

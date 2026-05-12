@@ -23,12 +23,15 @@ const Settings = () => {
   const [backupStatus, setBackupStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [restoreStatus, setRestoreStatus] = useState<'idle' | 'restoring' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
+  const [discordRpcEnabled, setDiscordRpcEnabled] = useState(true);
 
   // Google Drive
   const [driveConnected, setDriveConnected] = useState(false);
   const [driveEmail, setDriveEmail] = useState('');
   const [driveStatus, setDriveStatus] = useState<'idle' | 'connecting' | 'backing_up' | 'restoring' | 'success' | 'error'>('idle');
   const [driveMessage, setDriveMessage] = useState('');
+  const [lastCloudBackup, setLastCloudBackup] = useState<string | null>(null);
+  const [discordStatus, setDiscordStatus] = useState<{ connected: boolean; initialized: boolean }>({ connected: false, initialized: false });
 
   useEffect(() => {
     window.api.getSetting('backup_folder').then((val) => {
@@ -39,6 +42,19 @@ const Settings = () => {
       setDriveConnected(res.connected);
       if (res.email) setDriveEmail(res.email);
     });
+    window.api.getSetting('last_cloud_backup').then((val) => {
+      if (val) setLastCloudBackup(val);
+    });
+    window.api.getSetting('discord_rpc').then((val) => {
+      setDiscordRpcEnabled(val !== 'false');
+    });
+
+    const interval = setInterval(() => {
+      window.api.checkDiscordStatus().then(setDiscordStatus);
+    }, 5000);
+    window.api.checkDiscordStatus().then(setDiscordStatus);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleBrowseFolder = async () => {
@@ -154,6 +170,67 @@ const Settings = () => {
                   Muted
                 </button>
               </div>
+            </div>
+
+            <div className="flex flex-col gap-6 pt-6 border-t border-slate-700/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${discordRpcEnabled ? 'bg-[#5865F2]/20 text-[#5865F2]' : 'bg-slate-800 text-slate-500'}`}>
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                      <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2758-3.68-.2758-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1971.3728.2914a.077.077 0 01-.0066.1277 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-bold text-white uppercase tracking-wider">Discord RPC</label>
+                      {discordRpcEnabled && (
+                        <span className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${
+                          discordStatus.connected 
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                            : 'bg-red-500/10 border-red-500/30 text-red-400'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${discordStatus.connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></span>
+                          {discordStatus.connected ? 'Active' : 'Offline'}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">Show library stats and current game on your profile.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      const newValue = !discordRpcEnabled;
+                      setDiscordRpcEnabled(newValue);
+                      await window.api.saveSetting('discord_rpc', String(newValue));
+                      await window.api.updateDiscordRpc(newValue);
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${discordRpcEnabled ? 'bg-[#5865F2]' : 'bg-slate-700'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${discordRpcEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {discordRpcEnabled && !discordStatus.connected && (
+                <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle size={16} className="text-amber-400 shrink-0" />
+                    <p className="text-[11px] text-slate-400 leading-tight">
+                      Discord connection failed. Make sure the Discord app is running on your desktop.
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await window.api.updateDiscordRpc(true);
+                    }}
+                    className="shrink-0 flex items-center gap-1.5 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all border border-slate-600/50 hover:scale-105 active:scale-95"
+                  >
+                    <RefreshCw size={12} className={discordStatus.initialized && !discordStatus.connected ? 'animate-spin' : ''} />
+                    Retry Connection
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -292,6 +369,11 @@ const Settings = () => {
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                       </div>
                       <p className="text-xs text-slate-400 mt-0.5">{driveEmail}</p>
+                      {lastCloudBackup && (
+                        <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                          <Clock size={10} /> Last backup: {formatDate(lastCloudBackup)}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <button
@@ -313,6 +395,7 @@ const Settings = () => {
                       const result = await window.api.backupToDrive();
                       setDriveStatus(result.success ? 'success' : 'error');
                       setDriveMessage(result.message);
+                      if (result.success) setLastCloudBackup(new Date().toISOString());
                       setTimeout(() => setDriveStatus('idle'), 3000);
                     }}
                     disabled={driveStatus === 'backing_up'}

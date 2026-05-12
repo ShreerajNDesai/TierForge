@@ -107,7 +107,7 @@ const Library = () => {
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.api.launchGame(suggestedGame.executable_path, suggestedGame.id.toString());
+                  window.api.launchGame(suggestedGame.executable_path, suggestedGame.id.toString(), suggestedGame.title);
                 }}
                 className="shrink-0 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:scale-105 transition-all flex items-center gap-2"
               >

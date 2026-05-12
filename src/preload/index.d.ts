@@ -15,12 +15,14 @@ declare global {
       updateGameData: (id: string, notes: string, status: string) => Promise<boolean>;
       getTimeToBeat: (name: string) => Promise<any>;
       getDiscoverGames: (filterType: string, offset: number) => Promise<any[]>;
-      launchGame: (path: string, gameId: string) => Promise<boolean>;
+      launchGame: (path: string, gameId: string, gameTitle: string) => Promise<boolean>;
       getPlaytime: (gameId: string) => Promise<number>;
       onGameStarted: (callback: (gameId: string) => void) => () => void;
       onGameStopped: (callback: (gameId: string, totalPlaytime: number) => void) => () => void;
       getSetting: (key: string) => Promise<string | null>;
       saveSetting: (key: string, value: string) => Promise<boolean>;
+      updateDiscordRpc: (isEnabled: boolean) => Promise<boolean>;
+      checkDiscordStatus: () => Promise<{ connected: boolean; initialized: boolean }>;
       browseImage: () => Promise<string | null>;
       analyzeImage: (imagePath: string, apiKey: string) => Promise<string[]>;
       bulkImportText: (text: string) => Promise<string[]>;
