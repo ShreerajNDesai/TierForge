@@ -31,6 +31,8 @@ declare global {
       syncSteam: (steamId: string, apiKey: string) => Promise<number>;
       getSteamDetails: (steamId: string) => Promise<any>;
       getSteamTags: () => Promise<any[]>;
+      getGamerProfile: (statsJson: string) => Promise<string>;
+      backfillMetadata: () => Promise<boolean>;
       
       // Window Controls
       windowMinimize: () => Promise<void>;

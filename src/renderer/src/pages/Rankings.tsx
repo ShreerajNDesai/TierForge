@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Trophy, RefreshCw, Crown, Diamond, Gamepad2, Star, Search, X, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Trophy, RefreshCw, Crown, Star, Search, ChevronDown } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 
 const Rankings = () => {
@@ -16,6 +16,7 @@ const Rankings = () => {
   const [showMegaMenu, setShowMegaMenu] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dynamicGenres, setDynamicGenres] = useState<{id: string, label: string}[]>([]);
+  const [tagSearch, setTagSearch] = useState('');
 
   useEffect(() => {
     window.api.getSteamTags().then(setDynamicGenres);
@@ -40,28 +41,14 @@ const Rankings = () => {
   };
 
   const mainstreamFilters = [
-    { key: 'overall', label: '👑 Overall', icon: Crown },
-    { key: 'action', label: '⚔️ Action', icon: Gamepad2 },
-    { key: 'adventure', label: '🧭 Adventure', icon: Diamond },
-    { key: 'horror', label: '👻 Horror', icon: Star },
-    { key: 'sci_fi', label: '🚀 Sci-Fi', icon: Gamepad2 },
-    { key: 'family', label: '👨‍👩‍👧‍👦 Family', icon: Star }
-  ];
-
-  const hardcoreGenres = [
-    'Action-Adventure', 'Action RPG', 'Artillery', 'Auto Battler', 'Battle Royale', 
-    'Beat em up', 'Board Game', 'Card Game', 'Casual', 'City Builder', 
-    'Construction and Management Simulation', 'CRPG', 'Dungeon Crawl', 'Educational', 
-    'Fighting', 'FPS', 'Gacha', 'Grand Strategy', 'Graphic Adventure', 'Hack and Slash', 
-    'Hero Shooter', 'Hidden Object', 'Idle', 'Interactive Movie', 'JRPG', 
-    'Life Simulation', 'Light Gun Shooter', 'MMORPG', 'MOBA', 'Monster-taming', 
-    'Music', 'Narrative', 'Open World', 'Party', 'Physics', 'Pinball', 
-    'Platformer', 'Point-and-Click', 'Puzzle', 'Puzzle-Platformer', 'Racing', 
-    'RTS', 'RTT', 'Rhythm', 'Roguelike', 'Roguelite', 'RPG', 'Sandbox', 
-    'Shmup', 'Shooter', 'Simulation', 'Social Deduction', 'Soulslike', 'Sports', 
-    'Stealth', 'Strategy', 'Survival', 'Survival Horror', 'Tactical RPG', 
-    'Text Adventure', 'TPS', 'Tower Defense', 'Traditional Puzzle', 'Trivia', 
-    'TBS', 'TBT', 'Typing', 'Vehicle Simulation', 'Visual Novel', 'Wargame'
+    { key: 'overall', label: '👑 Overall' },
+    { key: 'action', label: '⚔️ Action' },
+    { key: 'adventure', label: '🧭 Adventure' },
+    { key: 'rpg', label: '🗡️ RPGs' },
+    { key: 'shooter', label: '🔫 Shooters' },
+    { key: 'open_world', label: '🌍 Open World' },
+    { key: 'horror', label: '👻 Horror' },
+    { key: 'indie', label: '💎 Indie' }
   ];
 
   const currentRankingList = globalRankings ? globalRankings[rankingsGenre] : [];
@@ -69,7 +56,10 @@ const Rankings = () => {
   const handleGenreSelect = (key: string) => {
     setRankingsGenre(key);
     setShowMegaMenu(false);
+    setTagSearch('');
   };
+
+  const filteredTags = dynamicGenres.filter(t => t.label.toLowerCase().includes(tagSearch.toLowerCase()));
 
   if (rankingsLoading && (!globalRankings || !globalRankings[rankingsGenre])) {
     return (
@@ -83,45 +73,7 @@ const Rankings = () => {
 
   return (
     <div className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
-      {/* Mega Menu Overlay */}
-      {showMegaMenu && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-10">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-xl transition-all"
-            onClick={() => setShowMegaMenu(false)}
-          />
-          <div className="relative w-full max-w-5xl max-h-[80vh] bg-slate-900/80 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
-              <h2 className="text-2xl font-black text-white flex items-center gap-3">
-                <Search className="text-yellow-400" /> Browse Hardcore Genres
-              </h2>
-              <button 
-                onClick={() => setShowMegaMenu(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition"
-              >
-                <X size={24} className="text-slate-400" />
-              </button>
-            </div>
-            <div className="p-8 overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {dynamicGenres.map(genre => (
-                  <button
-                    key={genre.id}
-                    onClick={() => handleGenreSelect(genre.id)}
-                    className={`px-4 py-3 rounded-xl text-left text-sm font-bold transition-all border ${
-                      rankingsGenre === genre.id
-                        ? 'bg-yellow-600 border-yellow-400 text-white'
-                        : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    {genre.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Header */}
       <div className="mb-8 flex items-end">
@@ -142,27 +94,67 @@ const Rankings = () => {
       </div>
 
       {/* Genre Filter Pills */}
-      <div className="flex gap-3 mb-10 overflow-x-auto pb-4 no-scrollbar items-center">
+      <div className="flex gap-3 overflow-x-auto pb-4 mb-2 flex-nowrap no-scrollbar items-center">
         {mainstreamFilters.map(genre => (
           <button
             key={genre.key}
             onClick={() => setRankingsGenre(genre.key)}
-            className={`px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all ${
+            className={`px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap shrink-0 transition-all ${
               rankingsGenre === genre.key
                 ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]'
-                : 'bg-[#121620] border border-white/5 text-slate-300 hover:bg-white/10'
+                : 'bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300'
             }`}
           >
             {genre.label}
           </button>
         ))}
         <button
-          onClick={() => setShowMegaMenu(true)}
-          className="px-5 py-2.5 rounded-full font-bold text-sm bg-indigo-900/40 border border-indigo-700/50 text-indigo-200 hover:bg-indigo-900/60 transition-all whitespace-nowrap flex items-center gap-2"
+          onClick={() => setShowMegaMenu(!showMegaMenu)}
+          className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 shrink-0 ${
+            showMegaMenu 
+              ? 'bg-indigo-500 text-white border-indigo-400' 
+              : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30'
+          }`}
         >
-          <Search size={16} /> Browse All Genres <ChevronDown size={16} />
+          <Search size={16} /> Browse All Genres <ChevronDown size={16} className={`transition-transform duration-300 ${showMegaMenu ? 'rotate-180' : ''}`} />
         </button>
       </div>
+
+      {/* Mega Menu Dropdown */}
+      {showMegaMenu && (
+        <div className="w-full bg-[#121620]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-8 mb-8 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="sticky top-0 mb-6 bg-[#121620] pb-2 z-10">
+            <div className="relative w-full max-w-lg">
+              <Search className="absolute left-3 top-3 text-slate-500" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search hundreds of Steam tags and IGDB genres..." 
+                value={tagSearch} 
+                onChange={(e) => setTagSearch(e.target.value)} 
+                className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-indigo-500 transition" 
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+            {filteredTags.map(genre => {
+              const isSteam = genre.id.startsWith('steamtag_');
+              return (
+                <button
+                  key={genre.id}
+                  onClick={() => handleGenreSelect(genre.id)}
+                  className={`px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all border ${
+                    rankingsGenre === genre.id
+                      ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
+                      : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <span className={isSteam ? 'text-sky-300' : ''}>{genre.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {currentRankingList && currentRankingList.length >= 3 && (
         <>

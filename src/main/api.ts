@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { addGame, getSetting, getCachedRanking, updateRankingsCache, clearRankingsCache, syncSteamGame } from './database';
+import { addGame, getSetting, getCachedRanking, updateRankingsCache, clearRankingsCache, syncSteamGame, getAllGames, updateGameMetadata } from './database';
 import { BrowserWindow } from 'electron';
 
 const DEFAULT_CLIENT_ID = '3mejs4touc121msgxhw5mxy31medg3';
@@ -32,7 +32,7 @@ export async function searchGames(query: string) {
     const response = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: { 'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID, 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
-      body: 'search "' + cleanQuery + '"; fields name, cover.image_id, rating_count, total_rating_count, first_release_date; where game_type = (0,8,9); limit 40;'
+      body: 'search "' + cleanQuery + '"; fields name, cover.image_id, rating_count, total_rating_count, first_release_date, genres.name, involved_companies.company.name; where game_type = (0,8,9); limit 40;'
     });
     const data = await response.json();
     if (!Array.isArray(data)) return [];
@@ -61,7 +61,10 @@ export async function searchGames(query: string) {
     return sortedData.map((game: any) => {
       let imageUrl = 'https://placehold.co/150x200/2d3748/fff?text=No+Cover';
       if (game.cover && game.cover.image_id) imageUrl = 'https://images.igdb.com/igdb/image/upload/t_1080p/' + game.cover.image_id + '.jpg';
-      return { id: game.id.toString(), title: game.name, image_url: imageUrl };
+      const genres = game.genres ? game.genres.map((g: any) => g.name).join(', ') : '';
+      const developers = game.involved_companies ? game.involved_companies.map((c: any) => c.company.name).join(', ') : '';
+      const releaseYear = game.first_release_date ? new Date(game.first_release_date * 1000).getFullYear().toString() : '';
+      return { id: game.id.toString(), title: game.name, image_url: imageUrl, genres, developers, release_year: releaseYear };
     });
   } catch (error) { return []; }
 }
@@ -196,7 +199,7 @@ export async function fetchSteamTags() {
   }
 }
 
-export async function getDisplayTags() {
+export async function getDisplaySteamTags() {
   if (!cachedDisplayTags) await fetchSteamTags();
   return cachedDisplayTags || [];
 }
@@ -217,22 +220,6 @@ const IGDB_GENRE_MAP: Record<string, string> = {
 };
 
 // HELPER SCRAPER FUNCTIONS
-async function scrapeBrowser(url: string, selector: string): Promise<string[]> {
-  return new Promise((resolve) => {
-    const win = new BrowserWindow({ show: false, width: 1280, height: 1000, webPreferences: { offscreen: true, nodeIntegration: false, contextIsolation: true } });
-    win.loadURL(url, { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36' });
-    win.webContents.on('did-finish-load', async () => {
-      await new Promise(r => setTimeout(r, 2000));
-      try {
-        const titles = await win.webContents.executeJavaScript('(function() { return Array.from(document.querySelectorAll("' + selector + '")).map(el => el.innerText.trim().replace(/^\\d+\\.\\s+/, "")).filter(text => text.length > 0 && !text.includes("Top 200") && !text.includes("Recently viewed")); })()');
-        win.destroy();
-        resolve(titles || []);
-      } catch (error) { win.destroy(); resolve([]); }
-    });
-    win.webContents.on('did-fail-load', () => { win.destroy(); resolve([]); });
-  });
-}
-
 async function scrapeSteamDiscover(url: string): Promise<string[]> {
   return new Promise((resolve) => {
     const win = new BrowserWindow({ show: false, width: 1280, height: 1000, webPreferences: { offscreen: true, nodeIntegration: false, contextIsolation: true } });
@@ -251,7 +238,7 @@ async function scrapeSteamDiscover(url: string): Promise<string[]> {
 
 async function fetchSteamTrending(offset: number): Promise<string[]> {
   try {
-    const res = await fetch(`https://store.steampowered.com/search/results/?query&start=${offset}&count=50&filter=popularnew&category1=998&infinite=1`);
+    const res = await fetch(`https://store.steampowered.com/search/results/?query&start=${offset}&count=100&filter=popularnew&category1=998&infinite=1`);
     const data = await res.json();
     if (!data || !data.results_html) return [];
     const html = data.results_html;
@@ -267,11 +254,69 @@ async function fetchSteamTrending(offset: number): Promise<string[]> {
   }
 }
 
+const discoverSteamTitlesCache: Record<string, string[]> = {};
+
 // MAIN EXPORTED FUNCTIONS
 export async function getDiscoverGames(existingIds: string[], filterType: string = 'trending', offset: number = 0) {
   try {
     const token = await getAccessToken();
     if (!token) return [];
+
+    if (filterType.startsWith('steamtag_')) {
+      const cacheKey = offset === 0 ? 'discover_' + filterType : null;
+      if (cacheKey) {
+        const cached = getCachedRanking(cacheKey);
+        if (cached) return JSON.parse(cached.games_json).filter((g: any) => !existingIds.includes(g.id.toString()));
+      }
+
+      if (offset === 0 || !discoverSteamTitlesCache[filterType]) {
+        const rawTag = filterType.replace('steamtag_', '');
+        const tags = await fetchSteamTags();
+        const tagId = tags[rawTag] || '';
+        
+        let titles: string[] = [];
+        for (let i = 0; i < 2; i++) {
+          let steamUrl = '';
+          if (tagId) steamUrl = `https://store.steampowered.com/search/results/?query&start=${i * 100}&count=100&tags=${tagId}&category1=998&ignore_preferences=1&supportedlang=english&infinite=1`;
+          else steamUrl = `https://store.steampowered.com/search/results/?term=${encodeURIComponent(rawTag)}&start=${i * 100}&count=100&category1=998&ignore_preferences=1&supportedlang=english&infinite=1`;
+
+          try {
+            const res = await fetch(steamUrl);
+            const data = await res.json();
+            if (data && data.results_html) {
+              const regex = /<span class="title">([^<]+)<\/span>/g;
+              let match;
+              while ((match = regex.exec(data.results_html)) !== null) {
+                titles.push(match[1]);
+              }
+            }
+          } catch (e) {}
+        }
+
+        titles = titles.filter(text => { const lower = text.toLowerCase(); return text.length > 0 && !lower.includes("bundle") && !lower.includes("pack") && !lower.includes("collection") && !lower.includes("season pass") && !lower.includes("expansion") && !lower.includes("dlc") && !lower.includes("franchise"); });
+        discoverSteamTitlesCache[filterType] = [...new Set(titles)].sort(() => 0.5 - Math.random());
+      }
+
+      const shuffledTitles = discoverSteamTitlesCache[filterType] || [];
+      const startIndex = Math.floor(offset * 1.5); // Read a larger chunk to account for IGDB dropoffs
+      const titlesChunk = shuffledTitles.slice(startIndex, startIndex + 50);
+
+      if (!titlesChunk || titlesChunk.length === 0) return [];
+
+      const enriched: any[] = [];
+      for (const title of titlesChunk) {
+        if (enriched.length >= 30) break;
+        const results = await searchGames(title);
+        if (results && results.length > 0 && !existingIds.includes(results[0].id.toString())) {
+          enriched.push(results[0]);
+        }
+        await new Promise(r => setTimeout(r, 250));
+      }
+
+      if (cacheKey && enriched.length > 0) updateRankingsCache(cacheKey, JSON.stringify(enriched));
+      return enriched;
+    }
+
     if (filterType === 'trending' || filterType === 'popular') {
       const cacheKey = offset === 0 ? 'discover_trending' : null;
       if (cacheKey) {
@@ -521,3 +566,29 @@ export async function getScrapedRankings(category: string): Promise<any[]> {
 
 export async function getCachedRankings(categoryId: string) { return await getScrapedRankings(categoryId); }
 export async function getGlobalRankings() { return { overall: await getScrapedRankings('overall'), rpg: await getScrapedRankings('rpg'), shooter: await getScrapedRankings('shooter'), action: await getScrapedRankings('action') }; }
+
+export async function generateGamerProfile(statsJson: string, apiKey: string) {
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const prompt = `You are a witty, slightly sarcastic, but complimentary video game expert. Analyze these player stats: ${statsJson}. Write a 3-sentence 'Gamer Profile' that playfully roasts their backlog size, completion rate, and their favorite genres/studios, but ultimately hypes up their taste in games. No markdown.`;
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
+  } catch (err) {
+    return 'Could not generate profile. The AI needs a breather (or a valid API key).';
+  }
+}
+
+export async function backfillMissingMetadata() {
+  const games = getAllGames() as any[];
+  const missingGames = games.filter((g: any) => !g.release_year || g.release_year === '');
+  
+  for (const game of missingGames) {
+    const details = await getGameExtendedDetails(game.id);
+    if (details) {
+      updateGameMetadata(game.id, details.genres || '', details.developers || '', details.year || '');
+    }
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  return true;
+}

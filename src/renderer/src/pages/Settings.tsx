@@ -1,4 +1,3 @@
-import React from 'react';
 import { Settings as SettingsIcon, Sparkles, Trophy, Gamepad2 } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 

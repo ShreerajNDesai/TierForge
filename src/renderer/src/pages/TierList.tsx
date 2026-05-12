@@ -1,4 +1,3 @@
-import React from 'react';
 import { Crown, Star, Diamond, LayoutGrid, ThumbsDown, Skull, Ban, Trash2, Menu, Filter, ArrowUpDown, Grid, List, Plus, RefreshCw } from 'lucide-react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useGlobal } from '../context/GlobalContext';

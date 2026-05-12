@@ -1,10 +1,40 @@
-import React from 'react';
-import { BarChart2, Trophy, Check } from 'lucide-react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState, useEffect } from 'react';
+import { BarChart2, Trophy, Check, Library, CheckCircle, Target, Crown, Gamepad2, Wrench, Sparkles, RefreshCw } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, AreaChart, Area } from 'recharts';
 import { useGlobal } from '../context/GlobalContext';
 
 const Statistics = () => {
-  const { libraryGames, handleGameClick } = useGlobal();
+  const { libraryGames, handleGameClick, setLibraryGames } = useGlobal();
+  const [aiProfile, setAiProfile] = useState<string | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isBackfilling, setIsBackfilling] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkBackfill = async () => {
+      if (!libraryGames || libraryGames.length === 0) return;
+      
+      const needsBackfill = libraryGames.some((g: any) => !g.release_year || g.release_year === '' || !g.genres || g.genres === '');
+      
+      if (needsBackfill && !isBackfilling) {
+        setIsBackfilling(true);
+        try {
+          await window.api.backfillMetadata();
+          const updatedGames = await window.api.getAllGames();
+          if (isMounted && typeof setLibraryGames === 'function') {
+            setLibraryGames(updatedGames);
+          }
+        } catch (err) {
+          console.error('Failed to backfill metadata:', err);
+        } finally {
+          if (isMounted) setIsBackfilling(false);
+        }
+      }
+    };
+    
+    checkBackfill();
+    return () => { isMounted = false; };
+  }, [libraryGames, isBackfilling, setLibraryGames]);
 
   const totalGames = libraryGames.length;
   const completedGames = libraryGames.filter((g: any) => g.status === 'Completed').length;
@@ -13,15 +43,6 @@ const Statistics = () => {
   const playingCount = libraryGames.filter((g: any) => g.status === 'Playing').length;
   const backlogCount = libraryGames.filter((g: any) => (g.status || 'Backlog') === 'Backlog').length;
   const droppedCount = libraryGames.filter((g: any) => g.status === 'Abandoned' || g.status === 'Dropped').length;
-
-  const statusData = [
-    { name: 'Playing', value: playingCount },
-    { name: 'Backlog', value: backlogCount },
-    { name: 'Completed', value: completedGames },
-    { name: 'Dropped', value: droppedCount },
-  ].filter(s => s.value > 0);
-
-  const STATUS_COLORS: Record<string, string> = { Playing: '#06B6D4', Backlog: '#A855F7', Completed: '#22C55E', Dropped: '#EF4444' };
 
   const tierData = [
     { name: 'S', count: sTierCount, color: '#F43F5E' },
@@ -37,6 +58,78 @@ const Statistics = () => {
   const dustyMasterpieces = libraryGames.filter((g: any) => g.tier === 's' && (g.status || 'Backlog') === 'Backlog');
   const completedList = libraryGames.filter((g: any) => g.status === 'Completed');
 
+  const genreCounts: Record<string, number> = {};
+  libraryGames.forEach((game: any) => {
+    if (game.genres && game.genres !== 'Unknown') {
+      const genresList = typeof game.genres === 'string' ? game.genres.split(',') : (Array.isArray(game.genres) ? game.genres : []);
+      genresList.forEach((g: string) => {
+        const trimmedGenre = g.trim();
+        if (trimmedGenre) {
+          genreCounts[trimmedGenre] = (genreCounts[trimmedGenre] || 0) + 1;
+        }
+      });
+    }
+  });
+
+  const topGenres = Object.entries(genreCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+    
+  const maxGenreCount = topGenres.length > 0 ? topGenres[0].count : 1;
+
+  // Studio Loyalty Calculation
+  const studioCounts: Record<string, number> = {};
+  libraryGames.forEach((game: any) => {
+    if (game.developers && typeof game.developers === 'string') {
+      const devs = game.developers.split(',');
+      devs.forEach((d: string) => {
+        const trimmed = d.trim();
+        if (trimmed && trimmed !== '-') {
+          studioCounts[trimmed] = (studioCounts[trimmed] || 0) + 1;
+        }
+      });
+    }
+  });
+
+  const topStudios = Object.entries(studioCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+    
+  const maxStudioCount = topStudios.length > 0 ? topStudios[0].count : 1;
+
+  // Era/Decade Data Calculation
+  const yearCounts: Record<string, number> = {};
+  libraryGames.forEach((game: any) => {
+    if (game.release_year && game.release_year !== 'Unknown') {
+      yearCounts[game.release_year] = (yearCounts[game.release_year] || 0) + 1;
+    }
+  });
+
+  const eraData = Object.entries(yearCounts)
+    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+    .map(([year, count]) => ({ year, count }));
+
+  const handleGenerateProfile = async () => {
+    setIsProfileLoading(true);
+    const statsObj = {
+      completionRate: `${completionRate}%`,
+      totalGames,
+      topGenres: topGenres.map(g => g.name),
+      topStudios: topStudios.map(s => s.name)
+    };
+    try {
+      const profile = await window.api.getGamerProfile(JSON.stringify(statsObj));
+      setAiProfile(profile);
+    } catch (e) {
+      console.error(e);
+      setAiProfile("Failed to generate AI profile. The Oracle is currently sleeping.");
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
       <div className="flex items-center gap-4 mb-10">
@@ -49,98 +142,79 @@ const Statistics = () => {
         </div>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
-          <p className="text-slate-400 text-sm font-medium mb-2">Total Games</p>
-          <p className="text-4xl font-black text-white">{totalGames}</p>
+      {/* AI Gamer Roast / Profile Banner */}
+      <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/30 rounded-2xl p-6 mb-8 flex items-center justify-between">
+        <div className="flex-1 mr-6">
+          <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+            <Sparkles size={20} className="text-purple-400" />
+            AI Gamer Profile
+          </h2>
+          {aiProfile ? (
+            <p className="text-purple-200/80 italic leading-relaxed text-sm">{aiProfile}</p>
+          ) : (
+            <p className="text-slate-400 text-sm">Let the AI Oracle analyze your library and roast your gaming habits (lovingly).</p>
+          )}
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
-          <p className="text-slate-400 text-sm font-medium mb-2">Completed</p>
-          <p className="text-4xl font-black text-green-400">{completedGames}</p>
-        </div>
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
-          <p className="text-slate-400 text-sm font-medium mb-2">Completion Rate</p>
-          <p className="text-4xl font-black text-purple-400">{completionRate}<span className="text-2xl">%</span></p>
-        </div>
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
-          <p className="text-slate-400 text-sm font-medium mb-2">S-Tier Masterpieces</p>
-          <p className="text-4xl font-black text-rose-400">{sTierCount}</p>
+        <div className="shrink-0 flex items-center">
+          {aiProfile ? (
+            <button
+              onClick={handleGenerateProfile}
+              disabled={isProfileLoading}
+              className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-purple-400 transition-colors border border-white/10"
+              title="Regenerate Profile"
+            >
+              <RefreshCw size={18} className={isProfileLoading ? "animate-spin" : ""} />
+            </button>
+          ) : (
+            <button
+              onClick={handleGenerateProfile}
+              disabled={isProfileLoading}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold transition-colors border border-purple-500/50"
+            >
+              {isProfileLoading ? (
+                <><RefreshCw size={18} className="animate-spin" /> Analyzing...</>
+              ) : (
+                <><Sparkles size={18} /> Generate Profile</>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-2 gap-6">
-        {/* Pie Chart */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md h-96">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple-400"></div>
-            Games by Status
-          </h3>
-          {statusData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="85%">
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={110}
-                  paddingAngle={5}
-                  strokeWidth={0}
-                >
-                  {statusData.map((entry, i) => (
-                    <Cell key={i} fill={STATUS_COLORS[entry.name] || '#64748B'} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ background: '#1E293B', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', fontSize: '13px' }}
-                  itemStyle={{ color: '#CBD5E1' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-[85%] text-slate-500 text-sm">No status data yet</div>
-          )}
-          <div className="flex flex-wrap gap-4 mt-2 justify-center">
-            {statusData.map((s, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-slate-400">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: STATUS_COLORS[s.name] }}></div>
-                {s.name} ({s.value})
-              </div>
-            ))}
+      {/* Stat Cards */}
+      <div className="grid grid-cols-4 gap-6 mb-8">
+        <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div className="flex items-center gap-2 mb-2">
+            <Library size={20} className="text-blue-400"/>
+            <p className="text-slate-400 text-sm font-medium">Total Games</p>
           </div>
+          <p className="text-5xl font-black bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent">{totalGames}</p>
         </div>
-
-        {/* Bar Chart */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md h-96">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-rose-400"></div>
-            Tier Distribution
-          </h3>
-          <ResponsiveContainer width="100%" height="85%">
-            <BarChart data={tierData}>
-              <XAxis dataKey="name" stroke="#CBD5E1" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#475569" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-              <Tooltip
-                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                contentStyle={{ background: '#1E293B', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', fontSize: '13px' }}
-                itemStyle={{ color: '#CBD5E1' }}
-              />
-              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                {tierData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle size={20} className="text-green-400"/>
+            <p className="text-slate-400 text-sm font-medium">Completed</p>
+          </div>
+          <p className="text-5xl font-black bg-gradient-to-r from-green-400 to-green-200 bg-clip-text text-transparent">{completedGames}</p>
+        </div>
+        <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div className="flex items-center gap-2 mb-2">
+            <Target size={20} className="text-purple-400"/>
+            <p className="text-slate-400 text-sm font-medium">Completion Rate</p>
+          </div>
+          <p className="text-5xl font-black bg-gradient-to-r from-purple-400 to-purple-200 bg-clip-text text-transparent">{completionRate}<span className="text-3xl ml-1 text-purple-400/80">%</span></p>
+        </div>
+        <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div className="flex items-center gap-2 mb-2">
+            <Crown size={20} className="text-rose-400"/>
+            <p className="text-slate-400 text-sm font-medium">S-Tier Masterpieces</p>
+          </div>
+          <p className="text-5xl font-black bg-gradient-to-r from-rose-400 to-rose-200 bg-clip-text text-transparent">{sTierCount}</p>
         </div>
       </div>
 
       {/* Library Health Progress Bar */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md mt-8">
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md mb-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
@@ -180,6 +254,116 @@ const Statistics = () => {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* 3-Column Charts */}
+      <div className="relative grid grid-cols-3 gap-6 mb-8">
+        {isBackfilling && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#121620]/80 backdrop-blur-sm rounded-2xl">
+            <RefreshCw className="animate-spin text-indigo-400 mb-4" size={32}/>
+            <p className="text-white font-bold">Syncing Historical Metadata...</p>
+            <p className="text-slate-400 text-sm">Upgrading your library with genres and studio data.</p>
+          </div>
+        )}
+        {/* Tier Distribution Bar Chart */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md h-96">
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-rose-400"></div>
+            Tier Distribution
+          </h3>
+          <ResponsiveContainer width="100%" height="85%">
+            <BarChart data={tierData}>
+              <XAxis dataKey="name" stroke="#CBD5E1" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="#475569" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+              <Tooltip
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                contentStyle={{ background: '#1E293B', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', fontSize: '13px' }}
+                itemStyle={{ color: '#CBD5E1' }}
+              />
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                {tierData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Favorite Genres */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md h-96 flex flex-col">
+          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+            <Gamepad2 className="text-indigo-400"/> Favorite Genres
+          </h3>
+          <div className="flex-1 flex flex-col gap-4 justify-center">
+            {topGenres.length > 0 ? topGenres.map((genre, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="w-24 text-sm font-medium text-slate-300 truncate" title={genre.name}>{genre.name}</div>
+                <div className="flex-1 h-3 bg-slate-800/80 rounded-full overflow-hidden border border-white/5">
+                  <div 
+                    className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full"
+                    style={{ width: `${(genre.count / maxGenreCount) * 100}%` }}
+                  ></div>
+                </div>
+                <div className="w-16 text-right text-xs font-bold text-slate-400">{genre.count}</div>
+              </div>
+            )) : (
+              <div className="flex items-center justify-center h-full text-slate-500 text-sm">No genre data yet</div>
+            )}
+          </div>
+        </div>
+
+        {/* Studio Loyalty */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md h-96 flex flex-col">
+          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+            <Wrench className="text-cyan-400" size={20}/> Studio Loyalty
+          </h3>
+          <div className="flex-1 flex flex-col gap-4 justify-center">
+            {topStudios.length > 0 ? topStudios.map((studio, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="w-24 text-sm font-medium text-slate-300 truncate" title={studio.name}>{studio.name}</div>
+                <div className="flex-1 h-3 bg-slate-800/80 rounded-full overflow-hidden border border-white/5">
+                  <div 
+                    className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full"
+                    style={{ width: `${(studio.count / maxStudioCount) * 100}%` }}
+                  ></div>
+                </div>
+                <div className="w-16 text-right text-xs font-bold text-slate-400">{studio.count}</div>
+              </div>
+            )) : (
+              <div className="flex items-center justify-center h-full text-slate-500 text-sm">No studio data yet</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Era/Decade Area Chart */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md mb-8 h-80">
+        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+          Release Eras
+        </h3>
+        {eraData.length > 0 ? (
+          <ResponsiveContainer width="100%" height="85%">
+            <AreaChart data={eraData}>
+              <defs>
+                <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="year" stroke="#CBD5E1" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="#475569" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+              <Tooltip
+                cursor={{ stroke: 'rgba(255,255,255,0.1)' }}
+                contentStyle={{ background: '#1E293B', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', fontSize: '13px' }}
+                itemStyle={{ color: '#CBD5E1' }}
+              />
+              <Area type="monotone" dataKey="count" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorUv)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-full text-slate-500 text-sm">No release year data available</div>
+        )}
       </div>
 
       {/* Unplayed S-Tier Warning */}

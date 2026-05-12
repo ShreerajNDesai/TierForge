@@ -44,7 +44,9 @@ const api = {
   getAIPlayOrder: (gameId: string, gameTitle: string) => ipcRenderer.invoke('get-ai-play-order', gameId, gameTitle),
   syncSteam: (steamId: string, apiKey: string) => ipcRenderer.invoke('sync-steam', steamId, apiKey),
   getSteamDetails: (steamId: string) => ipcRenderer.invoke('get-steam-details', steamId),
-  getSteamTags: () => ipcRenderer.invoke('get-steam-tags')
+  getSteamTags: () => ipcRenderer.invoke('get-steam-tags'),
+  getGamerProfile: (statsJson: string) => ipcRenderer.invoke('get-gamer-profile', statsJson),
+  backfillMetadata: () => ipcRenderer.invoke('backfill-metadata')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
