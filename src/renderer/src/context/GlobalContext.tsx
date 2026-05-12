@@ -108,7 +108,7 @@ interface GlobalContextType {
   setGameDeals: React.Dispatch<React.SetStateAction<any[]>>;
   videoError: boolean;
   setVideoError: React.Dispatch<React.SetStateAction<boolean>>;
-  iframeRef: React.RefObject<HTMLIFrameElement>;
+  iframeRef: React.RefObject<HTMLIFrameElement | null>;
 
   loadGames: () => Promise<void>;
   handleGameClick: (game: any) => Promise<void>;
@@ -204,7 +204,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const cleanupStarted = window.api.onGameStarted((gameId: string) => {
       setRunningGameId(gameId);
     });
-    const cleanupStopped = window.api.onGameStopped((gameId: string, totalPlaytime: number) => {
+    const cleanupStopped = window.api.onGameStopped((_gameId: string, totalPlaytime: number) => {
       setRunningGameId(null);
       setGamePlaytime(totalPlaytime);
       loadGames();

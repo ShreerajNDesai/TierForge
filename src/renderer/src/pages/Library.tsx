@@ -1,4 +1,3 @@
-import React from 'react';
 import { PlayCircle, Search, Clock } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 

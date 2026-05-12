@@ -1,4 +1,3 @@
-import React from 'react';
 import { UploadCloud, Sparkles, Wand2, FileText, Plus, X, RefreshCw } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Check, Plus, Search, ChevronDown } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 
@@ -18,6 +18,8 @@ const Discover = () => {
   } = useGlobal();
 
   const [showGenreMenu, setShowGenreMenu] = useState(false);
+  const [tagSearch, setTagSearch] = useState('');
+  const [dynamicTags, setDynamicTags] = useState<{id: string, label: string}[]>([]);
 
   const handleDiscoverScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -36,7 +38,7 @@ const Discover = () => {
     { id: 'indie', label: '💎 Indie' }
   ];
 
-  const extendedGenres = [
+  const igdbGenres = [
     { id: 'pinball', label: 'Pinball' },
     { id: 'adventure', label: 'Adventure' },
     { id: 'indie', label: 'Indie' },
@@ -78,18 +80,38 @@ const Discover = () => {
     { id: 'open_world', label: 'Open world' },
     { id: 'warfare', label: 'Warfare' },
     { id: 'party', label: 'Party' },
-    { id: '4x', label: '4X (explore, expand, exploit, and exterminate)' },
+    { id: '4x', label: '4X' },
     { id: 'erotic', label: 'Erotic' },
     { id: 'mystery', label: 'Mystery' },
     { id: 'romance', label: 'Romance' }
   ];
+
+  useEffect(() => {
+    window.api.getSteamTags().then((steamTags: {id: string, label: string}[]) => {
+      const merged = [...igdbGenres];
+      const igdbLabels = new Set(igdbGenres.map(g => g.label.toLowerCase()));
+      
+      steamTags.forEach(tag => {
+        if (!igdbLabels.has(tag.label.toLowerCase())) {
+          merged.push({ id: 'steamtag_' + tag.id, label: tag.label });
+        }
+      });
+      setDynamicTags(merged);
+    });
+  }, []);
 
   const handleFilterSelect = (id: string) => {
     setDiscoverFilter(id);
     setDiscoverOffset(0);
     setHasMoreDiscover(true);
     setShowGenreMenu(false);
+    setTagSearch('');
   };
+
+  const filteredTags = useMemo(() => {
+    if (!tagSearch.trim()) return dynamicTags;
+    return dynamicTags.filter(t => t.label.toLowerCase().includes(tagSearch.toLowerCase()));
+  }, [dynamicTags, tagSearch]);
 
   return (
     <div 
@@ -101,7 +123,7 @@ const Discover = () => {
           <h1 className="text-[34px] font-extrabold text-white flex items-center gap-4 tracking-tight leading-none mb-2">
             Discover <span className="text-[10px] bg-indigo-500/10 text-indigo-300 px-2.5 py-1 rounded-md font-semibold border border-indigo-500/20 tracking-wide uppercase align-middle relative -top-1">Find new games</span>
           </h1>
-          <p className="text-slate-400 text-[15px]">Explore the IGDB database for your next adventure</p>
+          <p className="text-slate-400 text-[15px]">Explore for your next adventure</p>
         </div>
       </div>
 
@@ -136,20 +158,35 @@ const Discover = () => {
       {/* Mega Menu Dropdown */}
       {showGenreMenu && (
         <div className="w-full bg-[#121620]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-8 mb-8 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {extendedGenres.map(genre => (
-              <button
-                key={genre.id}
-                onClick={() => handleFilterSelect(genre.id)}
-                className={`px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all border ${
-                  discoverFilter === genre.id
-                    ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
-                    : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                {genre.label}
-              </button>
-            ))}
+          <div className="sticky top-0 mb-6 bg-[#121620] pb-2 z-10">
+            <div className="relative w-full max-w-lg">
+              <Search className="absolute left-3 top-3 text-slate-500" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search hundreds of Steam tags and IGDB genres..." 
+                value={tagSearch} 
+                onChange={(e) => setTagSearch(e.target.value)} 
+                className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-indigo-500 transition" 
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+            {filteredTags.map(genre => {
+              const isSteam = genre.id.startsWith('steamtag_');
+              return (
+                <button
+                  key={genre.id}
+                  onClick={() => handleFilterSelect(genre.id)}
+                  className={`px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all border ${
+                    discoverFilter === genre.id
+                      ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
+                      : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <span className={isSteam ? 'text-sky-300' : ''}>{genre.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

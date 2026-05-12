@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gamepad2, Clock, ChevronDown, Star, Monitor, Tag, ExternalLink, PlayCircle, Volume2, VolumeX, X, Sparkles, MessageSquare, Globe, Book } from 'lucide-react';
+import { Gamepad2, Clock, ChevronDown, Star, Monitor, Tag, ExternalLink, PlayCircle, Volume2, VolumeX, X, Sparkles } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 
 const CinematicModal = () => {
@@ -35,7 +35,8 @@ const CinematicModal = () => {
   const [isTimelineLoading, setIsTimelineLoading] = useState(false);
   const [steamDetails, setSteamDetails] = useState<any>(null);
 
-  const gameplayVideo = gameDetails?.videos?.find((v: any) => v.name.toLowerCase().includes('gameplay'));
+  const gameplayVideoRaw = gameDetails?.videos?.find((v: any) => v.name.toLowerCase().includes('gameplay'));
+  const gameplayVideo = gameplayVideoRaw?.id !== gameDetails?.video_id ? gameplayVideoRaw : null;
   const isWatchingGameplay = gameplayVideo && currentVideoId === gameplayVideo.id;
   const youtubeUrl = `https://www.youtube.com/watch?v=${currentVideoId}`;
 
@@ -160,16 +161,7 @@ const CinematicModal = () => {
             
             <div className="flex items-center gap-4 text-xl font-medium text-white/70 mb-12">
               <span className="bg-white/10 px-3 py-1 rounded-lg border border-white/10 backdrop-blur-sm">{gameDetails ? gameDetails.year : '...'}</span>
-              
-              {gameDetails?.ageRating && (
-                <span className="flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-lg border border-white/10 backdrop-blur-sm">
-                  {gameDetails.ageRating.rating_cover_url ? (
-                    <img src={gameDetails.ageRating.rating_cover_url.startsWith('//') ? `https:${gameDetails.ageRating.rating_cover_url}` : gameDetails.ageRating.rating_cover_url} alt="Age Rating" className="h-6 object-contain" />
-                  ) : (
-                    <span className="text-sm font-bold text-white">{gameDetails.ageRating.rating === 11 ? 'M' : gameDetails.ageRating.rating}</span>
-                  )}
-                </span>
-              )}
+
 
               {gameDetails?.rating && (
                 <span className="flex items-center gap-1.5 bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-lg border border-indigo-500/30 backdrop-blur-sm">
@@ -302,40 +294,6 @@ const CinematicModal = () => {
                 </div>
               </div>
 
-              {/* Community & Links */}
-              {gameDetails?.websites && gameDetails.websites.length > 0 && (
-                <div className="bg-black/30 border border-white/10 backdrop-blur-md rounded-2xl p-5 shadow-inner">
-                  <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <Globe size={14} className="text-sky-400" />
-                    Community & Links
-                  </h3>
-                  <div className="flex gap-3 flex-wrap">
-                    {gameDetails.websites.map((site: any, i: number) => {
-                      let icon = <Globe size={14} className="text-white/70 group-hover:text-white" />;
-                      let label = 'Website';
-                      if (site.category === 1) label = 'Official Site';
-                      else if (site.category === 2 || site.category === 3) { icon = <Book size={14} className="text-white/70 group-hover:text-white" />; label = 'Wiki'; }
-                      else if (site.category === 14) { icon = <MessageSquare size={14} className="text-orange-400 group-hover:text-orange-300" />; label = 'Reddit'; }
-                      else if (site.category === 18) { icon = <MessageSquare size={14} className="text-indigo-400 group-hover:text-indigo-300" />; label = 'Discord'; }
-                      else if (site.category === 13) label = 'Steam';
-                      else if (site.category === 9) { icon = <PlayCircle size={14} className="text-red-400 group-hover:text-red-300" />; label = 'YouTube'; }
-                      else return null;
-
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => window.api.openExternal(site.url)}
-                          className="group flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-sky-500/40 rounded-full px-4 py-2 transition-all hover:shadow-[0_0_15px_rgba(56,189,248,0.15)]"
-                        >
-                          {icon}
-                          <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{label}</span>
-                          <ExternalLink size={10} className="text-slate-500 group-hover:text-sky-400 ml-1" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
 
               {/* Story / Storyline */}
               <div className="bg-black/30 border border-white/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
@@ -559,42 +517,64 @@ const CinematicModal = () => {
       >
         {gameDetails?.video_id && !videoError && (
           <div className="flex items-center gap-3">
-            {/* Primary Control Group */}
-            <div className="flex items-center bg-[#181C25]/90 backdrop-blur-md border border-white/5 rounded-2xl p-1.5 shadow-2xl">
-              <button
-                onClick={() => setIsVideoMode(!isVideoMode)}
-                className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold text-white hover:bg-white/10 transition"
-              >
-                {isWatchingGameplay ? <Gamepad2 size={18} className="text-indigo-400" /> : <PlayCircle size={18} className={isVideoMode ? 'text-indigo-400' : ''} />}
-                {isVideoMode 
-                  ? (isWatchingGameplay ? 'Gameplay Video' : 'Cinematic Trailer')
-                  : 'Cinematic Trailer'}
-              </button>
-              <div className="w-px h-6 bg-white/10 mx-1"></div>
-              <button
-                onClick={toggleMute}
-                className="p-2.5 rounded-xl text-white hover:bg-white/10 transition"
-              >
-                {isMuted ? <VolumeX size={18} className="text-red-400" /> : <Volume2 size={18} className="text-emerald-400" />}
-              </button>
-            </div>
+            {/* Volume Button (Left) */}
+            <button
+              onClick={toggleMute}
+              className="p-3.5 bg-[#181C25]/90 hover:bg-white/10 text-white backdrop-blur-md border border-white/5 rounded-2xl transition shadow-2xl"
+            >
+              {isMuted ? <VolumeX size={20} className="text-red-400" /> : <Volume2 size={20} className="text-emerald-400" />}
+            </button>
 
-            {/* Secondary Video Button */}
-            {gameplayVideo && (
-              <button
-                onClick={() => {
-                  if (isWatchingGameplay) {
+            {isVideoMode ? (
+              <>
+                <button
+                  onClick={() => setIsVideoMode(false)}
+                  className="flex items-center gap-2.5 px-5 py-3.5 bg-[#181C25]/90 hover:bg-white/10 text-white backdrop-blur-md border border-white/5 rounded-2xl text-sm font-bold transition shadow-2xl"
+                >
+                  <ChevronDown size={18} className="rotate-90" />
+                  Back to Details
+                </button>
+                {gameplayVideo && (
+                  <button
+                    onClick={() => {
+                      if (isWatchingGameplay) {
+                        setCurrentVideoId(gameDetails.video_id);
+                      } else {
+                        setCurrentVideoId(gameplayVideo.id);
+                      }
+                    }}
+                    className="flex items-center gap-2.5 px-5 py-3.5 bg-[#181C25]/90 hover:bg-white/10 text-white backdrop-blur-md border border-white/5 rounded-2xl text-sm font-bold transition shadow-2xl"
+                  >
+                    {isWatchingGameplay ? <PlayCircle size={18} className="text-indigo-400" /> : <Gamepad2 size={18} className="text-indigo-400" />}
+                    {isWatchingGameplay ? 'Switch to Trailer' : 'Switch to Gameplay'}
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
                     setCurrentVideoId(gameDetails.video_id);
-                  } else {
-                    setCurrentVideoId(gameplayVideo.id);
-                  }
-                  setIsVideoMode(true);
-                }}
-                className="flex items-center gap-2.5 px-5 py-3.5 bg-[#181C25]/90 backdrop-blur-md border border-white/5 rounded-2xl text-sm font-bold text-white hover:bg-white/10 transition shadow-2xl"
-              >
-                {isWatchingGameplay ? <PlayCircle size={18} /> : <Gamepad2 size={18} />}
-                {isWatchingGameplay ? 'Watch Trailer' : 'Watch Gameplay'}
-              </button>
+                    setIsVideoMode(true);
+                  }}
+                  className="flex items-center gap-2.5 px-5 py-3.5 bg-[#181C25]/90 hover:bg-white/10 text-white backdrop-blur-md border border-white/5 rounded-2xl text-sm font-bold transition shadow-2xl"
+                >
+                  <PlayCircle size={18} className="text-indigo-400" />
+                  Watch Trailer
+                </button>
+                {gameplayVideo && (
+                  <button
+                    onClick={() => {
+                      setCurrentVideoId(gameplayVideo.id);
+                      setIsVideoMode(true);
+                    }}
+                    className="flex items-center gap-2.5 px-5 py-3.5 bg-[#181C25]/90 hover:bg-white/10 text-white backdrop-blur-md border border-white/5 rounded-2xl text-sm font-bold transition shadow-2xl"
+                  >
+                    <Gamepad2 size={18} className="text-indigo-400" />
+                    Watch Gameplay
+                  </button>
+                )}
+              </>
             )}
 
             {/* YouTube Link Button */}

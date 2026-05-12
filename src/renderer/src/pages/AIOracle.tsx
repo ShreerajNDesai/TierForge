@@ -1,4 +1,3 @@
-import React from 'react';
 import { Wand2, Sparkles, RefreshCw, Gamepad2, Plus } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 

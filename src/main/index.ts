@@ -20,7 +20,9 @@ import {
   getSmartAIPlayOrder,
   syncSteamLibrary,
   getSteamAppDetails,
-  getDisplayTags
+  getDisplaySteamTags,
+  generateGamerProfile,
+  backfillMissingMetadata
 } from './api'
 
 function createWindow(): void {
@@ -260,7 +262,17 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('get-steam-tags', async () => {
-    return await getDisplayTags();
+    return await getDisplaySteamTags();
+  });
+
+  ipcMain.handle('get-gamer-profile', async (_, statsJson: string) => {
+    const apiKey = getSetting('geminiKey');
+    if (!apiKey) return 'No Gemini API Key found in settings. Please add one to generate your profile.';
+    return await generateGamerProfile(statsJson, apiKey);
+  });
+
+  ipcMain.handle('backfill-metadata', async () => {
+    return await backfillMissingMetadata();
   });
 
   // Set app user model id for windows

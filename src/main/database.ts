@@ -17,7 +17,10 @@ export function initDB() {
       notes TEXT DEFAULT '',
       status TEXT DEFAULT 'Backlog',
       executable_path TEXT DEFAULT '',
-      playtime_minutes INTEGER DEFAULT 0
+      playtime_minutes INTEGER DEFAULT 0,
+      genres TEXT DEFAULT '',
+      developers TEXT DEFAULT '',
+      release_year TEXT DEFAULT ''
     );
   `);
 
@@ -52,6 +55,18 @@ export function initDB() {
   try {
     db.exec("ALTER TABLE games ADD COLUMN playtime_minutes INTEGER DEFAULT 0");
   } catch (e) { /* Column might already exist */ }
+
+  try {
+    db.exec("ALTER TABLE games ADD COLUMN genres TEXT DEFAULT ''");
+  } catch (e) { /* Column might already exist */ }
+
+  try {
+    db.exec("ALTER TABLE games ADD COLUMN developers TEXT DEFAULT ''");
+  } catch (e) { /* Column might already exist */ }
+
+  try {
+    db.exec("ALTER TABLE games ADD COLUMN release_year TEXT DEFAULT ''");
+  } catch (e) { /* Column might already exist */ }
   
   // One-time cache clear for Discover category overhaul
   try {
@@ -69,7 +84,7 @@ export function getAllGames() {
 }
 
 // Function to add a game
-export function addGame(id: string, title: string, imageUrl: string, executablePath: string = '') {
+export function addGame(id: string, title: string, imageUrl: string, executablePath: string = '', genres: string = '', developers: string = '', releaseYear: string = '') {
   const checkStmt = db.prepare('SELECT id FROM games WHERE id = ?');
   const exists = checkStmt.get(id);
 
@@ -79,8 +94,8 @@ export function addGame(id: string, title: string, imageUrl: string, executableP
       updateStmt.run(executablePath, id);
     }
   } else {
-    const stmt = db.prepare('INSERT INTO games (id, title, image_url, tier, executable_path) VALUES (?, ?, ?, ?, ?)');
-    stmt.run(id, title, imageUrl, 'unranked', executablePath);
+    const stmt = db.prepare('INSERT INTO games (id, title, image_url, tier, executable_path, genres, developers, release_year) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(id, title, imageUrl, 'unranked', executablePath, genres, developers, releaseYear);
   }
 }
 
@@ -100,6 +115,11 @@ export function deleteGame(id: string) {
 export function updateGameData(id: string, notes: string, status: string) {
   const stmt = db.prepare('UPDATE games SET notes = ?, status = ? WHERE id = ?');
   stmt.run(notes, status, id);
+}
+
+export function updateGameMetadata(id: string, genres: string, developers: string, releaseYear: string) {
+  const stmt = db.prepare('UPDATE games SET genres = ?, developers = ?, release_year = ? WHERE id = ?');
+  stmt.run(genres, developers, releaseYear, id);
 }
 
 // Settings functions
