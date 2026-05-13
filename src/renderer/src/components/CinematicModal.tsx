@@ -4,6 +4,7 @@ import { useGlobal } from '../context/GlobalContext';
 
 const CinematicModal = () => {
   const {
+    data,
     selectedGame,
     setSelectedGame,
     gameDetails,
@@ -42,6 +43,16 @@ const CinematicModal = () => {
   const gameplayVideo = gameplayVideoRaw?.id !== gameDetails?.video_id ? gameplayVideoRaw : null;
   const isWatchingGameplay = gameplayVideo && currentVideoId === gameplayVideo.id;
   const youtubeUrl = `https://www.youtube.com/watch?v=${currentVideoId}`;
+
+  const isInLibrary = React.useMemo(() => {
+    if (!selectedGame || !data) return false;
+    const gameId = selectedGame.id.toString();
+    if (data.collection.some((g: any) => g.id.toString() === gameId)) return true;
+    for (const tierKey in data.tiers) {
+      if (data.tiers[tierKey].items.some((g: any) => g.id.toString() === gameId)) return true;
+    }
+    return false;
+  }, [selectedGame, data]);
 
   useEffect(() => {
     setAiTimeline(null);
@@ -159,66 +170,68 @@ const CinematicModal = () => {
             </div>
 
             {/* Danger Zone */}
-            <div className="w-full space-y-2 mt-6">
-              <label className="text-xs font-bold text-red-500/80 uppercase tracking-wider pl-1">Danger Zone</label>
-              <div className="flex flex-col gap-2">
-                <button 
-                  onClick={() => {
-                    setConfirmDialog({
-                      title: 'Remove from Library',
-                      message: `Are you sure you want to remove ${selectedGame.title} from your TierForge library? This action cannot be undone.`,
-                      confirmText: 'Remove Game',
-                      isDanger: true,
-                      onConfirm: async () => {
-                        try {
-                          await window.api.deleteGame(selectedGame.id.toString());
-                          setSelectedGame(null);
-                        } catch (err) {
-                          setAlertDialog({ title: 'Error', message: 'Failed to remove the game. Please try again later.' });
-                        }
-                      }
-                    });
-                  }}
-                  className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl px-4 py-2.5 font-semibold transition"
-                >
-                  <Trash2 size={16} /> Remove from Library
-                </button>
-                {selectedGame.executable_path && selectedGame.executable_path.trim() !== '' && (
+            {isInLibrary && (
+              <div className="w-full space-y-2 mt-6">
+                <label className="text-xs font-bold text-red-500/80 uppercase tracking-wider pl-1">Danger Zone</label>
+                <div className="flex flex-col gap-2">
                   <button 
                     onClick={() => {
                       setConfirmDialog({
-                        title: 'Uninstall PC Game',
-                        message: `Are you sure you want to trigger the uninstaller for ${selectedGame.title}?`,
-                        confirmText: 'Open Uninstaller',
+                        title: 'Remove from Library',
+                        message: `Are you sure you want to remove ${selectedGame.title} from your TierForge library? This action cannot be undone.`,
+                        confirmText: 'Remove Game',
                         isDanger: true,
                         onConfirm: async () => {
-                          setIsUninstalling(true);
                           try {
-                            const success = await window.api.uninstallGame(selectedGame.id.toString(), selectedGame.executable_path);
-                            setTimeout(() => {
-                              setIsUninstalling(false);
-                              if (success) {
-                                setSelectedGame(null);
-                              } else {
-                                setAlertDialog({ title: 'Uninstall Failed', message: 'Failed to launch the uninstaller. The path may be invalid or protected.' });
-                              }
-                            }, 2000);
+                            await window.api.deleteGame(selectedGame.id.toString());
+                            setSelectedGame(null);
                           } catch (err) {
-                            setIsUninstalling(false);
-                            setAlertDialog({ title: 'Uninstall Failed', message: 'An unexpected error occurred while trying to launch the uninstaller.' });
+                            setAlertDialog({ title: 'Error', message: 'Failed to remove the game. Please try again later.' });
                           }
                         }
                       });
                     }}
-                    disabled={isUninstalling}
-                    className="w-full flex items-center justify-center gap-2 bg-red-900/40 hover:bg-red-600/40 text-red-300 border border-red-600/50 rounded-xl px-4 py-2.5 font-black uppercase tracking-wider text-xs transition shadow-[0_0_15px_rgba(220,38,38,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl px-4 py-2.5 font-semibold transition"
                   >
-                    {isUninstalling ? <RefreshCw size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                    {isUninstalling ? 'Opening Uninstaller...' : 'Uninstall PC Game'}
+                    <Trash2 size={16} /> Remove from Library
                   </button>
-                )}
+                  {selectedGame.executable_path && selectedGame.executable_path.trim() !== '' && (
+                    <button 
+                      onClick={() => {
+                        setConfirmDialog({
+                          title: 'Uninstall PC Game',
+                          message: `Are you sure you want to trigger the uninstaller for ${selectedGame.title}?`,
+                          confirmText: 'Open Uninstaller',
+                          isDanger: true,
+                          onConfirm: async () => {
+                            setIsUninstalling(true);
+                            try {
+                              const success = await window.api.uninstallGame(selectedGame.id.toString(), selectedGame.executable_path);
+                              setTimeout(() => {
+                                setIsUninstalling(false);
+                                if (success) {
+                                  setSelectedGame(null);
+                                } else {
+                                  setAlertDialog({ title: 'Uninstall Failed', message: 'Failed to launch the uninstaller. The path may be invalid or protected.' });
+                                }
+                              }, 2000);
+                            } catch (err) {
+                              setIsUninstalling(false);
+                              setAlertDialog({ title: 'Uninstall Failed', message: 'An unexpected error occurred while trying to launch the uninstaller.' });
+                            }
+                          }
+                        });
+                      }}
+                      disabled={isUninstalling}
+                      className="w-full flex items-center justify-center gap-2 bg-red-900/40 hover:bg-red-600/40 text-red-300 border border-red-600/50 rounded-xl px-4 py-2.5 font-black uppercase tracking-wider text-xs transition shadow-[0_0_15px_rgba(220,38,38,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isUninstalling ? <RefreshCw size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                      {isUninstalling ? 'Opening Uninstaller...' : 'Uninstall PC Game'}
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="flex-1 flex flex-col pt-8 overflow-y-auto pr-2 custom-scrollbar">
