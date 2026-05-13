@@ -109,6 +109,9 @@ interface GlobalContextType {
   videoError: boolean;
   setVideoError: React.Dispatch<React.SetStateAction<boolean>>;
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
+  notifications: {id: number, title: string, message: string, time: Date, read: boolean}[];
+  setNotifications: React.Dispatch<React.SetStateAction<{id: number, title: string, message: string, time: Date, read: boolean}[]>>;
+  addNotification: (title: string, message: string) => void;
 
   loadGames: () => Promise<void>;
   handleGameClick: (game: any) => Promise<void>;
@@ -180,6 +183,11 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [gamePlaytime, setGamePlaytime] = useState<number>(0);
   const [gameDeals, setGameDeals] = useState<any[]>([]);
   const [videoError, setVideoError] = useState(false);
+  
+  const [notifications, setNotifications] = useState<{id: number, title: string, message: string, time: Date, read: boolean}[]>([]);
+  const addNotification = (title: string, message: string) => {
+    setNotifications(prev => [{ id: Date.now(), title, message, time: new Date(), read: false }, ...prev]);
+  };
 
   useEffect(() => {
     window.api.getSetting('geminiKey').then((key: string | null) => {
@@ -528,6 +536,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       await loadGames();
       setIsImporting(false);
       setShowImportModal(false);
+      addNotification('AI Import Complete', 'Successfully imported games from your screenshot.');
+      window.api.showNotification('AI Import Complete', 'Successfully imported games from your screenshot.');
     }
   };
 
@@ -563,6 +573,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     oraclePhase, setOraclePhase, runningGameId, setRunningGameId,
     gamePlaytime, setGamePlaytime, gameDeals, setGameDeals,
     videoError, setVideoError, iframeRef,
+    notifications, setNotifications, addNotification,
     loadGames, handleGameClick, handleSearch, handleAddGame,
     handleScanPC, handleSaveGameData, onDragStart, onDragEnd,
     handleAIImport, handleTextImport, handleSortClick, handleFilterClick, toggleMute,

@@ -48,6 +48,7 @@ const api = {
   clearRankingsCache: (categoryId: string) => ipcRenderer.invoke('clear-rankings-cache', categoryId),
   getAIPlayOrder: (gameId: string, gameTitle: string) => ipcRenderer.invoke('get-ai-play-order', gameId, gameTitle),
   syncSteam: (steamId: string, apiKey: string) => ipcRenderer.invoke('sync-steam', steamId, apiKey),
+  showNotification: (title: string, body: string) => ipcRenderer.invoke('show-notification', title, body),
   getSteamDetails: (steamId: string) => ipcRenderer.invoke('get-steam-details', steamId),
   getSteamTags: () => ipcRenderer.invoke('get-steam-tags'),
   getGamerProfile: (statsJson: string) => ipcRenderer.invoke('get-gamer-profile', statsJson),

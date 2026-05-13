@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, Notification } from 'electron'
 import { join, basename } from 'path'
 import { exec } from 'child_process'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -28,6 +28,12 @@ import {
 } from './api'
 import { GDRIVE_CLIENT_ID, GDRIVE_CLIENT_SECRET, GDRIVE_REDIRECT_URI, GDRIVE_SCOPE } from './driveConfig'
 import { initDiscord, setBrowsingStatus, setPlayingStatus, disconnectDiscord, getDiscordStatus } from './discord'
+
+function sendDesktopNotification(title: string, body: string) {
+  if (Notification.isSupported()) {
+    new Notification({ title, body }).show();
+  }
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -198,6 +204,11 @@ app.whenReady().then(() => {
   });
 
   // Game launcher with automatic playtime tracking
+  ipcMain.handle('show-notification', (_, title, body) => {
+    sendDesktopNotification(title, body);
+    return true;
+  });
+
   ipcMain.handle('launch-game', async (_, exePath: string, gameId: string, gameTitle: string) => {
     const win = BrowserWindow.getFocusedWindow()
     const exeName = basename(exePath)
@@ -236,6 +247,8 @@ app.whenReady().then(() => {
             const totalGames = getAllGames().length;
             setBrowsingStatus(totalGames);
           }
+
+          sendDesktopNotification('Game Session Ended', `Logged ${elapsedMinutes} minutes in your library.`);
 
           // Notify frontend: game stopped
           if (win) win.webContents.send('game-stopped', gameId, totalPlaytime)

@@ -17,16 +17,23 @@ const Header = () => {
     setShowImportModal,
     setGeminiKey,
     handleScanPC,
-    isScanning
+    isScanning,
+    notifications,
+    setNotifications
   } = useGlobal();
 
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
         setShowExportMenu(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -159,9 +166,44 @@ const Header = () => {
               <><Download size={14} className="relative z-10" /> <span className="relative z-10">Scan PC</span></>
             )}
           </button>
-          <div className="relative cursor-pointer hover:text-white transition">
-            <Bell size={18} />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full border border-[#0B0E14]"></span>
+          <div className="relative" ref={notificationsRef}>
+            <div 
+              className="cursor-pointer hover:text-white transition"
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                if (!showNotifications && notifications.some(n => !n.read)) {
+                  setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                }
+              }}
+            >
+              <Bell size={18} />
+              {notifications.some(n => !n.read) && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full border border-[#0B0E14]"></span>
+              )}
+            </div>
+            
+            {showNotifications && (
+              <div className="absolute top-12 right-0 w-80 bg-[#121620]/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden z-[9999] flex flex-col">
+                <div className="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                  <h3 className="text-white font-bold">Notifications</h3>
+                </div>
+                <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                  {notifications.length === 0 ? (
+                    <div className="p-8 text-center text-slate-500 text-sm">
+                      No new notifications
+                    </div>
+                  ) : (
+                    notifications.map(n => (
+                      <div key={n.id} className={`p-4 border-b border-white/5 hover:bg-white/5 transition flex flex-col gap-1 ${n.read ? 'opacity-70' : ''}`}>
+                        <h4 className="text-sm font-bold text-white">{n.title}</h4>
+                        <p className="text-xs text-slate-400 leading-snug">{n.message}</p>
+                        <span className="text-[10px] text-slate-500 mt-1">{n.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           <BarChart2 size={18} className="cursor-pointer hover:text-white transition" />
         </div>
