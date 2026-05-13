@@ -66,7 +66,7 @@ const Rankings = () => {
       <div className="flex flex-col items-center justify-center py-20 flex-1">
         <RefreshCw size={48} className="text-yellow-400 animate-spin mb-4" />
         <p className="text-white text-xl font-bold mb-2">Initial Data Fetch...</p>
-        <p className="text-slate-400 text-sm max-w-xs text-center">We're scraping current leaderboards and enriching them with IGDB art. This first load takes about 5-10 seconds.</p>
+        <p className="text-slate-400 text-sm max-w-xs text-center">We're scraping current leaderboards and enriching them with art. This first load takes about 5-10 seconds.</p>
       </div>
     );
   }
@@ -81,7 +81,7 @@ const Rankings = () => {
           <h1 className="text-4xl font-black text-white mb-2 flex items-center gap-3">
             <Trophy className="text-yellow-400" size={36}/> Global Hall of Fame
           </h1>
-          <p className="text-slate-400 text-[15px]">The highest user-rated games — scraped live from critic leaderboards and cached locally.</p>
+          <p className="text-slate-400 text-[15px]">The highest rated games scraped live from critic leaderboards.</p>
         </div>
         <button 
           onClick={handleRefresh} 
