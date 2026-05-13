@@ -15,7 +15,8 @@ const ImportHubModal = () => {
     setSteamKey,
     steamId,
     setSteamId,
-    loadGames
+    loadGames,
+    addNotification
   } = useGlobal();
 
   if (!showImportModal) return null;
@@ -123,6 +124,8 @@ const ImportHubModal = () => {
                 await loadGames();
                 setIsImporting(false);
                 setShowImportModal(false);
+                addNotification('Steam Sync Complete', `Successfully synced ${count} games from your Steam library.`);
+                window.api.showNotification('Steam Sync Complete', `Successfully synced ${count} games from your Steam library.`);
               }}
               disabled={isImporting}
               className="w-full py-4 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 disabled:opacity-50 text-white font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 active:scale-[0.98]"
