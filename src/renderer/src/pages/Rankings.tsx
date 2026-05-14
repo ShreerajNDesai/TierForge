@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Trophy, RefreshCw, Crown, Star, Search, ChevronDown } from 'lucide-react';
+import Tilt from 'react-parallax-tilt';
 import { useGlobal } from '../context/GlobalContext';
 
 const Rankings = () => {
@@ -170,27 +171,46 @@ const Rankings = () => {
               return (
                 <div
                   key={game.id}
+                  tabIndex={0}
                   onClick={async () => {
                     const matches = await window.api.searchGames(game.title);
                     if (matches && matches.length > 0) handleGameClick(matches[0]);
                   }}
-                  className={`relative cursor-pointer group flex flex-col items-center ${isFirst ? 'w-64' : 'w-52'}`}
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter') {
+                      const matches = await window.api.searchGames(game.title);
+                      if (matches && matches.length > 0) handleGameClick(matches[0]);
+                    }
+                  }}
+                  className={`relative cursor-pointer group flex flex-col items-center focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all ${isFirst ? 'w-64' : 'w-52'}`}
                 >
                   <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${medalColor} flex items-center justify-center font-black text-lg shadow-xl mb-3 border-4 border-[#0B0E14]`}>
                     {podiumIdx === 0 ? <Crown size={22} /> : `#${podiumIdx + 1}`}
                   </div>
-                  <div className={`relative w-full rounded-2xl overflow-hidden border-2 ${medalBorder} transition-all group-hover:scale-[1.03]`}>
-                    <img src={game.img} alt={game.title} className={`w-full ${isFirst ? 'h-80' : 'h-64'} object-cover group-hover:scale-105 transition-transform duration-500`} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <p className={`text-white font-black ${isFirst ? 'text-xl' : 'text-base'} truncate mb-1`}>{game.title}</p>
-                      <p className="text-slate-400 text-xs truncate mb-2">{game.genres}</p>
-                      <div className="flex items-center gap-1.5">
-                        <Star size={14} className="text-yellow-400" fill="currentColor" />
-                        <span className="text-sky-400 font-black text-sm">Overwhelmingly Positive</span>
+                  <Tilt
+                    glareEnable={true}
+                    glareMaxOpacity={0.3}
+                    glarePosition="all"
+                    glareBorderRadius="1rem"
+                    tiltMaxAngleX={10}
+                    tiltMaxAngleY={10}
+                    scale={1.05}
+                    transitionSpeed={400}
+                    className="w-full rounded-2xl"
+                  >
+                    <div className={`relative w-full rounded-2xl overflow-hidden border-2 ${medalBorder} transition-all group-hover:scale-[1.03]`}>
+                      <img src={game.img} alt={game.title} className={`w-full ${isFirst ? 'h-80' : 'h-64'} object-cover group-hover:scale-105 transition-transform duration-500`} />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <p className={`text-white font-black ${isFirst ? 'text-xl' : 'text-base'} truncate mb-1`}>{game.title}</p>
+                        <p className="text-slate-400 text-xs truncate mb-2">{game.genres}</p>
+                        <div className="flex items-center gap-1.5">
+                          <Star size={14} className="text-yellow-400" fill="currentColor" />
+                          <span className="text-sky-400 font-black text-sm">Overwhelmingly Positive</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Tilt>
                   <span className={`mt-3 text-xs font-black uppercase tracking-widest ${podiumIdx === 0 ? 'text-yellow-400' : podiumIdx === 1 ? 'text-slate-400' : 'text-amber-600'}`}>{rankLabel}</span>
                 </div>
               );
@@ -204,11 +224,18 @@ const Rankings = () => {
               return (
                 <div
                   key={game.id}
+                  tabIndex={0}
                   onClick={async () => {
                     const matches = await window.api.searchGames(game.title);
                     if (matches && matches.length > 0) handleGameClick(matches[0]);
                   }}
-                  className="group relative h-32 w-full overflow-hidden rounded-2xl border border-white/5 hover:border-yellow-500/40 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-2xl"
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter') {
+                      const matches = await window.api.searchGames(game.title);
+                      if (matches && matches.length > 0) handleGameClick(matches[0]);
+                    }
+                  }}
+                  className="group relative h-32 w-full overflow-hidden rounded-2xl border border-white/5 hover:border-yellow-500/40 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)]"
                 >
                   {/* Atmospheric Backdrop */}
                   <div className="absolute inset-0 overflow-hidden">
@@ -228,9 +255,21 @@ const Rankings = () => {
                   {/* Foreground Content */}
                   <div className="relative h-full flex items-center px-8 gap-8">
                     {/* Vertical Poster */}
-                    <div className="relative h-24 w-18 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-lg group-hover:border-yellow-500/50 transition">
-                      <img src={game.img} className="h-full w-full object-cover" alt={game.title} />
-                    </div>
+                    <Tilt
+                      glareEnable={true}
+                      glareMaxOpacity={0.3}
+                      glarePosition="all"
+                      glareBorderRadius="0.5rem"
+                      tiltMaxAngleX={10}
+                      tiltMaxAngleY={10}
+                      scale={1.05}
+                      transitionSpeed={400}
+                      className="shrink-0 rounded-lg"
+                    >
+                      <div className="relative h-24 w-18 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-lg group-hover:border-yellow-500/50 transition">
+                        <img src={game.img} className="h-full w-full object-cover" alt={game.title} />
+                      </div>
+                    </Tilt>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">

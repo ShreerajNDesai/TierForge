@@ -69,7 +69,7 @@ const Header = () => {
             placeholder={activeTab === 'library' ? "Search your library..." : "Search games..."} 
             className="w-full bg-[#121620]/80 border border-slate-700/50 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-indigo-500/50 focus:bg-[#151924]/90 text-slate-200 placeholder-slate-500 transition shadow-inner"
           />
-          {searchResults.length > 0 && activeTab !== 'library' && (
+          {searchResults.length > 0 && activeTab !== 'library' && activeTab !== 'discover' && (
             <Droppable droppableId="search-results" isDropDisabled={true}>
               {(provided) => (
                 <div 

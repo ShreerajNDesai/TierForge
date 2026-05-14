@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { GlobalProvider, useGlobal } from './context/GlobalContext';
+import { useGamepad } from './hooks/useGamepad';
 
 // Components
 import Sidebar from './components/Sidebar';
@@ -17,7 +19,31 @@ import AIOracle from './pages/AIOracle';
 import Settings from './pages/Settings';
 
 const AppContent = () => {
-  const { activeTab, onDragStart, onDragEnd } = useGlobal();
+  useGamepad();
+  const { activeTab, setActiveTab, setSelectedGame, setShowImportModal, onDragStart, onDragEnd } = useGlobal();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedGame(null);
+        setShowImportModal(false);
+      }
+
+      const tabs = ['tierlist', 'discover', 'library', 'statistics', 'rankings', 'oracle', 'settings'];
+      const currentIndex = tabs.indexOf(activeTab);
+
+      if (e.key === 'GamepadL1') {
+        const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        setActiveTab(tabs[prevIndex]);
+      } else if (e.key === 'GamepadR1') {
+        const nextIndex = (currentIndex + 1) % tabs.length;
+        setActiveTab(tabs[nextIndex]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab, setActiveTab, setSelectedGame, setShowImportModal]);
 
   const renderPage = () => {
     switch (activeTab) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Check, Plus, Search, ChevronDown } from 'lucide-react';
+import Tilt from 'react-parallax-tilt';
 import { useGlobal } from '../context/GlobalContext';
 
 const Discover = () => {
@@ -14,12 +15,17 @@ const Discover = () => {
     handleGameClick,
     data,
     handleAddGame,
-    hasMoreDiscover
+    hasMoreDiscover,
+    searchQuery,
+    setSearchQuery
   } = useGlobal();
 
   const [showGenreMenu, setShowGenreMenu] = useState(false);
   const [tagSearch, setTagSearch] = useState('');
   const [dynamicTags, setDynamicTags] = useState<{id: string, label: string}[]>([]);
+  const [discoverSearchResults, setDiscoverSearchResults] = useState<any[]>([]);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [previousFilter, setPreviousFilter] = useState<string>('trending');
 
   const handleDiscoverScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -102,11 +108,38 @@ const Discover = () => {
 
   const handleFilterSelect = (id: string) => {
     setDiscoverFilter(id);
+    if (searchQuery) {
+      setSearchQuery('');
+    }
     setDiscoverOffset(0);
     setHasMoreDiscover(true);
     setShowGenreMenu(false);
     setTagSearch('');
   };
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (searchQuery.length > 2) {
+      setIsSearchLoading(true);
+      if (discoverFilter !== 'search') {
+        setPreviousFilter(discoverFilter);
+        setDiscoverFilter('search');
+      }
+      
+      timeoutId = setTimeout(() => {
+        window.api.searchGames(searchQuery).then(results => {
+          setDiscoverSearchResults(results);
+          setIsSearchLoading(false);
+        });
+      }, 500); // debounce search
+    } else if (searchQuery.length === 0 && discoverFilter === 'search') {
+      setDiscoverFilter(previousFilter);
+      setDiscoverSearchResults([]);
+    }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [searchQuery, discoverFilter, previousFilter]);
 
   const filteredTags = useMemo(() => {
     if (!tagSearch.trim()) return dynamicTags;
@@ -133,7 +166,7 @@ const Discover = () => {
           <button
             key={filter.id}
             onClick={() => handleFilterSelect(filter.id)}
-            className={`px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap shrink-0 transition-all ${
+            className={`px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap shrink-0 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10 ${
               discoverFilter === filter.id 
                 ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]' 
                 : 'bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300'
@@ -145,7 +178,7 @@ const Discover = () => {
         
         <button 
           onClick={() => setShowGenreMenu(!showGenreMenu)} 
-          className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 shrink-0 ${
+          className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10 ${
             showGenreMenu 
               ? 'bg-indigo-500 text-white border-indigo-400' 
               : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30'
@@ -177,7 +210,7 @@ const Discover = () => {
                 <button
                   key={genre.id}
                   onClick={() => handleFilterSelect(genre.id)}
-                  className={`px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all border ${
+                  className={`px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all border focus:outline-none focus:ring-2 focus:ring-white focus:bg-white/10 ${
                     discoverFilter === genre.id
                       ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
                       : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
@@ -193,40 +226,61 @@ const Discover = () => {
 
       {/* Grid */}
       <div className="grid grid-cols-5 gap-6">
-        {(isDiscoverLoading && discoverOffset === 0) ? (
+        {(isDiscoverLoading && discoverOffset === 0 && searchQuery.length <= 2) || isSearchLoading ? (
           Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="animate-pulse bg-white/5 rounded-2xl h-72 border border-white/5"></div>
           ))
         ) : (
           <>
-            {discoverGames.map(game => (
+            {(searchQuery.length > 2 ? discoverSearchResults : discoverGames).map(game => (
               <div 
                 key={game.id} 
+                tabIndex={0}
                 onClick={() => handleGameClick(game)}
-                className="group relative cursor-pointer"
+                onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(game); }}
+                className="group relative cursor-pointer focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:scale-105 focus:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-2xl transition-all"
               >
-                <div className="w-full h-72 rounded-2xl overflow-hidden shadow-lg border border-slate-700/50 group-hover:border-indigo-500/50 transition duration-300 relative">
-                  <img src={game.image_url} alt={game.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                    {data.collection.some((g: any) => g.id === game.id.toString()) || 
-                     Object.values(data.tiers).some((tier: any) => tier.items.some((g: any) => g.id === game.id.toString())) ? (
-                      <div className="ml-auto bg-green-500/20 p-1.5 rounded-full border border-green-500/40">
-                        <Check size={20} className="text-green-400" />
-                      </div>
-                    ) : (
-                      <Plus size={24} className="text-white hover:text-indigo-400 transition ml-auto" onClick={(e) => { e.stopPropagation(); handleAddGame(game); }} />
-                    )}
+                <Tilt
+                  glareEnable={true}
+                  glareMaxOpacity={0.3}
+                  glarePosition="all"
+                  glareBorderRadius="1rem"
+                  tiltMaxAngleX={10}
+                  tiltMaxAngleY={10}
+                  scale={1.05}
+                  transitionSpeed={400}
+                  className="w-full h-72 rounded-2xl"
+                >
+                  <div className="w-full h-full rounded-2xl overflow-hidden shadow-lg border border-slate-700/50 group-hover:border-indigo-500/50 transition duration-300 relative">
+                    <img src={game.image_url} alt={game.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                      {data.collection.some((g: any) => g.id === game.id.toString()) || 
+                       Object.values(data.tiers).some((tier: any) => tier.items.some((g: any) => g.id === game.id.toString())) ? (
+                        <div className="ml-auto bg-green-500/20 p-1.5 rounded-full border border-green-500/40">
+                          <Check size={20} className="text-green-400" />
+                        </div>
+                      ) : (
+                        <Plus size={24} className="text-white hover:text-indigo-400 transition ml-auto" onClick={(e) => { e.stopPropagation(); handleAddGame(game); }} />
+                      )}
+                    </div>
                   </div>
-                </div>
+                </Tilt>
                 <div className="mt-3 text-center">
                   <h3 className="text-sm font-semibold text-slate-200 group-hover:text-indigo-300 transition line-clamp-1">{game.title}</h3>
                 </div>
               </div>
             ))}
-            {isDiscoverLoading && discoverOffset > 0 && (
+            {isDiscoverLoading && discoverOffset > 0 && searchQuery.length <= 2 && (
               Array.from({ length: 5 }).map((_, i) => (
                 <div key={`loading-more-${i}`} className="animate-pulse bg-white/5 rounded-2xl h-72 border border-white/5"></div>
               ))
+            )}
+            {searchQuery.length > 2 && discoverSearchResults.length === 0 && !isSearchLoading && (
+              <div className="col-span-5 flex flex-col items-center justify-center py-20 text-slate-400">
+                <Search size={48} className="mb-4 opacity-20" />
+                <p className="text-xl font-semibold">No games found for "{searchQuery}"</p>
+                <p className="text-sm mt-2 opacity-60">Try adjusting your search terms</p>
+              </div>
             )}
           </>
         )}

@@ -37,6 +37,7 @@ declare global {
       syncSteam: (steamId: string, apiKey: string) => Promise<number>;
       getSteamDetails: (steamId: string) => Promise<any>;
       getSteamTags: () => Promise<any[]>;
+      getSteamAchievements: (appId: string) => Promise<any>;
       getGamerProfile: (statsJson: string) => Promise<string>;
       backfillMetadata: () => Promise<boolean>;
       saveImage: (dataUrl: string, defaultPath: string) => Promise<boolean>;
@@ -49,6 +50,7 @@ declare global {
       restoreFromDrive: () => Promise<{ success: boolean; message: string }>;
       checkDriveConnection: () => Promise<{ connected: boolean; email?: string }>;
       disconnectDrive: () => Promise<boolean>;
+      setCustomSavePath: (gameId: string) => Promise<string | false>;
       
       // Window Controls
       windowMinimize: () => Promise<void>;

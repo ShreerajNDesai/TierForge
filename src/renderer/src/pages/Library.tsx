@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as htmlToImage from 'html-to-image';
-import { PlayCircle, Search, Clock, Gamepad2, Trophy, Star, Library as LibraryIcon } from 'lucide-react';
+import Tilt from 'react-parallax-tilt';
+import { PlayCircle, Search, Clock, Gamepad2, Trophy, Star, Library as LibraryIcon, ExternalLink, Activity, Target, Flame } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 
 const Library = () => {
@@ -78,7 +79,12 @@ const Library = () => {
       </div>
       
       {suggestedGame && librarySearch === '' && (
-        <div className="w-full relative rounded-2xl overflow-hidden mb-8 group cursor-pointer border border-indigo-500/40 shadow-[0_0_25px_rgba(99,102,241,0.15),inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-purple-400/50 hover:shadow-[0_0_40px_rgba(139,92,246,0.25)] transition-all duration-500" onClick={() => handleGameClick(suggestedGame)}>
+        <div 
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(suggestedGame); }}
+          className="w-full relative rounded-2xl overflow-hidden mb-8 group cursor-pointer border border-indigo-500/40 shadow-[0_0_25px_rgba(99,102,241,0.15),inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-purple-400/50 hover:shadow-[0_0_40px_rgba(139,92,246,0.25)] focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all duration-500" 
+          onClick={() => handleGameClick(suggestedGame)}
+        >
           {/* Background Image */}
           <div className="absolute inset-0">
             <img src={suggestedGame.img || suggestedGame.image_url} alt="" className="w-full h-full object-cover scale-110 blur-sm group-hover:scale-105 transition-transform duration-700" />
@@ -139,22 +145,38 @@ const Library = () => {
                 {gamesInStatus.map(game => (
                   <div 
                     key={game.id} 
+                    tabIndex={0}
                     onClick={() => handleGameClick(game)}
-                    className="flex-shrink-0 w-48 h-72 rounded-xl overflow-hidden shadow-lg border border-white/10 cursor-pointer group relative hover:scale-105 hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all"
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(game); }}
+                    className="flex-shrink-0 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-xl transition-all"
                   >
-                    <img src={game.img || game.image_url} alt={game.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                      <span className="text-white font-bold text-sm truncate w-full">{game.title}</span>
-                    </div>
-                    {(game.playtime_minutes || 0) > 0 && (
-                      <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 border border-white/10">
-                        <Clock size={10} className="text-indigo-400" />
-                        {(game.playtime_minutes || 0) >= 60 
-                          ? `${Math.floor(game.playtime_minutes / 60)}h ${game.playtime_minutes % 60}m`
-                          : `${game.playtime_minutes}m`
-                        }
+                    <Tilt
+                      glareEnable={true}
+                      glareMaxOpacity={0.3}
+                      glarePosition="all"
+                      glareBorderRadius="0.75rem"
+                      tiltMaxAngleX={10}
+                      tiltMaxAngleY={10}
+                      scale={1.05}
+                      transitionSpeed={400}
+                      className="w-48 h-72 rounded-xl"
+                    >
+                      <div className="w-full h-full rounded-xl overflow-hidden shadow-lg border border-white/10 group relative hover:scale-105 hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all">
+                        <img src={game.img || game.image_url} alt={game.title} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                          <span className="text-white font-bold text-sm truncate w-full">{game.title}</span>
+                        </div>
+                        {(game.playtime_minutes || 0) > 0 && (
+                          <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 border border-white/10">
+                            <Clock size={10} className="text-indigo-400" />
+                            {(game.playtime_minutes || 0) >= 60 
+                              ? `${Math.floor(game.playtime_minutes / 60)}h ${game.playtime_minutes % 60}m`
+                              : `${game.playtime_minutes}m`
+                            }
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </Tilt>
                   </div>
                 ))}
               </div>

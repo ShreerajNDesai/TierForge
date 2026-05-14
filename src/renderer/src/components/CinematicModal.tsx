@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Gamepad2, Clock, ChevronDown, Star, Monitor, Tag, ExternalLink, PlayCircle, Volume2, VolumeX, X, Sparkles, Trash2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Gamepad2, Clock, ChevronDown, Star, Monitor, Tag, ExternalLink, PlayCircle, Volume2, VolumeX, X, Sparkles, Trash2, RefreshCw, AlertTriangle, Cloud } from 'lucide-react';
+import Tilt from 'react-parallax-tilt';
 import { useGlobal } from '../context/GlobalContext';
 
 const CinematicModal = () => {
@@ -35,6 +36,7 @@ const CinematicModal = () => {
   const [aiTimeline, setAiTimeline] = useState<any[] | null>(null);
   const [isTimelineLoading, setIsTimelineLoading] = useState(false);
   const [steamDetails, setSteamDetails] = useState<any>(null);
+  const [achievements, setAchievements] = useState<any>(null);
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{ title: string; message: string; confirmText: string; isDanger?: boolean; onConfirm: () => void } | null>(null);
   const [alertDialog, setAlertDialog] = useState<{ title: string; message: string } | null>(null);
@@ -57,13 +59,16 @@ const CinematicModal = () => {
   useEffect(() => {
     setAiTimeline(null);
     setSteamDetails(null);
+    setAchievements(null);
   }, [selectedGame]);
 
   useEffect(() => {
     if (gameDetails?.steamId) {
       window.api.getSteamDetails(gameDetails.steamId).then(setSteamDetails).catch(() => setSteamDetails(null));
+      window.api.getSteamAchievements(gameDetails.steamId).then(setAchievements).catch(() => setAchievements(null));
     } else {
       setSteamDetails(null);
+      setAchievements(null);
     }
   }, [gameDetails]);
 
@@ -108,7 +113,19 @@ const CinematicModal = () => {
         <div className="relative z-10 w-full h-full p-16 flex gap-16 overflow-hidden">
           {/* Left Column - sticky, no scroll */}
           <div className="flex flex-col gap-6 shrink-0 self-start sticky top-0">
-            <img src={selectedGame.img || selectedGame.image_url} alt={selectedGame.title} className="w-80 rounded-2xl shadow-2xl border border-white/10" />
+            <Tilt
+              glareEnable={true}
+              glareMaxOpacity={0.3}
+              glarePosition="all"
+              glareBorderRadius="1rem"
+              tiltMaxAngleX={10}
+              tiltMaxAngleY={10}
+              scale={1.05}
+              transitionSpeed={400}
+              className="rounded-2xl"
+            >
+              <img src={selectedGame.img || selectedGame.image_url} alt={selectedGame.title} className="w-80 rounded-2xl shadow-2xl border border-white/10" />
+            </Tilt>
             
             {selectedGame.executable_path && selectedGame.executable_path !== '' && (
               runningGameId === selectedGame.id.toString() ? (
@@ -116,11 +133,23 @@ const CinematicModal = () => {
                   <Gamepad2 size={22} className="animate-bounce" /> Game Running...
                 </div>
               ) : (
-                <button onClick={() => window.api.launchGame(selectedGame.executable_path, selectedGame.id.toString(), selectedGame.title)} className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex justify-center items-center gap-3 tracking-widest uppercase border border-indigo-400/50">
+                <button onClick={() => window.api.launchGame(selectedGame.executable_path, selectedGame.id.toString(), selectedGame.title)} className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex justify-center items-center gap-3 tracking-widest uppercase border border-indigo-400/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10">
                   <Gamepad2 size={22} /> Play Game
                 </button>
               )
             )}
+
+            <button 
+              onClick={async () => {
+                const newPath = await window.api.setCustomSavePath(selectedGame.id.toString());
+                if (newPath) {
+                  alert(`Linked save folder: ${newPath}`);
+                }
+              }}
+              className="w-full py-2.5 bg-black/40 border border-white/20 hover:border-indigo-500/50 hover:bg-indigo-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center gap-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            >
+              <Cloud size={16} /> Link Save Folder
+            </button>
 
             {/* Playtime Badge */}
             <div className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/5 border border-white/10 rounded-xl">
@@ -191,7 +220,7 @@ const CinematicModal = () => {
                         }
                       });
                     }}
-                    className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl px-4 py-2.5 font-semibold transition"
+                    className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl px-4 py-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10"
                   >
                     <Trash2 size={16} /> Remove from Library
                   </button>
@@ -223,7 +252,7 @@ const CinematicModal = () => {
                         });
                       }}
                       disabled={isUninstalling}
-                      className="w-full flex items-center justify-center gap-2 bg-red-900/40 hover:bg-red-600/40 text-red-300 border border-red-600/50 rounded-xl px-4 py-2.5 font-black uppercase tracking-wider text-xs transition shadow-[0_0_15px_rgba(220,38,38,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-2 bg-red-900/40 hover:bg-red-600/40 text-red-300 border border-red-600/50 rounded-xl px-4 py-2.5 font-black uppercase tracking-wider text-xs transition shadow-[0_0_15px_rgba(220,38,38,0.2)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10"
                     >
                       {isUninstalling ? <RefreshCw size={16} className="animate-spin" /> : <Trash2 size={16} />}
                       {isUninstalling ? 'Opening Uninstaller...' : 'Uninstall PC Game'}
@@ -416,6 +445,42 @@ const CinematicModal = () => {
                     .steam-specs-container strong { color: #94a3b8; font-weight: 800; margin-right: 4px; }
                     .steam-specs-container br { display: none; }
                   `}</style>
+                </div>
+              )}
+
+              {/* Steam Achievements */}
+              {achievements && achievements.total > 0 && (
+                <div className="bg-black/30 border border-white/10 backdrop-blur-md rounded-2xl p-6 shadow-inner mb-6">
+                  <h3 className="text-sm font-bold text-white/70 tracking-wide mb-4">
+                    Steam Achievements ({achievements.unlocked} / {achievements.total})
+                  </h3>
+                  
+                  <div className="w-full h-2 bg-slate-800 rounded-full mb-2 overflow-hidden flex">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-cyan-400 h-full transition-all duration-1000 ease-out"
+                      style={{ width: `${achievements.percentage}%` }}
+                    />
+                  </div>
+                  <div className="text-xs font-bold text-cyan-400 text-right mb-4">{achievements.percentage}% Unlocked</div>
+
+                  <div className="flex gap-3 overflow-x-auto custom-scrollbar pt-4 pb-2">
+                    {[...achievements.list].sort((a, b) => (b.achieved ? 1 : 0) - (a.achieved ? 1 : 0)).map((ach: any, idx: number) => (
+                      <div key={idx} className="group relative shrink-0">
+                        <div className={`w-16 h-16 rounded-xl overflow-hidden ${ach.achieved ? 'border-2 border-cyan-400/80 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'border border-white/10'}`}>
+                          <img 
+                            src={ach.icon} 
+                            alt={ach.name} 
+                            className={`w-full h-full object-cover transition-all ${ach.achieved ? 'opacity-100' : 'grayscale contrast-50 opacity-40'}`} 
+                          />
+                        </div>
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#0B0E14]/95 backdrop-blur-xl border border-white/20 rounded-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[400] shadow-2xl">
+                          <h4 className="text-xs font-bold text-white mb-1 leading-tight">{ach.name}</h4>
+                          <p className="text-[10px] text-slate-400 leading-snug">{ach.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
