@@ -62,20 +62,10 @@ const Rankings = () => {
 
   const filteredTags = dynamicGenres.filter(t => t.label.toLowerCase().includes(tagSearch.toLowerCase()));
 
-  if (rankingsLoading && (!globalRankings || !globalRankings[rankingsGenre])) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 flex-1">
-        <RefreshCw size={48} className="text-yellow-400 animate-spin mb-4" />
-        <p className="text-white text-xl font-bold mb-2">Initial Data Fetch...</p>
-        <p className="text-slate-400 text-sm max-w-xs text-center">We're scraping current leaderboards and enriching them with art. This first load takes about 5-10 seconds.</p>
-      </div>
-    );
-  }
+  const showLoader = rankingsLoading && (!globalRankings || !globalRankings[rankingsGenre]);
 
   return (
     <div className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
-
-
       {/* Header */}
       <div className="mb-8 flex items-end">
         <div>
@@ -157,7 +147,13 @@ const Rankings = () => {
         </div>
       )}
 
-      {currentRankingList && currentRankingList.length >= 3 && (
+      {showLoader ? (
+        <div className="flex flex-col items-center justify-center py-32 flex-1">
+          <RefreshCw size={48} className="text-yellow-400 animate-spin mb-4" />
+          <p className="text-white text-xl font-bold mb-2">Fetching Rankings...</p>
+          <p className="text-slate-400 text-sm max-w-xs text-center">We're scraping leaderboards and enriching them with metadata. This takes a few seconds.</p>
+        </div>
+      ) : currentRankingList && currentRankingList.length >= 3 && (
         <>
           {/* Podium — Top 3 */}
           <div className="flex gap-6 mb-16 items-end justify-center">
