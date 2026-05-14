@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, Notification } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, Notification, Tray, nativeImage } from 'electron'
 import { join, basename } from 'path'
 import { exec } from 'child_process'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -74,6 +74,37 @@ function sendDesktopNotification(title: string, body: string) {
   }
 }
 
+let tray: Tray | null = null;
+let trayWindow: BrowserWindow | null = null;
+let isQuitting = false;
+
+function createTrayWindow(): void {
+  trayWindow = new BrowserWindow({
+    width: 320,
+    height: 450,
+    show: false,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false
+    }
+  });
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    trayWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}#/tray`);
+  } else {
+    trayWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash: 'tray' });
+  }
+
+  trayWindow.on('blur', () => {
+    trayWindow?.hide();
+  });
+}
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -94,6 +125,14 @@ function createWindow(): void {
     mainWindow.show()
   })
 
+  mainWindow.on('close', (event) => {
+    // Hide to tray instead of quitting
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
@@ -113,6 +152,52 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   initDB();
+
+  createTrayWindow();
+
+  // Initialize Tray
+  tray = new Tray(nativeImage.createFromPath(join(__dirname, '../../resources/icon.png')));
+  tray.setToolTip('TierForge Gaming Dashboard');
+  
+  tray.on('click', () => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (win) {
+      win.show();
+      win.focus();
+    }
+  });
+
+  tray.on('right-click', () => {
+    if (!tray || !trayWindow) return;
+    
+    if (trayWindow.isVisible()) {
+      trayWindow.hide();
+    } else {
+      const { x, y, width, height } = tray.getBounds();
+      const trayWidth = trayWindow.getBounds().width;
+      const trayHeight = trayWindow.getBounds().height;
+      const { screen } = require('electron');
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const workArea = primaryDisplay.workArea;
+
+      // Calculate x position to center above tray icon
+      let xPos = Math.round(x + (width / 2) - (trayWidth / 2));
+      // Keep within screen bounds
+      if (xPos < workArea.x) xPos = workArea.x;
+      if (xPos + trayWidth > workArea.x + workArea.width) xPos = workArea.x + workArea.width - trayWidth;
+
+      // Calculate y position above tray
+      let yPos = Math.round(y - trayHeight - 10);
+      // If taskbar is at top, put below
+      if (yPos < workArea.y) yPos = Math.round(y + height + 10);
+
+      trayWindow.setPosition(xPos, yPos, false);
+      trayWindow.show();
+      trayWindow.focus();
+    }
+  });
+
+  // tray.on('double-click') can remain or be removed, since click already handles it. Let's just remove double-click to avoid conflicts.
 
   // Initialize Discord RPC if enabled
   const isDiscordEnabled = getSetting('discord_rpc') !== 'false'; // Defaults to true
@@ -242,6 +327,54 @@ app.whenReady().then(() => {
     return true;
   });
 
+  ipcMain.handle('get-tray-data', () => {
+    const games = getAllGames();
+    const installedGames = games.filter((g: any) => g.executable_path && g.executable_path.trim() !== '');
+    const recentGames = [...installedGames].sort((a: any, b: any) => (b.last_played_at || 0) - (a.last_played_at || 0)).slice(0, 5);
+    const backlogGames = installedGames.filter((g: any) => g.status === 'Backlog');
+    const discordEnabled = getSetting('discord_rpc') !== 'false';
+    
+    return {
+      recentGames,
+      installedGames,
+      backlogGames,
+      discordEnabled
+    };
+  });
+
+  ipcMain.handle('hide-tray-window', () => {
+    if (trayWindow) trayWindow.hide();
+  });
+
+  ipcMain.handle('quit-app', () => {
+    isQuitting = true;
+    app.quit();
+  });
+
+  ipcMain.handle('show-main-window', () => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (win) {
+      win.show();
+      win.focus();
+    }
+  });
+
+  ipcMain.handle('force-cloud-backup', async () => {
+    sendDesktopNotification('Cloud Backup', 'Starting background backup of recently played games...');
+    const games = getAllGames().filter((g: any) => g.executable_path && g.last_played_at > 0).sort((a: any, b: any) => b.last_played_at - a.last_played_at).slice(0, 3);
+    if (games.length === 0) {
+      sendDesktopNotification('Cloud Backup', 'No recently played games found to backup.');
+      return;
+    }
+    let successCount = 0;
+    for (const game of games) {
+      const success = await backupGameSave(game.title, game.custom_save_path || '', getValidDriveToken);
+      if (success) successCount++;
+    }
+    sendDesktopNotification('Cloud Backup', `Successfully backed up ${successCount}/${games.length} recent games.`);
+    return true;
+  });
+
   // Game launcher with automatic playtime tracking
   ipcMain.handle('show-notification', (_, title, body) => {
     sendDesktopNotification(title, body);
@@ -258,6 +391,8 @@ app.whenReady().then(() => {
     })
 
     const startTime = Date.now()
+    
+    db.prepare('UPDATE games SET last_played_at = ? WHERE id = ?').run(startTime, gameId);
 
     // Update Discord Status
     const isDiscordEnabled = getSetting('discord_rpc') !== 'false';
@@ -509,7 +644,9 @@ app.whenReady().then(() => {
 
   ipcMain.handle('window-close', () => {
     const win = BrowserWindow.getFocusedWindow();
-    if (win) win.close();
+    if (win) {
+      win.hide();
+    }
   });
 
   // Backup System
@@ -753,6 +890,10 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+app.on('before-quit', () => {
+  isQuitting = true;
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

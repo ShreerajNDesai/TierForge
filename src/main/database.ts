@@ -25,13 +25,21 @@ export function initDB() {
       genres TEXT DEFAULT '',
       developers TEXT DEFAULT '',
       release_year TEXT DEFAULT '',
-      custom_save_path TEXT DEFAULT ''
+      custom_save_path TEXT DEFAULT '',
+      last_played_at INTEGER DEFAULT 0
     );
   `);
 
   // Add custom_save_path column if it doesn't exist
   try {
     db.exec(`ALTER TABLE games ADD COLUMN custom_save_path TEXT DEFAULT '';`);
+  } catch (e) {
+    // Column already exists
+  }
+
+  // Add last_played_at column if it doesn't exist
+  try {
+    db.exec(`ALTER TABLE games ADD COLUMN last_played_at INTEGER DEFAULT 0;`);
   } catch (e) {
     // Column already exists
   }
