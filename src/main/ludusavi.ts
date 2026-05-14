@@ -3,8 +3,9 @@ import path from 'path';
 import https from 'https';
 import os from 'os';
 import AdmZip from 'adm-zip';
+import yaml from 'js-yaml';
 
-const MANIFEST_URL = 'https://raw.githubusercontent.com/mtkennerly/ludusavi-manifest/master/data/manifest.json';
+const MANIFEST_URL = 'https://raw.githubusercontent.com/mtkennerly/ludusavi-manifest/master/data/manifest.yaml';
 let manifestCache: any = null;
 
 // Parse paths replacing variables
@@ -39,7 +40,7 @@ export async function fetchLudusaviManifest() {
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         try {
-          manifestCache = JSON.parse(data);
+          manifestCache = yaml.load(data);
           resolve(manifestCache);
         } catch (e) {
           reject(e);
@@ -71,6 +72,31 @@ export async function findGameSavePath(gameTitle: string): Promise<string | null
     return null;
   } catch (error) {
     console.error('Ludusavi resolution error', error);
+    return null;
+  }
+}
+
+export async function getExeNameFromManifest(gameTitle: string): Promise<string | null> {
+  try {
+    const manifest: any = await fetchLudusaviManifest();
+    
+    let gameData = manifest[gameTitle];
+    if (!gameData) {
+      const key = Object.keys(manifest).find(k => k.toLowerCase() === gameTitle.toLowerCase());
+      if (key) gameData = manifest[key];
+    }
+
+    if (!gameData || !gameData.launch) return null;
+
+    for (const key of Object.keys(gameData.launch)) {
+      if (key.toLowerCase().endsWith('.exe')) {
+        const parts = key.replace(/\\/g, '/').split('/');
+        return parts[parts.length - 1];
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('Ludusavi exe extraction error', error);
     return null;
   }
 }
