@@ -8,6 +8,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import CinematicModal from './components/CinematicModal';
 import ImportHubModal from './components/ImportHubModal';
+import TrayMenu from './components/TrayMenu';
 
 // Pages
 import TierList from './pages/TierList';
@@ -83,6 +84,10 @@ const AppContent = () => {
 };
 
 export default function App() {
+  if (window.location.hash === '#/tray' || window.location.hash === '#tray') {
+    return <TrayMenu />;
+  }
+
   return (
     <GlobalProvider>
       <AppContent />

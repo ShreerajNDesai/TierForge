@@ -64,7 +64,12 @@ const api = {
   restoreFromDrive: () => ipcRenderer.invoke('restore-from-drive'),
   checkDriveConnection: () => ipcRenderer.invoke('check-drive-connection'),
   disconnectDrive: () => ipcRenderer.invoke('disconnect-drive'),
-  setCustomSavePath: (gameId: string) => ipcRenderer.invoke('set-custom-save-path', gameId)
+  setCustomSavePath: (gameId: string) => ipcRenderer.invoke('set-custom-save-path', gameId),
+  getTrayData: () => ipcRenderer.invoke('get-tray-data'),
+  hideTrayWindow: () => ipcRenderer.invoke('hide-tray-window'),
+  quitApp: () => ipcRenderer.invoke('quit-app'),
+  showMainWindow: () => ipcRenderer.invoke('show-main-window'),
+  forceCloudBackup: () => ipcRenderer.invoke('force-cloud-backup')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

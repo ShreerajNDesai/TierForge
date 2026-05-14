@@ -59,6 +59,11 @@ declare global {
       getGameDeals: (title: string) => Promise<any[]>;
       openExternal: (url: string) => Promise<boolean>;
       getGlobalRankings: () => Promise<any>;
+      getTrayData: () => Promise<{ recentGames: any[], installedGames: any[], backlogGames: any[], discordEnabled: boolean }>;
+      hideTrayWindow: () => Promise<void>;
+      quitApp: () => Promise<void>;
+      showMainWindow: () => Promise<void>;
+      forceCloudBackup: () => Promise<boolean>;
     }
   }
 }
