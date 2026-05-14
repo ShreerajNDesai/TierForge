@@ -30,7 +30,8 @@ const CinematicModal = () => {
     isMuted,
     toggleMute,
     setTimeToBeat,
-    handleGameClick
+    handleGameClick,
+    setLibraryGames
   } = useGlobal();
 
   const [aiTimeline, setAiTimeline] = useState<any[] | null>(null);
@@ -212,6 +213,7 @@ const CinematicModal = () => {
                         isDanger: true,
                         onConfirm: async () => {
                           try {
+                            setLibraryGames(prev => prev.filter(g => g.id.toString() !== selectedGame.id.toString()));
                             await window.api.deleteGame(selectedGame.id.toString());
                             setSelectedGame(null);
                           } catch (err) {
@@ -239,6 +241,7 @@ const CinematicModal = () => {
                               setTimeout(() => {
                                 setIsUninstalling(false);
                                 if (success) {
+                                  setLibraryGames(prev => prev.filter(g => g.id.toString() !== selectedGame.id.toString()));
                                   setSelectedGame(null);
                                 } else {
                                   setAlertDialog({ title: 'Uninstall Failed', message: 'Failed to launch the uninstaller. The path may be invalid or protected.' });
