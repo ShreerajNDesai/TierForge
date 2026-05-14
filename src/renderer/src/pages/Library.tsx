@@ -141,14 +141,14 @@ const Library = () => {
           return (
             <div key={status.id} className="mb-10">
               <h2 className="text-2xl font-bold text-white mb-4">{status.title}</h2>
-              <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide pt-2 px-2 custom-scrollbar">
+              <div className="flex gap-6 overflow-x-auto py-6 -my-4 scrollbar-hide px-2 custom-scrollbar">
                 {gamesInStatus.map(game => (
                   <div 
                     key={game.id} 
                     tabIndex={0}
                     onClick={() => handleGameClick(game)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(game); }}
-                    className="flex-shrink-0 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-xl transition-all"
+                    className="flex-shrink-0 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-xl transition-all relative z-0 hover:z-50"
                   >
                     <Tilt
                       glareEnable={true}

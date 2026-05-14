@@ -85,7 +85,7 @@ const Rankings = () => {
       </div>
 
       {/* Genre Filter Pills */}
-      <div className="flex gap-3 overflow-x-auto pb-4 mb-2 flex-nowrap no-scrollbar items-center">
+      <div className="flex gap-3 overflow-x-auto py-4 -my-2 mb-2 flex-nowrap no-scrollbar items-center">
         {mainstreamFilters.map(genre => (
           <button
             key={genre.key}
@@ -178,7 +178,7 @@ const Rankings = () => {
                       if (matches && matches.length > 0) handleGameClick(matches[0]);
                     }
                   }}
-                  className={`relative cursor-pointer group flex flex-col items-center focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all ${isFirst ? 'w-64' : 'w-52'}`}
+                  className={`relative cursor-pointer group flex flex-col items-center focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all relative z-0 hover:z-50 ${isFirst ? 'w-64' : 'w-52'}`}
                 >
                   <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${medalColor} flex items-center justify-center font-black text-lg shadow-xl mb-3 border-4 border-[#0B0E14]`}>
                     {podiumIdx === 0 ? <Crown size={22} /> : `#${podiumIdx + 1}`}
@@ -231,7 +231,7 @@ const Rankings = () => {
                       if (matches && matches.length > 0) handleGameClick(matches[0]);
                     }
                   }}
-                  className="group relative h-32 w-full overflow-hidden rounded-2xl border border-white/5 hover:border-yellow-500/40 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)]"
+                  className="group relative h-32 w-full overflow-hidden rounded-2xl border border-white/5 hover:border-yellow-500/40 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] relative z-0 hover:z-50"
                 >
                   {/* Atmospheric Backdrop */}
                   <div className="absolute inset-0 overflow-hidden">
