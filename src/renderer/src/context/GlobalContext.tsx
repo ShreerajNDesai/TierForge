@@ -304,6 +304,14 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     loadGames();
   }, []);
 
+  // Re-sync UI state whenever the app is restored from the system tray
+  useEffect(() => {
+    const cleanup = window.api.onAppRestored(() => {
+      loadGames();
+    });
+    return cleanup;
+  }, []);
+
   useEffect(() => {
     if (activeTab === 'library' || activeTab === 'statistics') {
       window.api.getAllGames().then((games: any[]) => {
