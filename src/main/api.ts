@@ -657,3 +657,47 @@ export async function backfillMissingMetadata() {
   }
   return true;
 }
+
+export async function getSteamAchievements(appId: string, steamId: string, apiKey: string) {
+  try {
+    const schemaRes = await fetch(`https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${apiKey}&appid=${appId}`);
+    const schemaData = await schemaRes.json();
+    
+    const playerRes = await fetch(`https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=${appId}&key=${apiKey}&steamid=${steamId}`);
+    const playerData = await playerRes.json();
+
+    if (!schemaData?.game?.availableGameStats?.achievements || !playerData?.playerstats?.achievements) {
+      return null;
+    }
+
+    const playerAchMap = new Map();
+    playerData.playerstats.achievements.forEach((ach: any) => {
+      playerAchMap.set(ach.apiname, ach);
+    });
+
+    let unlocked = 0;
+    const list = schemaData.game.availableGameStats.achievements.map((ach: any) => {
+      const pAch = playerAchMap.get(ach.name);
+      const isAchieved = pAch && pAch.achieved === 1;
+      if (isAchieved) unlocked++;
+      
+      return {
+        name: ach.displayName,
+        description: ach.description || '',
+        icon: isAchieved ? ach.icon : ach.icongray,
+        achieved: isAchieved,
+        unlockTime: pAch ? pAch.unlocktime : 0
+      };
+    });
+
+    const total = list.length;
+    return {
+      total,
+      unlocked,
+      percentage: total > 0 ? Math.round((unlocked / total) * 100) : 0,
+      list
+    };
+  } catch (err) {
+    return null;
+  }
+}

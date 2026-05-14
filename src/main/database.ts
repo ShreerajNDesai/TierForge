@@ -4,7 +4,7 @@ import path from 'path';
 
 // This saves the database in the user's AppData folder so it doesn't get deleted when updating the app
 const dbPath = path.join(app.getPath('userData'), 'tierforge.db');
-const db = new Database(dbPath);
+export const db: any = new Database(dbPath);
 
 export function getDbPath() {
   return dbPath;
@@ -24,9 +24,17 @@ export function initDB() {
       playtime_minutes INTEGER DEFAULT 0,
       genres TEXT DEFAULT '',
       developers TEXT DEFAULT '',
-      release_year TEXT DEFAULT ''
+      release_year TEXT DEFAULT '',
+      custom_save_path TEXT DEFAULT ''
     );
   `);
+
+  // Add custom_save_path column if it doesn't exist
+  try {
+    db.exec(`ALTER TABLE games ADD COLUMN custom_save_path TEXT DEFAULT '';`);
+  } catch (e) {
+    // Column already exists
+  }
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS settings (

@@ -236,8 +236,7 @@ const Settings = () => {
         </div>
 
         {/* Offline Folder Backup */}
-        <div className="bg-[#121620] border border-emerald-500/20 rounded-3xl p-8 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+        <div className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl relative overflow-hidden">
           
           <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
             <Shield size={22} className="text-emerald-400" />
@@ -343,8 +342,7 @@ const Settings = () => {
         </div>
 
         {/* Google Drive API */}
-        <div className="bg-[#121620] border border-blue-500/20 rounded-3xl p-8 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-cyan-400"></div>
+        <div className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl relative overflow-hidden">
           
           <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
             <Cloud size={22} className="text-blue-400" />

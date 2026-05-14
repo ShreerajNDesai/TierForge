@@ -31,8 +31,10 @@ const Sidebar = () => {
             return (
               <div 
                 key={item.id}
+                tabIndex={0}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl cursor-pointer relative overflow-hidden group transition ${item.marginTop || ''} ${isActive ? `bg-gradient-to-r from-${colorClass}-600/20 to-${colorClass === 'indigo' ? 'purple' : colorClass === 'purple' ? 'pink' : 'amber'}-600/10 text-${colorClass}-300 border border-${colorClass}-500/30 shadow-[0_0_20px_rgba(${colorClass === 'indigo' ? '99,102,241' : colorClass === 'purple' ? '168,85,247' : '234,179,8'},0.15)]` : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'}`}
+                onKeyDown={(e) => { if (e.key === 'Enter') setActiveTab(item.id); }}
+                className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl cursor-pointer relative overflow-hidden group transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10 ${item.marginTop || ''} ${isActive ? `bg-gradient-to-r from-${colorClass}-600/20 to-${colorClass === 'indigo' ? 'purple' : colorClass === 'purple' ? 'pink' : 'amber'}-600/10 text-${colorClass}-300 border border-${colorClass}-500/30 shadow-[0_0_20px_rgba(${colorClass === 'indigo' ? '99,102,241' : colorClass === 'purple' ? '168,85,247' : '234,179,8'},0.15)]` : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'}`}
               >
                 {isActive && <div className={`absolute inset-0 bg-${colorClass}-500/10 group-hover:bg-${colorClass}-500/20 transition-colors`}></div>}
                 <Icon size={20} className={isActive ? `text-${colorClass}-400 relative z-10` : ''} /> 

@@ -51,6 +51,7 @@ const api = {
   showNotification: (title: string, body: string) => ipcRenderer.invoke('show-notification', title, body),
   getSteamDetails: (steamId: string) => ipcRenderer.invoke('get-steam-details', steamId),
   getSteamTags: () => ipcRenderer.invoke('get-steam-tags'),
+  getSteamAchievements: (appId: string) => ipcRenderer.invoke('get-steam-achievements', appId),
   getGamerProfile: (statsJson: string) => ipcRenderer.invoke('get-gamer-profile', statsJson),
   backfillMetadata: () => ipcRenderer.invoke('backfill-metadata'),
   saveImage: (dataUrl: string, defaultPath: string) => ipcRenderer.invoke('save-image', dataUrl, defaultPath),
@@ -62,7 +63,8 @@ const api = {
   backupToDrive: () => ipcRenderer.invoke('backup-to-drive'),
   restoreFromDrive: () => ipcRenderer.invoke('restore-from-drive'),
   checkDriveConnection: () => ipcRenderer.invoke('check-drive-connection'),
-  disconnectDrive: () => ipcRenderer.invoke('disconnect-drive')
+  disconnectDrive: () => ipcRenderer.invoke('disconnect-drive'),
+  setCustomSavePath: (gameId: string) => ipcRenderer.invoke('set-custom-save-path', gameId)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

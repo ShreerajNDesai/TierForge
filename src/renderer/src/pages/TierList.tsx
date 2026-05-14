@@ -119,8 +119,10 @@ const TierList = () => {
                         {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}
+                            tabIndex={0}
                             onClick={() => handleGameClick(item)}
-                            className={`flex-shrink-0 w-[100px] h-[145px] rounded-[10px] overflow-hidden border border-slate-700/80 shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-colors duration-200 cursor-pointer ${
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(item); }}
+                            className={`flex-shrink-0 w-[100px] h-[145px] rounded-[10px] overflow-hidden border border-slate-700/80 shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] ${
                               snapshot.isDragging 
                                 ? 'shadow-2xl border-indigo-400 z-[100]' 
                                 : 'hover:border-slate-400 hover:shadow-lg'
@@ -174,8 +176,10 @@ const TierList = () => {
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}
+                      tabIndex={0}
                       onClick={() => handleGameClick(item)}
-                      className={`flex-shrink-0 w-[115px] h-[170px] rounded-[10px] overflow-hidden border border-slate-700/80 shadow-lg transition-colors duration-200 cursor-pointer ${
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(item); }}
+                      className={`flex-shrink-0 w-[115px] h-[170px] rounded-[10px] overflow-hidden border border-slate-700/80 shadow-lg transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] ${
                         snapshot.isDragging 
                           ? 'shadow-2xl border-indigo-400 z-[100]' 
                           : 'hover:border-slate-400 hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)]'

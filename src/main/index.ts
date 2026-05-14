@@ -3,7 +3,7 @@ import { join, basename } from 'path'
 import { exec } from 'child_process'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { initDB, getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime, clearRankingsCache, getDbPath } from './database'
+import { initDB, getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime, clearRankingsCache, getDbPath, db } from './database'
 import { scanLocalGames } from './scanner'
 import { 
   searchGames, 
@@ -24,10 +24,49 @@ import {
   getSteamAppDetails,
   getDisplaySteamTags,
   generateGamerProfile,
-  backfillMissingMetadata
+  backfillMissingMetadata,
+  getSteamAchievements
 } from './api'
 import { GDRIVE_CLIENT_ID, GDRIVE_CLIENT_SECRET, GDRIVE_REDIRECT_URI, GDRIVE_SCOPE } from './driveConfig'
 import { initDiscord, setBrowsingStatus, setPlayingStatus, disconnectDiscord, getDiscordStatus } from './discord'
+import { backupGameSave } from './ludusavi'
+
+export async function getValidDriveToken(): Promise<string | null> {
+  const clientId = GDRIVE_CLIENT_ID;
+  const clientSecret = GDRIVE_CLIENT_SECRET;
+  const refreshToken = getSetting('gdrive_refresh_token');
+  const expiry = Number(getSetting('gdrive_token_expiry') || '0');
+  let accessToken = getSetting('gdrive_access_token');
+
+  if (!accessToken || !refreshToken) return null;
+
+  // Refresh if expired or about to expire
+  if (Date.now() > expiry - 60000) {
+    try {
+      const res = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: clientId!,
+          client_secret: clientSecret!,
+          refresh_token: refreshToken,
+          grant_type: 'refresh_token'
+        })
+      });
+      const data = await res.json();
+      if (data.access_token) {
+        accessToken = data.access_token;
+        saveSetting('gdrive_access_token', accessToken!);
+        saveSetting('gdrive_token_expiry', String(Date.now() + (data.expires_in || 3600) * 1000));
+      } else {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+  }
+  return accessToken;
+}
 
 function sendDesktopNotification(title: string, body: string) {
   if (Notification.isSupported()) {
@@ -251,7 +290,19 @@ app.whenReady().then(() => {
           sendDesktopNotification('Game Session Ended', `Logged ${elapsedMinutes} minutes in your library.`);
 
           // Notify frontend: game stopped
-          if (win) win.webContents.send('game-stopped', gameId, totalPlaytime)
+          if (win) {
+            win.webContents.send('game-stopped', gameId, totalPlaytime);
+          }
+          sendDesktopNotification('Cloud Save Sync', `☁️ Syncing Cloud Save for ${gameTitle}...`);
+
+          // Trigger Cloud Backup Engine
+          const dbRow = db.prepare('SELECT custom_save_path FROM games WHERE id = ?').get(gameId) as { custom_save_path?: string };
+          const customSavePath = dbRow ? dbRow.custom_save_path || '' : '';
+          
+          backupGameSave(gameTitle, customSavePath, getValidDriveToken).then(success => {
+            if (success) sendDesktopNotification('Cloud Save Sync', `✅ Cloud Save Sync Complete for ${gameTitle}`);
+            else sendDesktopNotification('Cloud Save Sync', `⚠️ Cloud Save Sync skipped or failed for ${gameTitle}`);
+          });
         }
       })
     }, 3000)
@@ -371,6 +422,13 @@ app.whenReady().then(() => {
     return await getDisplaySteamTags();
   });
 
+  ipcMain.handle('get-steam-achievements', async (_, appId) => {
+    const apiKey = getSetting('steamKey');
+    const steamId = getSetting('steamId');
+    if (!apiKey || !steamId) return null;
+    return await getSteamAchievements(appId, steamId, apiKey);
+  });
+
   ipcMain.handle('get-gamer-profile', async (_, statsJson: string) => {
     const apiKey = getSetting('geminiKey');
     if (!apiKey) return 'No Gemini API Key found in settings. Please add one to generate your profile.';
@@ -399,6 +457,22 @@ app.whenReady().then(() => {
       return true;
     } catch (e) {
       console.error('Failed to save image', e);
+      return false;
+    }
+  });
+
+  ipcMain.handle('set-custom-save-path', async (_, gameId) => {
+    try {
+      const result = await dialog.showOpenDialog({
+        properties: ['openDirectory']
+      });
+      if (result.canceled || result.filePaths.length === 0) return false;
+      const selectedPath = result.filePaths[0];
+      
+      db.prepare('UPDATE games SET custom_save_path = ? WHERE id = ?').run(selectedPath, gameId);
+      return selectedPath;
+    } catch (e) {
+      console.error('Failed to set custom save path', e);
       return false;
     }
   });
@@ -566,43 +640,6 @@ app.whenReady().then(() => {
       return { success: false, message: String(e) };
     }
   });
-
-  async function getValidDriveToken(): Promise<string | null> {
-    const clientId = GDRIVE_CLIENT_ID;
-    const clientSecret = GDRIVE_CLIENT_SECRET;
-    const refreshToken = getSetting('gdrive_refresh_token');
-    const expiry = Number(getSetting('gdrive_token_expiry') || '0');
-    let accessToken = getSetting('gdrive_access_token');
-
-    if (!accessToken || !refreshToken) return null;
-
-    // Refresh if expired or about to expire
-    if (Date.now() > expiry - 60000) {
-      try {
-        const res = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            client_id: clientId!,
-            client_secret: clientSecret!,
-            refresh_token: refreshToken,
-            grant_type: 'refresh_token'
-          })
-        });
-        const data = await res.json();
-        if (data.access_token) {
-          accessToken = data.access_token;
-          saveSetting('gdrive_access_token', accessToken!);
-          saveSetting('gdrive_token_expiry', String(Date.now() + (data.expires_in || 3600) * 1000));
-        } else {
-          return null;
-        }
-      } catch {
-        return null;
-      }
-    }
-    return accessToken;
-  }
 
   ipcMain.handle('backup-to-drive', async () => {
     try {
