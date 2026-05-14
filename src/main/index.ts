@@ -76,7 +76,16 @@ function sendDesktopNotification(title: string, body: string) {
 
 let tray: Tray | null = null;
 let trayWindow: BrowserWindow | null = null;
+let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
+
+function showAndRestoreMainWindow() {
+  if (mainWindow) {
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('app-restored');
+  }
+}
 
 function createTrayWindow(): void {
   trayWindow = new BrowserWindow({
@@ -107,7 +116,7 @@ function createTrayWindow(): void {
 
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -121,15 +130,15 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.maximize()
-    mainWindow.show()
+    mainWindow!.maximize()
+    mainWindow!.show()
   })
 
   mainWindow.on('close', (event) => {
     // Hide to tray instead of quitting
     if (!isQuitting) {
       event.preventDefault();
-      mainWindow.hide();
+      mainWindow!.hide();
     }
   });
 
@@ -145,6 +154,10 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
 
 // This method will be called when Electron has finished
@@ -160,11 +173,7 @@ app.whenReady().then(() => {
   tray.setToolTip('TierForge Gaming Dashboard');
   
   tray.on('click', () => {
-    const win = BrowserWindow.getAllWindows()[0];
-    if (win) {
-      win.show();
-      win.focus();
-    }
+    showAndRestoreMainWindow();
   });
 
   tray.on('right-click', () => {
@@ -352,11 +361,7 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('show-main-window', () => {
-    const win = BrowserWindow.getAllWindows()[0];
-    if (win) {
-      win.show();
-      win.focus();
-    }
+    showAndRestoreMainWindow();
   });
 
   ipcMain.handle('force-cloud-backup', async () => {
@@ -382,7 +387,6 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('launch-game', async (_, exePath: string, gameId: string, gameTitle: string) => {
-    const win = BrowserWindow.getFocusedWindow()
     const exeName = basename(exePath)
 
     // Launch the game
@@ -400,8 +404,8 @@ app.whenReady().then(() => {
       setPlayingStatus(gameTitle, startTime);
     }
 
-    // Notify frontend: game started
-    if (win) win.webContents.send('game-started', gameId)
+    // Notify frontend: game started — always target mainWindow explicitly
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('game-started', gameId)
 
     // Poll for process termination every 3 seconds
     const pollInterval = setInterval(() => {
@@ -424,9 +428,9 @@ app.whenReady().then(() => {
 
           sendDesktopNotification('Game Session Ended', `Logged ${elapsedMinutes} minutes in your library.`);
 
-          // Notify frontend: game stopped
-          if (win) {
-            win.webContents.send('game-stopped', gameId, totalPlaytime);
+          // Notify frontend: game stopped — always target mainWindow explicitly
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('game-stopped', gameId, totalPlaytime);
           }
           sendDesktopNotification('Cloud Save Sync', `☁️ Syncing Cloud Save for ${gameTitle}...`);
 

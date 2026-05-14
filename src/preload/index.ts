@@ -69,7 +69,11 @@ const api = {
   hideTrayWindow: () => ipcRenderer.invoke('hide-tray-window'),
   quitApp: () => ipcRenderer.invoke('quit-app'),
   showMainWindow: () => ipcRenderer.invoke('show-main-window'),
-  forceCloudBackup: () => ipcRenderer.invoke('force-cloud-backup')
+  forceCloudBackup: () => ipcRenderer.invoke('force-cloud-backup'),
+  onAppRestored: (callback: () => void) => {
+    ipcRenderer.on('app-restored', () => callback());
+    return () => ipcRenderer.removeAllListeners('app-restored');
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

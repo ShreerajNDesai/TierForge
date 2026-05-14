@@ -64,6 +64,7 @@ declare global {
       quitApp: () => Promise<void>;
       showMainWindow: () => Promise<void>;
       forceCloudBackup: () => Promise<boolean>;
+      onAppRestored: (callback: () => void) => () => void;
     }
   }
 }
