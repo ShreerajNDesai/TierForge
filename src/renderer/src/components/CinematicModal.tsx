@@ -112,8 +112,8 @@ const CinematicModal = () => {
       {/* Content Container */}
       {!isVideoMode && (
         <div className="relative z-10 w-full h-full p-16 flex gap-16 overflow-hidden">
-          {/* Left Column - sticky, no scroll */}
-          <div className="flex flex-col gap-6 shrink-0 self-start sticky top-0">
+          {/* Left Column - scrollable */}
+          <div className="w-[352px] px-4 -mx-4 pt-4 -mt-4 flex flex-col gap-6 shrink-0 self-start h-full overflow-y-auto custom-scrollbar pb-8">
             <Tilt
               glareEnable={true}
               glareMaxOpacity={0.3}
@@ -201,7 +201,7 @@ const CinematicModal = () => {
 
             {/* Danger Zone */}
             {isInLibrary && (
-              <div className="w-full space-y-2 mt-6">
+              <div className="w-full space-y-2">
                 <label className="text-xs font-bold text-red-500/80 uppercase tracking-wider pl-1">Danger Zone</label>
                 <div className="flex flex-col gap-2">
                   <button 
