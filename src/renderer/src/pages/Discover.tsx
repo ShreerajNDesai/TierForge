@@ -238,7 +238,7 @@ const Discover = () => {
                 tabIndex={0}
                 onClick={() => handleGameClick(game)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(game); }}
-                className="group relative cursor-pointer focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:scale-105 focus:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-2xl transition-all"
+                className="group relative cursor-pointer focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:scale-105 focus:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-2xl transition-all relative z-0 hover:z-50"
               >
                 <Tilt
                   glareEnable={true}

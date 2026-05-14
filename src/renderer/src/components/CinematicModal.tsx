@@ -572,11 +572,11 @@ const CinematicModal = () => {
                     <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-6 flex items-center gap-3">
                       <Sparkles size={24} className="text-purple-400"/> Canon Story Play Order
                     </h3>
-                    <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar items-start">
+                    <div className="flex gap-4 overflow-x-auto py-4 -my-2 custom-scrollbar items-start">
                       {aiTimeline.map((miniGame: any) => (
                         <div 
                           key={miniGame.id}
-                          className="flex flex-col gap-2 shrink-0 w-28 group"
+                          className="flex flex-col gap-2 shrink-0 w-28 group relative z-0 hover:z-50"
                           onClick={() => handleGameClick(miniGame)}
                         >
                           <img 
@@ -602,11 +602,11 @@ const CinematicModal = () => {
               {gameDetails?.dlcList && gameDetails.dlcList.length > 0 && (
                 <div className="mt-4">
                   <h3 className="text-lg font-bold text-white/80 mb-4">DLCs & Expansions</h3>
-                  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar items-start">
+                  <div className="flex gap-4 overflow-x-auto py-4 -my-2 custom-scrollbar items-start">
                     {gameDetails.dlcList.map((miniGame: any) => (
                       <div 
                         key={miniGame.id}
-                        className="flex flex-col gap-2 shrink-0 w-24 group"
+                        className="flex flex-col gap-2 shrink-0 w-24 group relative z-0 hover:z-50"
                         onClick={() => handleGameClick(miniGame)}
                       >
                         <img 
@@ -629,12 +629,12 @@ const CinematicModal = () => {
                   <h3 className="text-lg font-bold text-white/80 mb-4 mt-8">
                     {gameDetails.seriesName} (Related Games)
                   </h3>
-                  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar items-start">
+                  <div className="flex gap-4 overflow-x-auto py-4 -my-2 custom-scrollbar items-start">
                     {gameDetails.seriesList.map((miniGame: any) => {
                       return (
                         <div 
                           key={miniGame.id}
-                          className="flex flex-col gap-2 shrink-0 w-24 group"
+                          className="flex flex-col gap-2 shrink-0 w-24 group relative z-0 hover:z-50"
                           onClick={() => handleGameClick(miniGame)}
                         >
                           <img 
