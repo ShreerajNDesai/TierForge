@@ -1,17 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo, ReactNode } from 'react';
 
-const emptyData = {
-  tiers: {
-    s: { id: 's', title: 'S-Tier', sub: 'Masterpiece', color: 'bg-rose-500', items: [] },
-    a: { id: 'a', title: 'A-Tier', sub: 'Excellent', color: 'bg-orange-500', items: [] },
-    b: { id: 'b', title: 'B-Tier', sub: 'Great', color: 'bg-yellow-500', items: [] },
-    c: { id: 'c', title: 'C-Tier', sub: 'Good', color: 'bg-green-500', items: [] },
-    d: { id: 'd', title: 'D-Tier', sub: 'Mediocre', color: 'bg-sky-500', items: [] },
-    f: { id: 'f', title: 'F-Tier', sub: 'Terrible', color: 'bg-red-800', items: [] },
-    dropped: { id: 'dropped', title: 'Dropped', sub: 'Not For Me', color: 'bg-slate-600', items: [] },
-  },
-  collection: []
-};
+// emptyData removed — tier structure is now derived via useMemo from allGames
 
 interface GlobalContextType {
   data: any;
@@ -132,7 +121,9 @@ interface GlobalContextType {
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
-  const [data, setData] = useState<any>(emptyData);
+  // ===== SINGLE SOURCE OF TRUTH =====
+  const [allGames, setAllGames] = useState<any[]>([]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isDraggingItem, setIsDraggingItem] = useState(false);
@@ -156,9 +147,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [discoverOffset, setDiscoverOffset] = useState(0);
   const [hasMoreDiscover, setHasMoreDiscover] = useState(true);
   const [defaultMuted, setDefaultMuted] = useState<boolean>(localStorage.getItem('defaultMuted') === 'true');
-  const [libraryGames, setLibraryGames] = useState<any[]>([]);
   const [librarySearch, setLibrarySearch] = useState('');
-  const [suggestedGame, setSuggestedGame] = useState<any>(null);
 
   const [showImportModal, setShowImportModal] = useState(false);
   const [importText, setImportText] = useState('');
@@ -287,47 +276,48 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   const loadGames = async () => {
     const dbGames = await window.api.getAllGames();
-    const newData = JSON.parse(JSON.stringify(emptyData));
-
-    dbGames.forEach((game: any) => {
-      const gameObj = { id: game.id, title: game.title, img: game.image_url, notes: game.notes || '', status: game.status || 'Backlog', executable_path: game.executable_path || '' };
-      if (game.tier === 'unranked' || !newData.tiers[game.tier]) {
-        newData.collection.push(gameObj);
-      } else {
-        newData.tiers[game.tier].items.push(gameObj);
-      }
-    });
-    setData(newData);
+    setAllGames(dbGames);
   };
 
-  useEffect(() => {
-    loadGames();
-  }, []);
-
-  // Re-sync UI state whenever the app is restored from the system tray
-  useEffect(() => {
-    const cleanup = window.api.onAppRestored(() => {
-      loadGames();
+  // ===== DERIVED STATE (useMemo) =====
+  const data = useMemo(() => {
+    const tierDef: Record<string, any> = {
+      s: { id: 's', title: 'S-Tier', sub: 'Masterpiece', color: 'bg-rose-500', items: [] as any[] },
+      a: { id: 'a', title: 'A-Tier', sub: 'Excellent', color: 'bg-orange-500', items: [] as any[] },
+      b: { id: 'b', title: 'B-Tier', sub: 'Great', color: 'bg-yellow-500', items: [] as any[] },
+      c: { id: 'c', title: 'C-Tier', sub: 'Good', color: 'bg-green-500', items: [] as any[] },
+      d: { id: 'd', title: 'D-Tier', sub: 'Mediocre', color: 'bg-sky-500', items: [] as any[] },
+      f: { id: 'f', title: 'F-Tier', sub: 'Terrible', color: 'bg-red-800', items: [] as any[] },
+      dropped: { id: 'dropped', title: 'Dropped', sub: 'Not For Me', color: 'bg-slate-600', items: [] as any[] },
+    };
+    const collection: any[] = [];
+    allGames.forEach((game: any) => {
+      const gameObj = { id: game.id, title: game.title, img: game.image_url, notes: game.notes || '', status: game.status || 'Backlog', executable_path: game.executable_path || '' };
+      if (game.tier === 'unranked' || !tierDef[game.tier]) {
+        collection.push(gameObj);
+      } else {
+        tierDef[game.tier].items.push(gameObj);
+      }
     });
+    return { tiers: tierDef, collection };
+  }, [allGames]);
+
+  const libraryGames = useMemo(() => allGames, [allGames]);
+  const setLibraryGames = setAllGames;
+
+  const suggestedGame = useMemo(() => {
+    const backlog = allGames.filter(g => (g.status || 'Backlog') === 'Backlog');
+    const installed = backlog.filter(g => g.executable_path && g.executable_path.trim() !== '');
+    const pool = installed.length > 0 ? installed : backlog;
+    return pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
+  }, [allGames]);
+
+  useEffect(() => { loadGames(); }, []);
+
+  useEffect(() => {
+    const cleanup = window.api.onAppRestored(() => { loadGames(); });
     return cleanup;
   }, []);
-
-  useEffect(() => {
-    if (activeTab === 'library' || activeTab === 'statistics') {
-      window.api.getAllGames().then((games: any[]) => {
-        setLibraryGames(games);
-        const backlogGames = games.filter(g => (g.status || 'Backlog') === 'Backlog');
-        const installedBacklog = backlogGames.filter(g => g.executable_path && g.executable_path.trim() !== '');
-        const pool = installedBacklog.length > 0 ? installedBacklog : backlogGames;
-        if (pool.length > 0) {
-          const randomGame = pool[Math.floor(Math.random() * pool.length)];
-          setSuggestedGame(randomGame);
-        } else {
-          setSuggestedGame(null);
-        }
-      });
-    }
-  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab === 'discover') {
@@ -395,7 +385,15 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     await window.api.addGame(game.id, game.title, game.image_url);
     setSearchQuery('');
     setSearchResults([]);
-    loadGames();
+    // Optimistic: add to allGames directly
+    setAllGames(prev => {
+      if (prev.find(g => g.id === game.id)) return prev;
+      return [...prev, {
+        id: game.id, title: game.title, image_url: game.image_url,
+        tier: 'unranked', notes: '', status: 'Backlog', executable_path: '',
+        playtime_minutes: 0, genres: '', developers: '', release_year: ''
+      }];
+    });
   };
 
   const handleScanPC = async () => {
@@ -437,16 +435,10 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const newDetails = { ...gameDetails, [field]: value };
     setGameDetails(newDetails);
 
-    setData((prev: any) => {
-      const newData = JSON.parse(JSON.stringify(prev));
-      const collGame = newData.collection.find((g: any) => g.id === gameDetails.id);
-      if (collGame) collGame[field] = value;
-      Object.values(newData.tiers).forEach((tier: any) => {
-        const tierGame = tier.items.find((g: any) => g.id === gameDetails.id);
-        if (tierGame) tierGame[field] = value;
-      });
-      return newData;
-    });
+    // Optimistic: patch allGames directly — derived `data` auto-recalculates
+    setAllGames(prev => prev.map(g =>
+      g.id === gameDetails.id ? { ...g, [field]: value } : g
+    ));
 
     await window.api.updateGameData(
       gameDetails.id,
@@ -469,66 +461,43 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       if (destination.droppableId === 'search-results' || destination.droppableId === 'trash') return;
 
       const game = searchResults[source.index];
-      const newItem = { id: game.id.toString(), title: game.title, img: game.image_url };
+      const newTier = destination.droppableId === 'collection' ? 'unranked' : destination.droppableId;
 
-      setData((prev: any) => {
-        const newData = { ...prev, tiers: { ...prev.tiers } };
-        if (destination.droppableId === 'collection') {
-          newData.collection = [...prev.collection];
-          newData.collection.splice(destination.index, 0, newItem);
-        } else {
-          newData.tiers[destination.droppableId] = { ...prev.tiers[destination.droppableId] };
-          newData.tiers[destination.droppableId].items = [...prev.tiers[destination.droppableId].items];
-          newData.tiers[destination.droppableId].items.splice(destination.index, 0, newItem);
-        }
-        return newData;
-      });
+      // Optimistic: add to allGames
+      setAllGames(prev => [...prev, {
+        id: game.id.toString(), title: game.title, image_url: game.image_url,
+        tier: newTier, notes: '', status: 'Backlog', executable_path: '',
+        playtime_minutes: 0, genres: '', developers: '', release_year: ''
+      }]);
 
       setSearchResults([]);
       setSearchQuery('');
 
       await window.api.addGame(game.id.toString(), game.title, game.image_url);
-      const newTier = destination.droppableId === 'collection' ? 'unranked' : destination.droppableId;
       if (newTier !== 'unranked') {
         await window.api.updateGameTier(game.id.toString(), newTier);
       }
       return;
     }
 
-    let sourceList = source.droppableId === 'collection' ? Array.from(data.collection) : Array.from(data.tiers[source.droppableId].items);
-    const [movedItem]: any = sourceList.splice(source.index, 1);
+    // Find the moved item from the derived data view
+    let sourceItems = source.droppableId === 'collection' ? [...data.collection] : [...data.tiers[source.droppableId].items];
+    const [movedItem]: any = sourceItems.splice(source.index, 1);
 
     if (destination.droppableId === 'trash') {
-      setData((prev: any) => {
-        const newData = { ...prev };
-        if (source.droppableId === 'collection') newData.collection = sourceList;
-        else newData.tiers[source.droppableId].items = sourceList;
-        return newData;
-      });
+      // Optimistic delete
+      setAllGames(prev => prev.filter(g => g.id !== movedItem.id));
       await window.api.deleteGame(movedItem.id);
       return;
     }
 
-    let destList = destination.droppableId === 'collection' ? Array.from(data.collection) : Array.from(data.tiers[destination.droppableId].items);
-
-    if (source.droppableId === destination.droppableId) {
-      sourceList.splice(destination.index, 0, movedItem);
-      destList = sourceList;
-    } else {
-      destList.splice(destination.index, 0, movedItem);
-    }
-
-    setData((prev: any) => {
-      const newData = { ...prev };
-      if (source.droppableId === 'collection') newData.collection = sourceList;
-      else newData.tiers[source.droppableId].items = sourceList;
-
-      if (destination.droppableId === 'collection') newData.collection = destList;
-      else newData.tiers[destination.droppableId].items = destList;
-      return newData;
-    });
-
     const newTier = destination.droppableId === 'collection' ? 'unranked' : destination.droppableId;
+
+    // Optimistic: update the tier field in allGames
+    setAllGames(prev => prev.map(g =>
+      g.id === movedItem.id ? { ...g, tier: newTier } : g
+    ));
+
     await window.api.updateGameTier(movedItem.id, newTier);
   };
 
@@ -560,7 +529,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const value = {
-    data, setData, searchQuery, setSearchQuery, searchResults, setSearchResults,
+    data, setData: setAllGames as any, searchQuery, setSearchQuery, searchResults, setSearchResults,
     isDraggingItem, setIsDraggingItem, isScanning, setIsScanning,
     selectedGame, setSelectedGame, gameDetails, setGameDetails,
     isVideoMode, setIsVideoMode, isMuted, setIsMuted, currentVideoId, setCurrentVideoId,
@@ -571,7 +540,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     isDiscoverLoading, setIsDiscoverLoading, discoverOffset, setDiscoverOffset,
     hasMoreDiscover, setHasMoreDiscover, defaultMuted, setDefaultMuted,
     libraryGames, setLibraryGames, librarySearch, setLibrarySearch,
-    suggestedGame, setSuggestedGame, showImportModal, setShowImportModal,
+    suggestedGame, setSuggestedGame: (() => {}) as any, showImportModal, setShowImportModal,
     importText, setImportText, isImporting, setIsImporting,
     geminiKey, setGeminiKey, steamKey, setSteamKey, steamId, setSteamId, rawgKey, setRawgKey, igdbClientId, setIgdbClientId,
     igdbClientSecret, setIgdbClientSecret, globalRankings, setGlobalRankings,
