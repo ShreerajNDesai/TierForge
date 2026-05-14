@@ -29,7 +29,7 @@ import {
 } from './api'
 import { GDRIVE_CLIENT_ID, GDRIVE_CLIENT_SECRET, GDRIVE_REDIRECT_URI, GDRIVE_SCOPE } from './driveConfig'
 import { initDiscord, setBrowsingStatus, setPlayingStatus, disconnectDiscord, getDiscordStatus } from './discord'
-import { backupGameSave } from './ludusavi'
+import { backupGameSave, getExeNameFromManifest } from './ludusavi'
 
 export async function getValidDriveToken(): Promise<string | null> {
   const clientId = GDRIVE_CLIENT_ID;
@@ -387,12 +387,28 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('launch-game', async (_, exePath: string, gameId: string, gameTitle: string) => {
-    const exeName = basename(exePath)
+    let exeName = basename(exePath);
 
-    // Launch the game
-    exec(`"${exePath}"`, (err) => {
-      if (err) console.error('Launch error:', err)
-    })
+    if (exePath.startsWith('steam://')) {
+      shell.openExternal(exePath);
+      const manifestExe = await getExeNameFromManifest(gameTitle);
+      if (manifestExe) {
+        exeName = manifestExe;
+      } else {
+        const startTime = Date.now();
+        db.prepare('UPDATE games SET last_played_at = ? WHERE id = ?').run(startTime, gameId);
+        const isDiscordEnabled = getSetting('discord_rpc') !== 'false';
+        if (isDiscordEnabled) {
+          setPlayingStatus(gameTitle, startTime);
+        }
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('game-started', gameId);
+        return true;
+      }
+    } else {
+      exec(`"${exePath}"`, (err) => {
+        if (err) console.error('Launch error:', err)
+      });
+    }
 
     const startTime = Date.now()
     
@@ -407,10 +423,16 @@ app.whenReady().then(() => {
     // Notify frontend: game started — always target mainWindow explicitly
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('game-started', gameId)
 
+    let hasActuallyStarted = false;
+
     // Poll for process termination every 3 seconds
     const pollInterval = setInterval(() => {
       exec(`tasklist /FI "IMAGENAME eq ${exeName}" /NH`, (err, stdout) => {
-        if (err || !stdout.toLowerCase().includes(exeName.toLowerCase())) {
+        const isRunning = !err && stdout.toLowerCase().includes(exeName.toLowerCase());
+        
+        if (isRunning) {
+          hasActuallyStarted = true;
+        } else if (hasActuallyStarted && !isRunning) {
           clearInterval(pollInterval)
 
           const elapsedMs = Date.now() - startTime
