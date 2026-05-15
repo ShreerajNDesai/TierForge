@@ -202,9 +202,34 @@ export function getCachedTimeline(franchise: string) {
   return result ? JSON.parse(result.data_json) : null;
 }
 
-export function saveCachedTimeline(franchise: string, dataJson: string) {
+export function checkCachedTimelineForGame(gameId: string, gameTitle: string) {
+  const stmt = db.prepare('SELECT data_json FROM timeline_cache');
+  const results = stmt.all() as any[];
+  for (const row of results) {
+    if (!row.data_json) continue;
+    try {
+      const timeline = JSON.parse(row.data_json);
+      const exists = timeline.some((game: any) => 
+        (game.id && game.id.toString() === gameId.toString()) || 
+        (game.title && game.title.toLowerCase() === gameTitle.toLowerCase())
+      );
+      if (exists) {
+        return timeline.map((game: any) => ({
+          ...game,
+          isCurrent: (game.id && game.id.toString() === gameId.toString()) || 
+                     (game.title && game.title.toLowerCase() === gameTitle.toLowerCase())
+        }));
+      }
+    } catch (e) {
+      continue;
+    }
+  }
+  return null;
+}
+
+export function saveCachedTimeline(franchise: string, data: any) {
   const stmt = db.prepare('INSERT OR REPLACE INTO timeline_cache (franchise, data_json) VALUES (?, ?)');
-  stmt.run(franchise, dataJson);
+  stmt.run(franchise, JSON.stringify(data));
 }
 
 export function syncSteamGame(id: string, title: string, imageUrl: string, playtimeMinutes: number) {

@@ -34,7 +34,8 @@ declare global {
       getScrapedRankings: (category: string) => Promise<any[]>;
       getCachedRankings: (categoryId: string) => Promise<any[]>;
       clearRankingsCache: (categoryId: string) => Promise<boolean>;
-      getAIPlayOrder: (gameId: string, gameTitle: string) => Promise<any[]>;
+      getAIPlayOrder: (gameId: string, gameTitle: string, forceRefresh?: boolean) => Promise<any[]>;
+      checkCachedTimeline: (gameId: string, gameTitle: string) => Promise<any[] | null>;
       showNotification: (title: string, body: string) => Promise<boolean>;
       syncSteam: (steamId: string, apiKey: string) => Promise<number>;
       getSteamDetails: (steamId: string) => Promise<any>;
