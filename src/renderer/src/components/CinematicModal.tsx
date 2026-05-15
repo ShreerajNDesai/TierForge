@@ -36,6 +36,7 @@ const CinematicModal = () => {
 
   const [aiTimeline, setAiTimeline] = useState<any[] | null>(null);
   const [isTimelineLoading, setIsTimelineLoading] = useState(false);
+  const [isRefreshingTimeline, setIsRefreshingTimeline] = useState(false);
   const [steamDetails, setSteamDetails] = useState<any>(null);
   const [achievements, setAchievements] = useState<any>(null);
   const [isUninstalling, setIsUninstalling] = useState(false);
@@ -61,6 +62,16 @@ const CinematicModal = () => {
     setAiTimeline(null);
     setSteamDetails(null);
     setAchievements(null);
+
+    if (selectedGame) {
+      window.api.checkCachedTimeline(selectedGame.id.toString(), selectedGame.title)
+        .then(cachedTimeline => {
+          if (cachedTimeline) {
+            setAiTimeline(cachedTimeline);
+          }
+        })
+        .catch(err => console.error('Failed to check cached timeline:', err));
+    }
   }, [selectedGame]);
 
   useEffect(() => {
@@ -172,7 +183,7 @@ const CinematicModal = () => {
                   onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
                   className="w-full flex items-center justify-between bg-black/40 border border-white/20 text-white text-base rounded-xl px-4 py-3 cursor-pointer hover:bg-black/60 hover:border-indigo-500/50 backdrop-blur-md shadow-lg transition"
                 >
-                  <span>{gameDetails?.status || 'Backlog'}</span>
+                  <span>{!isInLibrary ? '-' : (gameDetails?.status || 'Backlog')}</span>
                   <ChevronDown size={18} className={`transition-transform duration-200 ${isStatusDropdownOpen ? 'rotate-180 text-indigo-400' : 'text-slate-400'}`} />
                 </div>
                 
@@ -539,26 +550,28 @@ const CinematicModal = () => {
 
               {/* Series Timeline & AI Canon Order */}
               <div className="mt-4">
-                <div className="flex items-center justify-end mb-4">
-                  <button 
-                    onClick={async () => { 
-                      setIsTimelineLoading(true); 
-                      try {
-                        const result = await window.api.getAIPlayOrder(selectedGame.id.toString(), selectedGame.title); 
-                        setAiTimeline(result); 
-                      } catch (err) {
-                        console.error('AI Timeline failed:', err);
-                      } finally {
-                        setIsTimelineLoading(false); 
-                      }
-                    }} 
-                    disabled={isTimelineLoading}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-500 hover:to-pink-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] border border-purple-400/50 rounded-xl text-sm font-black tracking-wide flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
-                  >
-                    <Sparkles size={18} className={isTimelineLoading ? "animate-pulse" : ""} /> 
-                    {isTimelineLoading ? "Consulting lore archives..." : "✨ Generate Canon Play Order"}
-                  </button>
-                </div>
+                {!aiTimeline && (
+                  <div className="flex items-center justify-end mb-4">
+                    <button 
+                      onClick={async () => { 
+                        setIsTimelineLoading(true); 
+                        try {
+                          const result = await window.api.getAIPlayOrder(selectedGame.id.toString(), selectedGame.title); 
+                          setAiTimeline(result); 
+                        } catch (err) {
+                          console.error('AI Timeline failed:', err);
+                        } finally {
+                          setIsTimelineLoading(false); 
+                        }
+                      }} 
+                      disabled={isTimelineLoading}
+                      className="px-6 py-3 bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-500 hover:to-pink-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] border border-purple-400/50 rounded-xl text-sm font-black tracking-wide flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                    >
+                      <Sparkles size={18} className={isTimelineLoading ? "animate-pulse" : ""} /> 
+                      {isTimelineLoading ? "Consulting lore archives..." : "✨ Generate Canon Play Order"}
+                    </button>
+                  </div>
+                )}
 
                 {isTimelineLoading && (
                   <div className="flex gap-4 overflow-x-auto pb-4 items-center">
@@ -573,6 +586,19 @@ const CinematicModal = () => {
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
                     <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-6 flex items-center gap-3">
                       <Sparkles size={24} className="text-purple-400"/> Canon Story Play Order
+                      <button 
+                        onClick={async () => { 
+                          setIsRefreshingTimeline(true); 
+                          const res = await window.api.getAIPlayOrder(selectedGame.id.toString(), selectedGame.title, true); 
+                          setAiTimeline(res); 
+                          setIsRefreshingTimeline(false); 
+                        }} 
+                        disabled={isRefreshingTimeline} 
+                        className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold text-slate-300 transition-all"
+                      >
+                        <RefreshCw size={14} className={isRefreshingTimeline ? "animate-spin text-purple-400" : ""} /> 
+                        {isRefreshingTimeline ? "Updating Lore..." : "Refresh Timeline"}
+                      </button>
                     </h3>
                     <div className="flex gap-4 overflow-x-auto py-4 -my-2 custom-scrollbar items-start">
                       {aiTimeline.map((miniGame: any) => (

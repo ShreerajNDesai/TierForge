@@ -3,7 +3,7 @@ import { join, basename } from 'path'
 import { exec } from 'child_process'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { initDB, getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime, clearRankingsCache, getDbPath, db } from './database'
+import { initDB, getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime, clearRankingsCache, getDbPath, db, checkCachedTimelineForGame } from './database'
 import { scanLocalGames } from './scanner'
 import { 
   searchGames, 
@@ -586,10 +586,14 @@ app.whenReady().then(() => {
     return true;
   });
 
-  ipcMain.handle('get-ai-play-order', async (_, _gameId, gameTitle) => {
+  ipcMain.handle('get-ai-play-order', async (_, _gameId, gameTitle, forceRefresh: boolean = false) => {
     const key = getSetting('geminiKey');
     if (!key) throw new Error('No Gemini API Key found in settings.');
-    return await getSmartAIPlayOrder(_gameId, gameTitle, key);
+    return await getSmartAIPlayOrder(_gameId, gameTitle, key, forceRefresh);
+  });
+
+  ipcMain.handle('check-cached-timeline', async (_, gameId, gameTitle) => {
+    return checkCachedTimelineForGame(gameId, gameTitle);
   });
 
   ipcMain.handle('sync-steam', async (_, steamId, apiKey) => {

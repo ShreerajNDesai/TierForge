@@ -394,7 +394,7 @@ export async function getDiscoverGames(existingIds: string[], filterType: string
   } catch (error) { return []; }
 }
 
-export async function getSmartAIPlayOrder(gameId: string, gameTitle: string, apiKey: string) {
+export async function getSmartAIPlayOrder(gameId: string, gameTitle: string, apiKey: string, forceRefresh: boolean = false) {
   try {
     const token = await getAccessToken();
     if (!token) return [];
@@ -412,7 +412,7 @@ export async function getSmartAIPlayOrder(gameId: string, gameTitle: string, api
     const cachedTimeline = getCachedTimeline(franchisePrefix);
     let baseTimeline: any[] = [];
 
-    if (cachedTimeline) {
+    if (cachedTimeline && !forceRefresh) {
       baseTimeline = cachedTimeline;
     } else {
       // 4. Perform the broad IGDB search using this perfect prefix
@@ -469,7 +469,7 @@ Return ONLY a raw JSON array of strings containing the perfectly clean game titl
 
       // Save raw timeline to cache
       if (baseTimeline.length > 0) {
-        saveCachedTimeline(franchisePrefix, JSON.stringify(baseTimeline));
+        saveCachedTimeline(franchisePrefix, baseTimeline);
       }
     }
 
