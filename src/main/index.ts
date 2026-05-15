@@ -499,6 +499,27 @@ app.whenReady().then(() => {
     return getDiscordStatus();
   });
 
+  ipcMain.handle('update-user-profile', (_, username: string, avatarPath: string | null) => {
+    saveSetting('user_name', username);
+    if (avatarPath) {
+      try {
+        const fs = require('fs');
+        const buffer = fs.readFileSync(avatarPath);
+        const extension = avatarPath.toLowerCase().endsWith('.jpg') || avatarPath.toLowerCase().endsWith('.jpeg') ? 'jpeg' : 'png';
+        const base64 = `data:image/${extension};base64,${buffer.toString('base64')}`;
+        saveSetting('user_avatar', base64);
+      } catch (e) {
+        console.error('Failed to read avatar image', e);
+      }
+    }
+    return true;
+  });
+
+  ipcMain.handle('browse-avatar', async () => {
+    const res = await dialog.showOpenDialog({ filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }] });
+    return res.filePaths[0] || null;
+  });
+
   ipcMain.handle('browse-image', async () => {
     const res = await dialog.showOpenDialog({ filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }] });
     return res.filePaths[0] || null;
@@ -568,7 +589,7 @@ app.whenReady().then(() => {
   ipcMain.handle('get-ai-play-order', async (_, _gameId, gameTitle) => {
     const key = getSetting('geminiKey');
     if (!key) throw new Error('No Gemini API Key found in settings.');
-    return await getSmartAIPlayOrder(gameTitle, key);
+    return await getSmartAIPlayOrder(_gameId, gameTitle, key);
   });
 
   ipcMain.handle('sync-steam', async (_, steamId, apiKey) => {

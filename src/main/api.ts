@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { addGame, getSetting, getCachedRanking, updateRankingsCache, clearRankingsCache, syncSteamGame, getAllGames, updateGameMetadata } from './database';
-import { BrowserWindow } from 'electron';
+import { addGame, getSetting, getCachedRanking, updateRankingsCache, clearRankingsCache, syncSteamGame, getAllGames, updateGameMetadata, getCachedTimeline, saveCachedTimeline, db } from './database';
+import { BrowserWindow, shell } from 'electron';
 
 const DEFAULT_CLIENT_ID = '3mejs4touc121msgxhw5mxy31medg3';
 const DEFAULT_CLIENT_SECRET = 'p71goredxlcacagkigxok0vm9sx92n';
@@ -81,6 +81,13 @@ export async function getGameExtendedDetails(gameId: string) {
     const data = await response.json();
     if (!data || data.length === 0) return null;
     const game = data[0];
+
+    // Persist storyline to database if available
+    if (game.storyline) {
+      try {
+        db.prepare('UPDATE games SET storyline = ? WHERE id = ?').run(game.storyline, gameId.toString());
+      } catch (e) {}
+    }
 
     let steamId = null;
     if (game.external_games && Array.isArray(game.external_games)) {
@@ -387,7 +394,7 @@ export async function getDiscoverGames(existingIds: string[], filterType: string
   } catch (error) { return []; }
 }
 
-export async function getSmartAIPlayOrder(gameTitle: string, apiKey: string) {
+export async function getSmartAIPlayOrder(gameId: string, gameTitle: string, apiKey: string) {
   try {
     const token = await getAccessToken();
     if (!token) return [];
@@ -401,24 +408,31 @@ export async function getSmartAIPlayOrder(gameTitle: string, apiKey: string) {
     const prefixResult = await model.generateContent(prefixPrompt);
     const franchisePrefix = prefixResult.response.text().trim();
 
-    // 3. Now perform the broad IGDB search using this perfect prefix
-    const response = await fetch('https://api.igdb.com/v4/games', {
-      method: 'POST',
-      headers: { 'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID, 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
-      body: `search "${franchisePrefix}"; fields name, rating_count, total_rating_count, alternative_names.name; where game_type = (0,8,9); limit 50;`
-    });
-    const data = await response.json();
-    if (!Array.isArray(data)) return [];
+    // 3. Check Database Cache
+    const cachedTimeline = getCachedTimeline(franchisePrefix);
+    let baseTimeline: any[] = [];
 
-    const rawDatabaseNames = data.map((g: any) => {
-      let altNames = '';
-      if (g.alternative_names && g.alternative_names.length > 0) {
-        altNames = ` [AKA: ${g.alternative_names.map((a: any) => a.name).join(', ')}]`;
-      }
-      return `${g.name}${altNames}`;
-    });
+    if (cachedTimeline) {
+      baseTimeline = cachedTimeline;
+    } else {
+      // 4. Perform the broad IGDB search using this perfect prefix
+      const response = await fetch('https://api.igdb.com/v4/games', {
+        method: 'POST',
+        headers: { 'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID, 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
+        body: `search "${franchisePrefix}"; fields name, rating_count, total_rating_count, alternative_names.name; where game_type = (0,8,9); limit 50;`
+      });
+      const data = await response.json();
+      if (!Array.isArray(data)) return [];
 
-    const prompt = `You are a strict video game archivist. We need the Canon Story Chronological Play Order for the '${franchisePrefix}' franchise.
+      const rawDatabaseNames = data.map((g: any) => {
+        let altNames = '';
+        if (g.alternative_names && g.alternative_names.length > 0) {
+          altNames = ` [AKA: ${g.alternative_names.map((a: any) => a.name).join(', ')}]`;
+        }
+        return `${g.name}${altNames}`;
+      });
+
+      const prompt = `You are a strict video game archivist. We need the Canon Story Chronological Play Order for the '${franchisePrefix}' franchise.
 
 Here are the raw database entries currently existing up to 2026: ${JSON.stringify(rawDatabaseNames)}.
 
@@ -431,33 +445,42 @@ INSTRUCTIONS:
 
 Return ONLY a raw JSON array of strings containing the perfectly clean game titles. No markdown, no extra text.`;
 
-    const result = await model.generateContent(prompt);
-    let text = result.response.text().trim();
-    const match = text.match(/\[[\s\S]*\]/);
-    if (!match) return [];
-    
-    const cleanTitles: string[] = JSON.parse(match[0]);
-    const enriched: any[] = [];
-    
-    for (const cleanTitle of cleanTitles) {
-      try {
-        const results = await searchGames(cleanTitle);
-        if (results && results.length > 0) {
-          const bestMatch = results[0];
-          enriched.push({ 
-            id: bestMatch.id, 
-            title: cleanTitle, 
-            img: bestMatch.image_url, 
-            isCurrent: cleanTitle.toLowerCase() === gameTitle.toLowerCase() || 
-                       bestMatch.title.toLowerCase() === gameTitle.toLowerCase() || 
-                       (gameTitle.toLowerCase().includes(franchisePrefix.toLowerCase()) && gameTitle.toLowerCase().includes(cleanTitle.toLowerCase().replace(/[0-9]/g, '').trim()))
-          });
-        }
-        await new Promise(r => setTimeout(r, 250));
-        
-      } catch (e) {}
+      const result = await model.generateContent(prompt);
+      let text = result.response.text().trim();
+      const match = text.match(/\[[\s\S]*\]/);
+      if (!match) return [];
+      
+      const cleanTitles: string[] = JSON.parse(match[0]);
+      
+      for (const cleanTitle of cleanTitles) {
+        try {
+          const results = await searchGames(cleanTitle);
+          if (results && results.length > 0) {
+            const bestMatch = results[0];
+            baseTimeline.push({ 
+              id: bestMatch.id, 
+              title: cleanTitle, 
+              img: bestMatch.image_url
+            });
+          }
+          await new Promise(r => setTimeout(r, 250));
+        } catch (e) {}
+      }
+
+      // Save raw timeline to cache
+      if (baseTimeline.length > 0) {
+        saveCachedTimeline(franchisePrefix, JSON.stringify(baseTimeline));
+      }
     }
-    return enriched;
+
+    // 5. Dynamically Re-Highlight - Strict ID and Exact Title matching
+    const finalTimeline = baseTimeline.map((game: any) => ({
+      ...game,
+      isCurrent: (game.id && game.id.toString() === gameId.toString()) || 
+                 (game.title.toLowerCase() === gameTitle.toLowerCase())
+    }));
+
+    return finalTimeline;
   } catch (err) { return []; }
 }
 

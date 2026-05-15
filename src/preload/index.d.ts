@@ -23,6 +23,8 @@ declare global {
       saveSetting: (key: string, value: string) => Promise<boolean>;
       updateDiscordRpc: (isEnabled: boolean) => Promise<boolean>;
       checkDiscordStatus: () => Promise<{ connected: boolean; initialized: boolean }>;
+      updateUserProfile: (username: string, avatarPath: string | null) => Promise<boolean>;
+      browseAvatar: () => Promise<string | null>;
       browseImage: () => Promise<string | null>;
       analyzeImage: (imagePath: string, apiKey: string) => Promise<string[]>;
       bulkImportText: (text: string) => Promise<string[]>;

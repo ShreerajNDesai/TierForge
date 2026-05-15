@@ -101,6 +101,12 @@ interface GlobalContextType {
   notifications: {id: number, title: string, message: string, time: Date, read: boolean}[];
   setNotifications: React.Dispatch<React.SetStateAction<{id: number, title: string, message: string, time: Date, read: boolean}[]>>;
   addNotification: (title: string, message: string) => void;
+  userName: string;
+  setUserName: React.Dispatch<React.SetStateAction<string>>;
+  userAvatar: string | null;
+  setUserAvatar: React.Dispatch<React.SetStateAction<string | null>>;
+  isMasterMenuOpen: boolean;
+  setIsMasterMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
 
   loadGames: () => Promise<void>;
   handleGameClick: (game: any) => Promise<void>;
@@ -178,7 +184,17 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     setNotifications(prev => [{ id: Date.now(), title, message, time: new Date(), read: false }, ...prev]);
   };
 
+  const [userName, setUserName] = useState('Player');
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [isMasterMenuOpen, setIsMasterMenuOpen] = useState(false);
+
   useEffect(() => {
+    window.api.getSetting('user_name').then((name: string | null) => {
+      if (name) setUserName(name);
+    });
+    window.api.getSetting('user_avatar').then((avatar: string | null) => {
+      if (avatar) setUserAvatar(avatar);
+    });
     window.api.getSetting('geminiKey').then((key: string | null) => {
       if (key) setGeminiKey(key);
     });
@@ -304,6 +320,18 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   const libraryGames = useMemo(() => allGames, [allGames]);
   const setLibraryGames = setAllGames;
+
+  const totalPlaytimeMinutes = useMemo(() => {
+    return allGames.reduce((acc, g) => acc + (g.playtime_minutes || 0), 0);
+  }, [allGames]);
+
+  const gamerTitle = useMemo(() => {
+    const count = libraryGames.length;
+    if (count < 10) return 'Novice';
+    if (count < 50) return 'Intermediate';
+    if (count < 100) return 'Collector';
+    return 'Grandmaster';
+  }, [libraryGames]);
 
   const suggestedGame = useMemo(() => {
     const backlog = allGames.filter(g => (g.status || 'Backlog') === 'Backlog');
@@ -467,7 +495,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       setAllGames(prev => [...prev, {
         id: game.id.toString(), title: game.title, image_url: game.image_url,
         tier: newTier, notes: '', status: 'Backlog', executable_path: '',
-        playtime_minutes: 0, genres: '', developers: '', release_year: ''
+        playtime_minutes: 0, genres: '', developers: '', release_year: '',
+        storyline: ''
       }]);
 
       setSearchResults([]);
@@ -551,6 +580,9 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     gamePlaytime, setGamePlaytime, gameDeals, setGameDeals,
     videoError, setVideoError, iframeRef,
     notifications, setNotifications, addNotification,
+    userName, setUserName, userAvatar, setUserAvatar,
+    isMasterMenuOpen, setIsMasterMenuOpen,
+    gamerTitle, totalPlaytimeMinutes,
     loadGames, handleGameClick, handleSearch, handleAddGame,
     handleScanPC, handleSaveGameData, onDragStart, onDragEnd,
     handleAIImport, handleTextImport, handleSortClick, handleFilterClick, toggleMute,
