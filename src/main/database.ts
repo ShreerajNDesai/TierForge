@@ -26,7 +26,8 @@ export function initDB() {
       developers TEXT DEFAULT '',
       release_year TEXT DEFAULT '',
       custom_save_path TEXT DEFAULT '',
-      last_played_at INTEGER DEFAULT 0
+      last_played_at INTEGER DEFAULT 0,
+      storyline TEXT DEFAULT ''
     );
   `);
 
@@ -40,6 +41,13 @@ export function initDB() {
   // Add last_played_at column if it doesn't exist
   try {
     db.exec(`ALTER TABLE games ADD COLUMN last_played_at INTEGER DEFAULT 0;`);
+  } catch (e) {
+    // Column already exists
+  }
+
+  // Add storyline column if it doesn't exist
+  try {
+    db.exec(`ALTER TABLE games ADD COLUMN storyline TEXT DEFAULT '';`);
   } catch (e) {
     // Column already exists
   }
@@ -58,6 +66,18 @@ export function initDB() {
       last_updated INTEGER NOT NULL
     );
   `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS timeline_cache (
+      franchise TEXT PRIMARY KEY,
+      data_json TEXT NOT NULL
+    );
+  `);
+
+  // Flush timeline cache to ensure new isCurrent logic applies
+  try {
+    db.exec("DELETE FROM timeline_cache");
+  } catch (e) {}
   
   // Safe migrations for existing databases
   try {
@@ -114,8 +134,8 @@ export function addGame(id: string, title: string, imageUrl: string, executableP
       updateStmt.run(executablePath, id);
     }
   } else {
-    const stmt = db.prepare('INSERT INTO games (id, title, image_url, tier, executable_path, genres, developers, release_year) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-    stmt.run(id, title, imageUrl, 'unranked', executablePath, genres, developers, releaseYear);
+    const stmt = db.prepare('INSERT INTO games (id, title, image_url, tier, executable_path, genres, developers, release_year, storyline) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(id, title, imageUrl, 'unranked', executablePath, genres, developers, releaseYear, '');
   }
 }
 
@@ -174,6 +194,17 @@ export function getCachedRanking(categoryId: string) {
 export function updateRankingsCache(categoryId: string, gamesJson: string) {
   const stmt = db.prepare('INSERT OR REPLACE INTO rankings_cache (category_id, games_json, last_updated) VALUES (?, ?, ?)');
   stmt.run(categoryId, gamesJson, Date.now());
+}
+
+export function getCachedTimeline(franchise: string) {
+  const stmt = db.prepare('SELECT data_json FROM timeline_cache WHERE franchise = ?');
+  const result = stmt.get(franchise) as any;
+  return result ? JSON.parse(result.data_json) : null;
+}
+
+export function saveCachedTimeline(franchise: string, dataJson: string) {
+  const stmt = db.prepare('INSERT OR REPLACE INTO timeline_cache (franchise, data_json) VALUES (?, ?)');
+  stmt.run(franchise, dataJson);
 }
 
 export function syncSteamGame(id: string, title: string, imageUrl: string, playtimeMinutes: number) {

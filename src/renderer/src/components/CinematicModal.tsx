@@ -411,11 +411,13 @@ const CinematicModal = () => {
                 <p className="text-slate-300 text-base leading-relaxed">
                   {gameDetails ? gameDetails.summary : 'Loading from IGDB...'}
                 </p>
-                {gameDetails?.storyline && gameDetails.storyline !== gameDetails.summary && (
-                  <>
+                {(gameDetails?.storyline || selectedGame?.storyline) && (gameDetails?.storyline !== gameDetails?.summary) && (
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-500">
                     <h3 className="text-sm font-bold text-white/70 tracking-wide mt-5 mb-3">Storyline</h3>
-                    <p className="text-slate-300 text-base leading-relaxed">{gameDetails.storyline}</p>
-                  </>
+                    <p className="text-slate-300 text-base leading-relaxed">
+                      {gameDetails?.storyline || selectedGame?.storyline}
+                    </p>
+                  </div>
                 )}
               </div>
 
