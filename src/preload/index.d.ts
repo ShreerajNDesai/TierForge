@@ -66,8 +66,10 @@ declare global {
       hideTrayWindow: () => Promise<void>;
       quitApp: () => Promise<void>;
       showMainWindow: () => Promise<void>;
+      getSystemStats: () => Promise<any>;
       forceCloudBackup: () => Promise<boolean>;
       onAppRestored: (callback: () => void) => () => void;
+      onSettingUpdated: (callback: (data: { key: string, value: string }) => void) => () => void;
     }
   }
 }

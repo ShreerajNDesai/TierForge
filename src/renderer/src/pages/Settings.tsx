@@ -54,7 +54,16 @@ const Settings = () => {
     }, 5000);
     window.api.checkDiscordStatus().then(setDiscordStatus);
 
-    return () => clearInterval(interval);
+    const removeListener = window.api.onSettingUpdated((data: { key: string, value: string }) => {
+      if (data.key === 'discord_rpc') {
+         setDiscordRpcEnabled(data.value === 'true' || data.value === true as unknown as string);
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      if(removeListener) removeListener();
+    };
   }, []);
 
   const handleBrowseFolder = async () => {

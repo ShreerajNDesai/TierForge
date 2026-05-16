@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Check, Plus, UploadCloud, RefreshCw, Download, Bell, BarChart2, Minus, Square, X, Camera, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import { Search, Check, Plus, UploadCloud, RefreshCw, Download, Bell, BarChart2, Minus, Square, X, Camera, Image as ImageIcon, ChevronDown, Cpu, HardDrive, Database, Activity } from 'lucide-react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useGlobal } from '../context/GlobalContext';
 
@@ -19,13 +19,33 @@ const Header = () => {
     handleScanPC,
     isScanning,
     notifications,
-    setNotifications
+    setNotifications,
+    libraryGames
   } = useGlobal();
 
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showSystemMonitor, setShowSystemMonitor] = useState(false);
+  const [sysStats, setSysStats] = useState<any>(null);
+
   const exportMenuRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
+  const systemMonitorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (showSystemMonitor) {
+      window.api.getSystemStats().then(setSysStats);
+      interval = setInterval(() => {
+        window.api.getSystemStats().then(setSysStats);
+      }, 2000);
+    } else {
+      setSysStats(null);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [showSystemMonitor]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -34,6 +54,9 @@ const Header = () => {
       }
       if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
+      }
+      if (systemMonitorRef.current && !systemMonitorRef.current.contains(event.target as Node)) {
+        setShowSystemMonitor(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -178,7 +201,7 @@ const Header = () => {
             >
               <Bell size={18} />
               {notifications.some(n => !n.read) && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full border border-[#0B0E14]"></span>
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-[#0B0E14]"></span>
               )}
             </div>
             
@@ -205,7 +228,108 @@ const Header = () => {
               </div>
             )}
           </div>
-          <BarChart2 size={18} className="cursor-pointer hover:text-white transition" />
+          <div className="relative" ref={systemMonitorRef}>
+            <div 
+              className={`cursor-pointer transition ${showSystemMonitor ? 'text-indigo-400' : 'text-slate-400 hover:text-white'}`}
+              onClick={() => setShowSystemMonitor(!showSystemMonitor)}
+            >
+              <BarChart2 size={18} />
+            </div>
+
+            {showSystemMonitor && (
+              <div className="absolute top-12 right-0 w-80 bg-[#121620]/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden z-[9999] flex flex-col">
+                {/* Session Stats */}
+                <div className="p-4 border-b border-white/5">
+                  <h3 className="text-white font-bold mb-3">🎮 Session Stats</h3>
+                  <div className="mb-4">
+                    <span className="text-xs text-slate-400">App Uptime</span>
+                    <p className="text-sm font-medium text-slate-200">
+                      {sysStats ? `Online for ${sysStats.uptime.hours}h ${sysStats.uptime.minutes}m` : 'Loading...'}
+                    </p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-slate-400">Library Health</span>
+                      <span className="text-slate-300">
+                        {libraryGames.filter(g => g.status === 'Completed').length} / {libraryGames.filter(g => g.status === 'Backlog' || g.status === 'Completed').length} Completed
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-800 rounded-full h-1.5">
+                      <div 
+                        className="bg-indigo-500 h-1.5 rounded-full" 
+                        style={{ width: `${Math.round((libraryGames.filter(g => g.status === 'Completed').length / Math.max(1, libraryGames.filter(g => g.status === 'Backlog' || g.status === 'Completed').length)) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hardware Telemetry */}
+                <div className="p-4 bg-white/5">
+                  <h3 className="text-white font-bold mb-4">💻 System Monitor</h3>
+                  
+                  {sysStats ? (
+                    <div className="space-y-4">
+                      {/* CPU */}
+                      <div>
+                        <div className="flex justify-between text-xs mb-1 items-center">
+                          <div className="flex items-center gap-1.5 text-slate-300">
+                            <Cpu size={12} className="text-blue-400" /> CPU
+                          </div>
+                          <span className={sysStats.cpu.percent > 85 ? 'text-rose-400' : 'text-slate-400'}>{sysStats.cpu.percent}%</span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                          <div 
+                            className={`h-1.5 rounded-full transition-all ${sysStats.cpu.percent > 85 ? 'bg-rose-500' : 'bg-blue-500'}`}
+                            style={{ width: `${sysStats.cpu.percent}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* RAM */}
+                      <div>
+                        <div className="flex justify-between text-xs mb-1 items-center">
+                          <div className="flex items-center gap-1.5 text-slate-300">
+                            <Activity size={12} className="text-emerald-400" /> RAM
+                          </div>
+                          <span className={sysStats.ram.percent > 85 ? 'text-rose-400' : 'text-slate-400'}>
+                            {sysStats.ram.usedGB}GB / {sysStats.ram.totalGB}GB
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                          <div 
+                            className={`h-1.5 rounded-full transition-all ${sysStats.ram.percent > 85 ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                            style={{ width: `${sysStats.ram.percent}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Disk */}
+                      <div>
+                        <div className="flex justify-between text-xs mb-1 items-center">
+                          <div className="flex items-center gap-1.5 text-slate-300">
+                            <HardDrive size={12} className="text-purple-400" /> C: Drive
+                          </div>
+                          <span className={sysStats.disk.percent > 85 ? 'text-rose-400' : 'text-slate-400'}>
+                            {sysStats.disk.freeGB}GB Free
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                          <div 
+                            className={`h-1.5 rounded-full transition-all ${sysStats.disk.percent > 85 ? 'bg-rose-500' : 'bg-purple-500'}`}
+                            style={{ width: `${sysStats.disk.percent}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-slate-500 text-sm py-4 animate-pulse">
+                      Gathering telemetry...
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="flex items-center gap-2 pl-6 border-l border-slate-800/80 text-slate-500">

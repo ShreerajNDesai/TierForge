@@ -182,6 +182,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<{id: number, title: string, message: string, time: Date, read: boolean}[]>([]);
   const addNotification = (title: string, message: string) => {
     setNotifications(prev => [{ id: Date.now(), title, message, time: new Date(), read: false }, ...prev]);
+    window.api.showNotification(title, message);
   };
 
   const [userName, setUserName] = useState('Player');
@@ -216,11 +217,13 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
     const cleanupStarted = window.api.onGameStarted((gameId: string) => {
       setRunningGameId(gameId);
+      addNotification('Game Launched', 'Your playtime is now being tracked.');
     });
     const cleanupStopped = window.api.onGameStopped((_gameId: string, totalPlaytime: number) => {
       setRunningGameId(null);
       setGamePlaytime(totalPlaytime);
       loadGames();
+      addNotification('Session Ended', 'Your playtime was successfully saved.');
     });
 
     return () => {

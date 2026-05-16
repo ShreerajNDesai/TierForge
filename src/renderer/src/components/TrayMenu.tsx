@@ -12,7 +12,14 @@ export default function TrayMenu() {
 
   useEffect(() => {
     loadData();
-    // In a real app we might want to poll or listen to updates, but for now loading on mount is fine
+    const removeListener = window.api.onSettingUpdated((updateData: { key: string, value: string }) => {
+      if (updateData.key === 'discord_rpc') {
+         setData(prev => ({ ...prev, discordEnabled: updateData.value === 'true' || updateData.value === true as unknown as string }));
+      }
+    });
+    return () => {
+      if (removeListener) removeListener();
+    };
   }, []);
 
   const loadData = async () => {

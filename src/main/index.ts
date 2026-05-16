@@ -1,6 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain, dialog, Notification, Tray, nativeImage } from 'electron'
 import { join, basename } from 'path'
 import { exec } from 'child_process'
+import * as os from 'os'
+import fs from 'fs'
+import fsPromises from 'fs/promises'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { initDB, getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime, clearRankingsCache, getDbPath, db, checkCachedTimelineForGame } from './database'
@@ -122,7 +125,7 @@ function createWindow(): void {
     show: false,
     frame: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon: join(__dirname, '../../resources/icon.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -169,7 +172,8 @@ app.whenReady().then(() => {
   createTrayWindow();
 
   // Initialize Tray
-  tray = new Tray(nativeImage.createFromPath(join(__dirname, '../../resources/icon.png')));
+  const trayIcon = nativeImage.createFromPath(join(__dirname, '../../resources/icon.png')).resize({ width: 16, height: 16 });
+  tray = new Tray(trayIcon);
   tray.setToolTip('TierForge Gaming Dashboard');
   
   tray.on('click', () => {
@@ -364,6 +368,77 @@ app.whenReady().then(() => {
     showAndRestoreMainWindow();
   });
 
+  let lastCpuInfo = os.cpus();
+  ipcMain.handle('get-system-stats', async () => {
+    // RAM
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const totalMemGB = (totalMem / 1024 / 1024 / 1024).toFixed(1);
+    const usedMemGB = (usedMem / 1024 / 1024 / 1024).toFixed(1);
+    const memPercent = Math.round((usedMem / totalMem) * 100);
+
+    // CPU
+    const cpus = os.cpus();
+    let user = 0;
+    let nice = 0;
+    let sys = 0;
+    let idle = 0;
+    let irq = 0;
+    let lastUser = 0;
+    let lastNice = 0;
+    let lastSys = 0;
+    let lastIdle = 0;
+    let lastIrq = 0;
+
+    for (let i = 0; i < cpus.length; i++) {
+      user += cpus[i].times.user;
+      nice += cpus[i].times.nice;
+      sys += cpus[i].times.sys;
+      idle += cpus[i].times.idle;
+      irq += cpus[i].times.irq;
+
+      lastUser += lastCpuInfo[i].times.user;
+      lastNice += lastCpuInfo[i].times.nice;
+      lastSys += lastCpuInfo[i].times.sys;
+      lastIdle += lastCpuInfo[i].times.idle;
+      lastIrq += lastCpuInfo[i].times.irq;
+    }
+
+    const totalDiff = (user - lastUser) + (nice - lastNice) + (sys - lastSys) + (idle - lastIdle) + (irq - lastIrq);
+    const idleDiff = idle - lastIdle;
+    const cpuPercent = totalDiff === 0 ? 0 : Math.round((1 - idleDiff / totalDiff) * 100);
+    lastCpuInfo = cpus;
+
+    // Disk Space
+    let diskFreeGB = '0';
+    let diskTotalGB = '0';
+    let diskPercent = 0;
+    try {
+      const rootPath = os.platform() === 'win32' ? 'C:\\' : '/';
+      const stat = await fsPromises.statfs(rootPath);
+      const freeSpace = stat.bfree * stat.bsize;
+      const totalSpace = stat.blocks * stat.bsize;
+      diskFreeGB = (freeSpace / 1024 / 1024 / 1024).toFixed(1);
+      diskTotalGB = (totalSpace / 1024 / 1024 / 1024).toFixed(1);
+      diskPercent = Math.round(((totalSpace - freeSpace) / totalSpace) * 100);
+    } catch (e) {
+      console.error('Failed to get disk stats', e);
+    }
+
+    // Uptime
+    const uptimeSec = process.uptime();
+    const hours = Math.floor(uptimeSec / 3600);
+    const minutes = Math.floor((uptimeSec % 3600) / 60);
+
+    return {
+      ram: { usedGB: usedMemGB, totalGB: totalMemGB, percent: memPercent },
+      cpu: { percent: cpuPercent },
+      disk: { freeGB: diskFreeGB, totalGB: diskTotalGB, percent: diskPercent },
+      uptime: { hours, minutes }
+    };
+  });
+
   ipcMain.handle('force-cloud-backup', async () => {
     sendDesktopNotification('Cloud Backup', 'Starting background backup of recently played games...');
     const games = getAllGames().filter((g: any) => g.executable_path && g.last_played_at > 0).sort((a: any, b: any) => b.last_played_at - a.last_played_at).slice(0, 3);
@@ -481,6 +556,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('save-setting', (_, key, value) => {
     saveSetting(key, value);
+    // Broadcast the change to ALL windows (Main App and Tray Menu)
+    BrowserWindow.getAllWindows().forEach(win => {
+      win.webContents.send('setting-updated', { key, value });
+    });
     return true;
   });
 
