@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as htmlToImage from 'html-to-image';
 import Tilt from 'react-parallax-tilt';
-import { PlayCircle, Search, Clock, Gamepad2, Trophy, Star, Library as LibraryIcon, ExternalLink, Activity, Target, Flame } from 'lucide-react';
+import { PlayCircle, Search, Clock, Gamepad2, Trophy, Star, Library as LibraryIcon, ExternalLink, Activity, Target, Flame, Grid, List } from 'lucide-react';
 import { useGlobal } from '../context/GlobalContext';
 
 const Library = () => {
@@ -11,6 +11,11 @@ const Library = () => {
     librarySearch,
     handleGameClick
   } = useGlobal();
+
+  const [viewMode, setViewMode] = useState<'rows' | 'grid'>('rows');
+  const filteredLibraryGames = libraryGames.filter((g: any) => 
+    g.title.toLowerCase().includes(librarySearch.toLowerCase())
+  );
 
   const statuses = [
     { id: 'Playing', title: '🎮 Currently Playing' },
@@ -76,6 +81,10 @@ const Library = () => {
           <h1 className="text-4xl font-black text-white mb-2">My Library</h1>
           <p className="text-slate-400">{libraryGames.length} games in your collection</p>
         </div>
+        <div className="flex items-center bg-[#121620] border border-white/10 rounded-xl p-1 shadow-inner">
+          <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-indigo-500/20 text-indigo-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}><Grid size={18} /></button>
+          <button onClick={() => setViewMode('rows')} className={`p-2 rounded-lg transition-all ${viewMode === 'rows' ? 'bg-indigo-500/20 text-indigo-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}><List size={18} /></button>
+        </div>
       </div>
       
       {suggestedGame && librarySearch === '' && (
@@ -131,7 +140,7 @@ const Library = () => {
       )}
 
       <div className="space-y-4">
-        {statuses.map(status => {
+        {viewMode === 'rows' && statuses.map(status => {
           const gamesInStatus = libraryGames.filter(g => 
             (g.status || 'Backlog') === status.id && 
             g.title.toLowerCase().includes(librarySearch.toLowerCase())
@@ -183,6 +192,56 @@ const Library = () => {
             </div>
           );
         })}
+
+        {viewMode === 'grid' && (
+          <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-6 mt-8">
+            {filteredLibraryGames.map((game: any) => (
+              <div 
+                key={game.id} 
+                tabIndex={0}
+                onClick={() => handleGameClick(game)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(game); }}
+                className="w-full aspect-[2/3] cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-xl transition-all relative z-0 hover:z-50"
+              >
+                <Tilt
+                  glareEnable={true}
+                  glareMaxOpacity={0.3}
+                  glarePosition="all"
+                  glareBorderRadius="0.75rem"
+                  tiltMaxAngleX={10}
+                  tiltMaxAngleY={10}
+                  scale={1.05}
+                  transitionSpeed={400}
+                  className="w-full h-full rounded-xl"
+                >
+                  <div className="w-full h-full rounded-xl overflow-hidden shadow-lg border border-white/10 group relative hover:scale-105 hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all bg-black/50">
+                    <img src={game.img || game.image_url} alt={game.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                      <span className="text-white font-bold text-sm truncate w-full">{game.title}</span>
+                    </div>
+                    {(game.playtime_minutes || 0) > 0 && (
+                      <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 border border-white/10">
+                        <Clock size={10} className="text-indigo-400" />
+                        {(game.playtime_minutes || 0) >= 60 
+                          ? `${Math.floor(game.playtime_minutes / 60)}h ${game.playtime_minutes % 60}m`
+                          : `${game.playtime_minutes}m`
+                        }
+                      </div>
+                    )}
+                    <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-lg border border-white/10 truncate max-w-[80px]">
+                      {statuses.find(s => s.id === (game.status || 'Backlog'))?.title.split(' ')[1] || (game.status || 'Backlog')}
+                    </div>
+                  </div>
+                </Tilt>
+              </div>
+            ))}
+            {filteredLibraryGames.length === 0 && (
+              <div className="col-span-full py-20 text-center text-slate-500">
+                <p>No games match your search.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* HIDDEN 4K MOSAIC RENDER NODE */}
