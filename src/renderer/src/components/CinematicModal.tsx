@@ -583,7 +583,6 @@ const CinematicModal = () => {
 
                 {aiTimeline && (
                   <div className="mb-8 bg-black/40 border border-purple-500/20 rounded-2xl p-6 shadow-inner relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
                     <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-6 flex items-center gap-3">
                       <Sparkles size={24} className="text-purple-400"/> Canon Story Play Order
                       <button 
@@ -653,8 +652,8 @@ const CinematicModal = () => {
 
               {/* Related Games */}
               {gameDetails?.seriesList && gameDetails.seriesList.length > 1 && (
-                <div className="mt-4">
-                  <h3 className="text-lg font-bold text-white/80 mb-4 mt-8">
+                <div className="">
+                  <h3 className="text-lg font-bold text-white/80">
                     {gameDetails.seriesName} (Related Games)
                   </h3>
                   <div className="flex gap-4 overflow-x-auto py-4 -my-2 custom-scrollbar items-start">

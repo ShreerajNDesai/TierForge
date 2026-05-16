@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as htmlToImage from 'html-to-image';
-import { Crown, Star, Diamond, LayoutGrid, ThumbsDown, Skull, Ban, Trash2, Menu, Filter, ArrowUpDown, Grid, List, Plus, RefreshCw } from 'lucide-react';
+import Tilt from 'react-parallax-tilt';
+import { Crown, Star, Diamond, LayoutGrid, ThumbsDown, Skull, Ban, Trash2, Menu, Filter, ArrowUpDown, Grid, List, Plus, RefreshCw, Clock } from 'lucide-react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useGlobal } from '../context/GlobalContext';
 
@@ -39,6 +40,8 @@ const TierList = () => {
     handleScanPC,
     isScanning
   } = useGlobal();
+
+  const [unrankedViewMode, setUnrankedViewMode] = useState<'rows' | 'grid'>('rows');
 
   return (
     <div className="flex-1 overflow-y-auto px-10 pb-12 pt-6 relative custom-scrollbar">
@@ -150,7 +153,7 @@ const TierList = () => {
       <div className="px-1 mb-10 bg-transparent">
         <div className="flex justify-between items-end mb-6">
           <div className="flex items-center gap-3">
-            <h3 className="text-[17px] font-extrabold text-white tracking-tight">Game Collection</h3>
+            <h3 className="text-[17px] font-extrabold text-white tracking-tight">Unranked Games</h3>
             <span className="bg-indigo-500/20 text-indigo-300 text-[11px] px-2.5 py-0.5 rounded-md font-bold border border-indigo-500/20">{data.collection.length}</span>
           </div>
           
@@ -161,16 +164,16 @@ const TierList = () => {
             <button onClick={handleSortClick} className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-[13px] font-medium border transition ${sortOrder !== 'none' ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' : 'border-slate-700/80 text-slate-300 hover:bg-slate-800/80'}`}>
               <ArrowUpDown size={14} /> {sortOrder === 'none' ? 'Sort' : sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
             </button>
-            <div className="flex items-center border border-slate-700/80 rounded-lg p-0.5 ml-1 bg-[#121620]/50">
-              <button className="p-1.5 bg-slate-700/80 text-white rounded-md shadow-sm"><Grid size={15} /></button>
-              <button className="p-1.5 text-slate-400 hover:text-white rounded-md transition"><List size={15} /></button>
+            <div className="flex items-center bg-[#121620] border border-white/10 rounded-xl p-1 shadow-inner ml-1">
+              <button onClick={() => setUnrankedViewMode('grid')} className={`p-1.5 rounded-lg transition-all ${unrankedViewMode === 'grid' ? 'bg-indigo-500/20 text-indigo-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}><Grid size={15} /></button>
+              <button onClick={() => setUnrankedViewMode('rows')} className={`p-1.5 rounded-lg transition-all ${unrankedViewMode === 'rows' ? 'bg-indigo-500/20 text-indigo-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}><List size={15} /></button>
             </div>
           </div>
         </div>
 
         <Droppable droppableId="collection" direction="horizontal">
           {(provided, snapshot) => (
-            <div ref={provided.innerRef} {...provided.droppableProps} className={`flex flex-wrap gap-[18px] min-h-[190px] p-2 -ml-2 rounded-2xl transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-500/5' : ''}`}>
+            <div ref={provided.innerRef} {...provided.droppableProps} className={unrankedViewMode === 'grid' ? `grid grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-6 mt-4 min-h-[190px] p-2 -ml-2 rounded-2xl transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-500/5' : ''}` : `flex flex-wrap gap-[18px] min-h-[190px] p-2 -ml-2 rounded-2xl transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-500/5' : ''}`}>
               {filteredAndSortedCollection.map((item: any, index: number) => (
                 <Draggable key={item.id} draggableId={item.id} index={index}>
                   {(provided, snapshot) => (
@@ -179,13 +182,48 @@ const TierList = () => {
                       tabIndex={0}
                       onClick={() => handleGameClick(item)}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(item); }}
-                      className={`flex-shrink-0 w-[115px] h-[170px] rounded-[10px] overflow-hidden border border-slate-700/80 shadow-lg transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] ${
+                      className={unrankedViewMode === 'grid' 
+                        ? `w-full aspect-[2/3] cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-xl transition-all relative z-0 hover:z-50 ${snapshot.isDragging ? 'shadow-2xl border-indigo-400 z-[100]' : ''}`
+                        : `flex-shrink-0 w-[115px] h-[170px] rounded-[10px] overflow-hidden border border-slate-700/80 shadow-lg transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] ${
                         snapshot.isDragging 
                           ? 'shadow-2xl border-indigo-400 z-[100]' 
                           : 'hover:border-slate-400 hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)]'
                       }`}
                     >
-                      <img src={item.img} alt={item.title} className="w-full h-full object-cover pointer-events-none" />
+                      {unrankedViewMode === 'grid' ? (
+                        <Tilt
+                          glareEnable={true}
+                          glareMaxOpacity={0.3}
+                          glarePosition="all"
+                          glareBorderRadius="0.75rem"
+                          tiltMaxAngleX={10}
+                          tiltMaxAngleY={10}
+                          scale={1.05}
+                          transitionSpeed={400}
+                          className="w-full h-full rounded-xl"
+                        >
+                          <div className="w-full h-full rounded-xl overflow-hidden shadow-lg border border-white/10 group relative hover:scale-105 hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all bg-black/50">
+                            <img src={item.img} alt={item.title} className="w-full h-full object-cover pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4 pointer-events-none">
+                              <span className="text-white font-bold text-sm truncate w-full">{item.title}</span>
+                            </div>
+                            {(item.playtime_minutes || 0) > 0 && (
+                              <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 border border-white/10 pointer-events-none">
+                                <Clock size={10} className="text-indigo-400" />
+                                {(item.playtime_minutes || 0) >= 60 
+                                  ? `${Math.floor(item.playtime_minutes / 60)}h ${item.playtime_minutes % 60}m`
+                                  : `${item.playtime_minutes}m`
+                                }
+                              </div>
+                            )}
+                            <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-lg border border-white/10 truncate max-w-[80px] pointer-events-none">
+                              {item.status || 'Backlog'}
+                            </div>
+                          </div>
+                        </Tilt>
+                      ) : (
+                        <img src={item.img} alt={item.title} className="w-full h-full object-cover pointer-events-none" />
+                      )}
                     </div>
                   )}
                 </Draggable>
@@ -194,11 +232,18 @@ const TierList = () => {
               
               <div 
                 onClick={handleScanPC}
-                className={`w-[115px] h-[170px] rounded-[10px] border-2 border-dashed flex flex-col items-center justify-center transition shadow-sm ${
-                  isScanning
-                    ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-400 cursor-not-allowed'
-                    : 'border-slate-700/80 text-slate-500 hover:text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/5 cursor-pointer'
-                }`}
+                className={unrankedViewMode === 'grid' 
+                  ? `w-full aspect-[2/3] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition shadow-sm ${
+                    isScanning
+                      ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-400 cursor-not-allowed'
+                      : 'border-slate-700/80 text-slate-500 hover:text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/5 cursor-pointer'
+                  }`
+                  : `w-[115px] h-[170px] rounded-[10px] border-2 border-dashed flex flex-col items-center justify-center transition shadow-sm ${
+                    isScanning
+                      ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-400 cursor-not-allowed'
+                      : 'border-slate-700/80 text-slate-500 hover:text-indigo-400 hover:border-indigo-500/50 hover:bg-indigo-500/5 cursor-pointer'
+                  }`
+                }
               >
                 {isScanning ? (
                   <>

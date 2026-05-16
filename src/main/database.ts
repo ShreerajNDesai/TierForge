@@ -73,11 +73,6 @@ export function initDB() {
       data_json TEXT NOT NULL
     );
   `);
-
-  // Flush timeline cache to ensure new isCurrent logic applies
-  try {
-    db.exec("DELETE FROM timeline_cache");
-  } catch (e) {}
   
   // Safe migrations for existing databases
   try {

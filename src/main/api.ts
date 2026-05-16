@@ -76,7 +76,7 @@ export async function getGameExtendedDetails(gameId: string) {
     const response = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: { 'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID, 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
-      body: 'where id = ' + gameId + '; fields rating, rating_count, summary, storyline, first_release_date, genres.name, platforms.name, screenshots.image_id, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, game_modes.name, player_perspectives.name, themes.name, collections.name, collections.games.name, collections.games.cover.image_id, collections.games.first_release_date, dlcs.name, dlcs.cover.image_id, dlcs.first_release_date, expansions.name, expansions.cover.image_id, expansions.first_release_date, game_engines.name, alternative_names.name, videos.video_id, videos.name, multiplayer_modes.onlinecoop, multiplayer_modes.onlinemax, multiplayer_modes.offlinecoop, multiplayer_modes.offlinemax, age_ratings.category, age_ratings.rating, age_ratings.rating_cover_url, websites.url, websites.category, external_games.category, external_games.external_game_source, external_games.uid;'
+      body: 'where id = ' + gameId + '; fields rating, rating_count, summary, storyline, first_release_date, genres.name, platforms.name, screenshots.image_id, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, game_modes.name, player_perspectives.name, themes.name, collections.name, collections.games.name, collections.games.cover.image_id, collections.games.first_release_date, collections.games.game_type, dlcs.name, dlcs.cover.image_id, dlcs.first_release_date, expansions.name, expansions.cover.image_id, expansions.first_release_date, game_engines.name, alternative_names.name, videos.video_id, videos.name, multiplayer_modes.onlinecoop, multiplayer_modes.onlinemax, multiplayer_modes.offlinecoop, multiplayer_modes.offlinemax, age_ratings.category, age_ratings.rating, age_ratings.rating_cover_url, websites.url, websites.category, external_games.category, external_games.external_game_source, external_games.uid;'
     });
     const data = await response.json();
     if (!data || data.length === 0) return null;
@@ -103,7 +103,10 @@ export async function getGameExtendedDetails(gameId: string) {
       year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : 9999
     });
     const dlcList = [...(game.dlcs || []), ...(game.expansions || [])].map(mapMiniGame).sort((a, b) => a.year - b.year);
-    const seriesList = (game.collections?.[0]?.games || []).map(mapMiniGame).sort((a, b) => a.year - b.year);
+    const seriesList = (game.collections?.[0]?.games || [])
+      .filter((g: any) => g.game_type === undefined || [0, 8, 9].includes(g.game_type))
+      .map(mapMiniGame)
+      .sort((a: any, b: any) => a.year - b.year);
     let background_url = '';
     if (game.screenshots && game.screenshots.length > 0) background_url = 'https://images.igdb.com/igdb/image/upload/t_1080p/' + game.screenshots[Math.floor(Math.random() * game.screenshots.length)].image_id + '.jpg';
     const videos = game.videos ? game.videos.map((v: any) => ({ id: v.video_id, name: v.name })) : [];
@@ -595,7 +598,25 @@ export async function getGameDeals(gameTitle: string) {
     const res = await fetch(searchUrl);
     const deals = await res.json();
     const titleLower = gameTitle.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const matched = deals.filter((d: any) => { const dealTitle = (d.title || '').toLowerCase().replace(/[^a-z0-9]/g, ''); return dealTitle === titleLower || dealTitle.includes(titleLower) || titleLower.includes(dealTitle); });
+    
+    const matched = deals.filter((d: any) => {
+      const rawDealTitle = (d.title || '').toLowerCase();
+      const dealTitleAlpha = rawDealTitle.replace(/[^a-z0-9]/g, '');
+      
+      // 1. Strict Negative Filter: Reject any deal that is obviously a DLC, Soundtrack, or Upgrade
+      const junkWords = ['dlc', 'soundtrack', 'upgrade', 'season pass', 'expansion', 'artbook', 'pack', 'bonus', 'bundle'];
+      if (junkWords.some(word => rawDealTitle.includes(word))) {
+        return false;
+      }
+
+      // 2. Exact Alphanumeric Match: Prevents "GameName: DLC" from passing just because it includes "GameName"
+      // We also allow a slight exception for "Game of the Year" or "Standard Edition" suffixes if needed, 
+      // but exact alphanumeric match is the safest for base games.
+      return dealTitleAlpha === titleLower || 
+             dealTitleAlpha === titleLower + 'edition' || 
+             dealTitleAlpha === titleLower + 'standardedition' ||
+             dealTitleAlpha === titleLower + 'gameoftheyearedition';
+    });
     const byStore: Record<string, any> = {};
     for (const deal of matched) { const storeId = deal.storeID; if (!byStore[storeId] || parseFloat(deal.salePrice) < parseFloat(byStore[storeId].salePrice)) byStore[storeId] = deal; }
     const sorted = Object.values(byStore).sort((a: any, b: any) => parseFloat(a.salePrice) - parseFloat(b.salePrice)).slice(0, 5);
