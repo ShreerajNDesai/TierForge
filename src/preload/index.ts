@@ -72,10 +72,15 @@ const api = {
   hideTrayWindow: () => ipcRenderer.invoke('hide-tray-window'),
   quitApp: () => ipcRenderer.invoke('quit-app'),
   showMainWindow: () => ipcRenderer.invoke('show-main-window'),
+  getSystemStats: () => ipcRenderer.invoke('get-system-stats'),
   forceCloudBackup: () => ipcRenderer.invoke('force-cloud-backup'),
   onAppRestored: (callback: () => void) => {
     ipcRenderer.on('app-restored', () => callback());
     return () => ipcRenderer.removeAllListeners('app-restored');
+  },
+  onSettingUpdated: (callback: (data: { key: string, value: string }) => void) => {
+    ipcRenderer.on('setting-updated', (_, data) => callback(data));
+    return () => ipcRenderer.removeAllListeners('setting-updated');
   }
 }
 
