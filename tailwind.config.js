@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content:[
-    "./src/renderer/index.html",
-    "./src/renderer/src/**/*.{js,ts,jsx,tsx}"
-  ],
+  content: ['./src/renderer/index.html', './src/renderer/src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -14,7 +11,7 @@ module.exports = {
           500: 'rgb(var(--color-primary) / <alpha-value>)',
           600: 'rgb(var(--color-primary-600) / <alpha-value>)',
           900: 'rgb(var(--color-primary-900) / <alpha-value>)',
-          DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)'
         },
         secondary: {
           200: 'rgb(var(--color-secondary-200) / <alpha-value>)',
@@ -23,10 +20,10 @@ module.exports = {
           500: 'rgb(var(--color-secondary) / <alpha-value>)',
           600: 'rgb(var(--color-secondary-600) / <alpha-value>)',
           900: 'rgb(var(--color-secondary-900) / <alpha-value>)',
-          DEFAULT: 'rgb(var(--color-secondary) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--color-secondary) / <alpha-value>)'
         }
       }
-    },
+    }
   },
-  plugins:[],
+  plugins: []
 }

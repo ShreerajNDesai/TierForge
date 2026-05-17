@@ -1,5 +1,5 @@
-import { UploadCloud, Sparkles, Wand2, FileText, Plus, X, RefreshCw } from 'lucide-react';
-import { useGlobal } from '../context/GlobalContext';
+import { UploadCloud, Sparkles, Wand2, FileText, Plus, X, RefreshCw } from 'lucide-react'
+import { useGlobal } from '../context/GlobalContext'
 
 const ImportHubModal = () => {
   const {
@@ -17,9 +17,9 @@ const ImportHubModal = () => {
     setSteamId,
     loadGames,
     addNotification
-  } = useGlobal();
+  } = useGlobal()
 
-  if (!showImportModal) return null;
+  if (!showImportModal) return null
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
@@ -31,16 +31,21 @@ const ImportHubModal = () => {
                 <UploadCloud size={28} className="text-primary-400" />
                 Import Hub
               </h2>
-              <p className="text-slate-400 text-sm mt-1">Add multiple games at once using AI or text.</p>
+              <p className="text-slate-400 text-sm mt-1">
+                Add multiple games at once using AI or text.
+              </p>
             </div>
-            <button onClick={() => !isImporting && setShowImportModal(false)} className="p-2 text-slate-500 hover:text-white transition">
+            <button
+              onClick={() => !isImporting && setShowImportModal(false)}
+              className="p-2 text-slate-500 hover:text-white transition"
+            >
               <X size={24} />
             </button>
           </div>
 
           <div className="grid grid-cols-2 gap-6 mb-8">
             {/* AI Vision Import */}
-            <div 
+            <div
               onClick={!isImporting ? handleAIImport : undefined}
               className={`p-6 rounded-2xl border-2 border-dashed transition-all group relative overflow-hidden ${isImporting ? 'border-primary-500/20 bg-primary-500/5 cursor-not-allowed' : 'border-primary-500/30 hover:border-primary-500 bg-primary-500/5 hover:bg-primary-500/10 cursor-pointer'}`}
             >
@@ -49,7 +54,10 @@ const ImportHubModal = () => {
                   <Sparkles size={24} className="text-primary-400" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">AI Vision Import</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">Upload a screenshot of your Steam, Epic, or GOG library. Gemini will scan and import everything.</p>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Upload a screenshot of your Steam, Epic, or GOG library. Gemini will scan and
+                  import everything.
+                </p>
               </div>
               <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <Wand2 size={120} />
@@ -62,13 +70,13 @@ const ImportHubModal = () => {
                 <FileText size={24} className="text-slate-300" />
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Bulk Text Import</h3>
-              <textarea 
+              <textarea
                 value={importText}
                 onChange={(e) => setImportText(e.target.value)}
                 placeholder="Paste list of games (one per line)..."
                 className="w-full h-24 bg-black/40 border border-slate-700 rounded-xl p-3 text-xs text-slate-300 focus:outline-none focus:border-primary-500/50 resize-none mb-3"
               />
-              <button 
+              <button
                 onClick={handleTextImport}
                 disabled={isImporting || !importText.trim()}
                 className="w-full py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-2"
@@ -86,46 +94,56 @@ const ImportHubModal = () => {
             </h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1.5 ml-1">Steam Web API Key</label>
-                <input 
+                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1.5 ml-1">
+                  Steam Web API Key
+                </label>
+                <input
                   type="password"
                   value={steamKey}
                   onChange={(e) => {
-                    setSteamKey(e.target.value);
-                    window.api.saveSetting('steamKey', e.target.value);
+                    setSteamKey(e.target.value)
+                    window.api.saveSetting('steamKey', e.target.value)
                   }}
                   placeholder="Enter API Key..."
                   className="w-full bg-black/40 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary-500/50 transition"
                 />
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1.5 ml-1">Steam64 ID</label>
-                <input 
+                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1.5 ml-1">
+                  Steam64 ID
+                </label>
+                <input
                   type="text"
                   value={steamId}
                   onChange={(e) => {
-                    setSteamId(e.target.value);
-                    window.api.saveSetting('steamId', e.target.value);
+                    setSteamId(e.target.value)
+                    window.api.saveSetting('steamId', e.target.value)
                   }}
                   placeholder="Enter Steam64 ID..."
                   className="w-full bg-black/40 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary-500/50 transition"
                 />
               </div>
             </div>
-            <button 
+            <button
               onClick={async () => {
                 if (!steamKey || !steamId) {
-                  alert('Please enter both your Steam API Key and Steam64 ID.');
-                  return;
+                  alert('Please enter both your Steam API Key and Steam64 ID.')
+                  return
                 }
-                setIsImporting(true);
-                const count = await window.api.syncSteam(steamId, steamKey);
-                alert(`Successfully synced ${count} games from Steam!`);
-                await loadGames();
-                setIsImporting(false);
-                setShowImportModal(false);
-                addNotification('Steam Sync Complete', `Successfully synced ${count} games from your Steam library.`);
-                window.api.showNotification('Steam Sync Complete', `Successfully synced ${count} games from your Steam library.`);
+                setIsImporting(true)
+                const count = await window.api.syncSteam(steamId, steamKey)
+                alert(`Successfully synced ${count} games from Steam!`)
+                await loadGames()
+                setIsImporting(false)
+                setShowImportModal(false)
+                addNotification(
+                  'Steam Sync Complete',
+                  `Successfully synced ${count} games from your Steam library.`
+                )
+                window.api.showNotification(
+                  'Steam Sync Complete',
+                  `Successfully synced ${count} games from your Steam library.`
+                )
               }}
               disabled={isImporting}
               className="w-full py-4 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 disabled:opacity-50 text-white font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 active:scale-[0.98]"
@@ -140,14 +158,16 @@ const ImportHubModal = () => {
               <RefreshCw size={20} className="text-primary-400 animate-spin" />
               <div>
                 <p className="text-sm font-bold text-primary-300">Processing Import...</p>
-                <p className="text-xs text-primary-400/70">Our AI is fetching game metadata. This may take a minute.</p>
+                <p className="text-xs text-primary-400/70">
+                  Our AI is fetching game metadata. This may take a minute.
+                </p>
               </div>
             </div>
           )}
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ImportHubModal;
+export default ImportHubModal

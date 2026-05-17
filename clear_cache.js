@@ -1,0 +1,10 @@
+const { app } = require('electron')
+const Database = require('better-sqlite3')
+const path = require('path')
+app.whenReady().then(() => {
+  const dbPath = path.join(app.getPath('userData'), 'tierforge.db')
+  const db = new Database(dbPath)
+  db.exec('DELETE FROM timeline_cache;')
+  console.log('Cleared timeline_cache')
+  app.quit()
+})
