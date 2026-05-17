@@ -2,10 +2,10 @@ import { app, shell, BrowserWindow, ipcMain, dialog, Notification, Tray, nativeI
 import { join, basename } from 'path'
 import { exec } from 'child_process'
 import * as os from 'os'
-import fs from 'fs'
 import fsPromises from 'fs/promises'
+import { autoUpdater } from 'electron-updater'
+import log from 'electron-log'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
 import { initDB, getAllGames, addGame, updateGameTier, deleteGame, updateGameData, getSetting, saveSetting, addPlaytime, getPlaytime, clearRankingsCache, getDbPath, db, checkCachedTimelineForGame } from './database'
 import { scanLocalGames } from './scanner'
 import { 
@@ -167,6 +167,47 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  autoUpdater.logger = log;
+  (autoUpdater.logger as any).transports.file.level = 'info';
+
+  autoUpdater.on('update-available', () => {
+    BrowserWindow.getAllWindows().forEach(win => {
+      win.webContents.send('update-available');
+    });
+  });
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    BrowserWindow.getAllWindows().forEach(win => {
+      win.webContents.send('download-progress', progressObj.percent);
+    });
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    BrowserWindow.getAllWindows().forEach(win => {
+      win.webContents.send('update-downloaded');
+    });
+  });
+
+  ipcMain.handle('check-for-updates', async () => {
+    try {
+      await autoUpdater.checkForUpdates();
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  });
+
+  ipcMain.handle('install-update', () => {
+    autoUpdater.quitAndInstall(false, true);
+  });
+
+  ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
+  });
+
+  autoUpdater.checkForUpdatesAndNotify();
+
   initDB();
 
   createTrayWindow();

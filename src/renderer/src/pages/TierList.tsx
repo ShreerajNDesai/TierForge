@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import * as htmlToImage from 'html-to-image';
 import Tilt from 'react-parallax-tilt';
 import { Crown, Star, Diamond, LayoutGrid, ThumbsDown, Skull, Ban, Trash2, Menu, Filter, ArrowUpDown, Grid, List, Plus, RefreshCw, Clock } from 'lucide-react';

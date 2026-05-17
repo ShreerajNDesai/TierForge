@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { addGame, getSetting, getCachedRanking, updateRankingsCache, clearRankingsCache, syncSteamGame, getAllGames, updateGameMetadata, getCachedTimeline, saveCachedTimeline, db } from './database';
-import { BrowserWindow, shell } from 'electron';
+import { BrowserWindow } from 'electron';
 
 const DEFAULT_CLIENT_ID = '3mejs4touc121msgxhw5mxy31medg3';
 const DEFAULT_CLIENT_SECRET = 'p71goredxlcacagkigxok0vm9sx92n';

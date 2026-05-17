@@ -107,6 +107,10 @@ interface GlobalContextType {
   setUserAvatar: React.Dispatch<React.SetStateAction<string | null>>;
   isMasterMenuOpen: boolean;
   setIsMasterMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  updateStatus: 'idle' | 'downloading' | 'ready';
+  setUpdateStatus: React.Dispatch<React.SetStateAction<'idle' | 'downloading' | 'ready'>>;
+  updateProgress: number;
+  setUpdateProgress: React.Dispatch<React.SetStateAction<number>>;
 
   loadGames: () => Promise<void>;
   handleGameClick: (game: any) => Promise<void>;
@@ -188,6 +192,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [userName, setUserName] = useState('Player');
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [isMasterMenuOpen, setIsMasterMenuOpen] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'downloading' | 'ready'>('idle');
+  const [updateProgress, setUpdateProgress] = useState<number>(0);
 
   useEffect(() => {
     window.api.getSetting('user_name').then((name: string | null) => {
@@ -225,10 +231,25 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       loadGames();
       addNotification('Session Ended', 'Your playtime was successfully saved.');
     });
+    const cleanupUpdateAvailable = window.api.onUpdateAvailable(() => {
+      setUpdateStatus('downloading');
+      setUpdateProgress(0);
+      addNotification('Update Available', 'Downloading a new version of TierForge...');
+    });
+    const cleanupUpdateProgress = window.api.onUpdateProgress((percent: number) => {
+      setUpdateProgress(percent);
+    });
+    const cleanupUpdateDownloaded = window.api.onUpdateDownloaded(() => {
+      setUpdateStatus('ready');
+      addNotification('Update Ready', 'A new version of TierForge is ready to install!');
+    });
 
     return () => {
       cleanupStarted();
       cleanupStopped();
+      cleanupUpdateAvailable();
+      cleanupUpdateProgress();
+      cleanupUpdateDownloaded();
     };
   }, []);
 
@@ -585,6 +606,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     notifications, setNotifications, addNotification,
     userName, setUserName, userAvatar, setUserAvatar,
     isMasterMenuOpen, setIsMasterMenuOpen,
+    updateStatus, setUpdateStatus, updateProgress, setUpdateProgress,
     gamerTitle, totalPlaytimeMinutes,
     loadGames, handleGameClick, handleSearch, handleAddGame,
     handleScanPC, handleSaveGameData, onDragStart, onDragEnd,
