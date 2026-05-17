@@ -28,7 +28,7 @@ const ImportHubModal = () => {
           <div className="flex justify-between items-start mb-8">
             <div>
               <h2 className="text-2xl font-black text-white flex items-center gap-3">
-                <UploadCloud size={28} className="text-indigo-400" />
+                <UploadCloud size={28} className="text-primary-400" />
                 Import Hub
               </h2>
               <p className="text-slate-400 text-sm mt-1">Add multiple games at once using AI or text.</p>
@@ -42,11 +42,11 @@ const ImportHubModal = () => {
             {/* AI Vision Import */}
             <div 
               onClick={!isImporting ? handleAIImport : undefined}
-              className={`p-6 rounded-2xl border-2 border-dashed transition-all group relative overflow-hidden ${isImporting ? 'border-indigo-500/20 bg-indigo-500/5 cursor-not-allowed' : 'border-indigo-500/30 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-500/10 cursor-pointer'}`}
+              className={`p-6 rounded-2xl border-2 border-dashed transition-all group relative overflow-hidden ${isImporting ? 'border-primary-500/20 bg-primary-500/5 cursor-not-allowed' : 'border-primary-500/30 hover:border-primary-500 bg-primary-500/5 hover:bg-primary-500/10 cursor-pointer'}`}
             >
               <div className="relative z-10">
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Sparkles size={24} className="text-indigo-400" />
+                <div className="w-12 h-12 rounded-xl bg-primary-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Sparkles size={24} className="text-primary-400" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">AI Vision Import</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">Upload a screenshot of your Steam, Epic, or GOG library. Gemini will scan and import everything.</p>
@@ -66,7 +66,7 @@ const ImportHubModal = () => {
                 value={importText}
                 onChange={(e) => setImportText(e.target.value)}
                 placeholder="Paste list of games (one per line)..."
-                className="w-full h-24 bg-black/40 border border-slate-700 rounded-xl p-3 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/50 resize-none mb-3"
+                className="w-full h-24 bg-black/40 border border-slate-700 rounded-xl p-3 text-xs text-slate-300 focus:outline-none focus:border-primary-500/50 resize-none mb-3"
               />
               <button 
                 onClick={handleTextImport}
@@ -79,9 +79,9 @@ const ImportHubModal = () => {
           </div>
 
           {/* Steam Sync Section */}
-          <div className="p-6 rounded-2xl border-2 border-indigo-500/30 bg-indigo-500/5 mb-8">
+          <div className="p-6 rounded-2xl border-2 border-primary-500/30 bg-primary-500/5 mb-8">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <RefreshCw size={20} className="text-indigo-400" />
+              <RefreshCw size={20} className="text-primary-400" />
               Steam Account Sync
             </h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -95,7 +95,7 @@ const ImportHubModal = () => {
                     window.api.saveSetting('steamKey', e.target.value);
                   }}
                   placeholder="Enter API Key..."
-                  className="w-full bg-black/40 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition"
+                  className="w-full bg-black/40 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary-500/50 transition"
                 />
               </div>
               <div>
@@ -108,7 +108,7 @@ const ImportHubModal = () => {
                     window.api.saveSetting('steamId', e.target.value);
                   }}
                   placeholder="Enter Steam64 ID..."
-                  className="w-full bg-black/40 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition"
+                  className="w-full bg-black/40 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary-500/50 transition"
                 />
               </div>
             </div>
@@ -136,11 +136,11 @@ const ImportHubModal = () => {
           </div>
 
           {isImporting && (
-            <div className="flex items-center gap-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
-              <RefreshCw size={20} className="text-indigo-400 animate-spin" />
+            <div className="flex items-center gap-4 p-4 bg-primary-500/10 border border-primary-500/20 rounded-xl">
+              <RefreshCw size={20} className="text-primary-400 animate-spin" />
               <div>
-                <p className="text-sm font-bold text-indigo-300">Processing Import...</p>
-                <p className="text-xs text-indigo-400/70">Our AI is fetching game metadata. This may take a minute.</p>
+                <p className="text-sm font-bold text-primary-300">Processing Import...</p>
+                <p className="text-xs text-primary-400/70">Our AI is fetching game metadata. This may take a minute.</p>
               </div>
             </div>
           )}

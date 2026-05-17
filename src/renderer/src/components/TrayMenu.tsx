@@ -72,7 +72,7 @@ export default function TrayMenu() {
   };
 
   return (
-    <div className="w-full h-full bg-[#0B0E14]/90 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col p-2 text-sm text-slate-300 shadow-2xl overflow-hidden no-scrollbar selection:bg-indigo-500/30">
+    <div className="w-full h-full bg-[#0B0E14]/90 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col p-2 text-sm text-slate-300 shadow-2xl overflow-hidden no-scrollbar selection:bg-primary-500/30">
       
       {!showAllGames ? (
         <>
@@ -83,13 +83,13 @@ export default function TrayMenu() {
                 <button
                   key={game.id}
                   onClick={() => handleLaunch(game.executable_path, game.id, game.title)}
-                  className="w-full text-left px-3 py-2 flex items-center gap-3 hover:bg-indigo-500/20 hover:text-white rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 group"
+                  className="w-full text-left px-3 py-2 flex items-center gap-3 hover:bg-primary-500/20 hover:text-white rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 group"
                 >
                   <div className="w-6 h-6 rounded overflow-hidden flex-shrink-0 bg-slate-800">
                     {game.image_url && <img src={game.image_url} alt="" className="w-full h-full object-cover" />}
                   </div>
                   <span className="truncate font-medium">{game.title}</span>
-                  <Play size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400" />
+                  <Play size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-primary-400" />
                 </button>
               ))}
               <div className="border-t border-white/10 my-1 mx-2" />
@@ -99,9 +99,9 @@ export default function TrayMenu() {
           <div className="flex flex-col gap-0.5">
             <button
               onClick={handleSurpriseMe}
-              className="w-full text-left px-3 py-2.5 flex items-center gap-3 hover:bg-purple-500/20 hover:text-purple-300 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+              className="w-full text-left px-3 py-2.5 flex items-center gap-3 hover:bg-secondary-500/20 hover:text-secondary-300 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-500"
             >
-              <Gamepad2 size={16} className="text-purple-400" />
+              <Gamepad2 size={16} className="text-secondary-400" />
               <span className="font-semibold">🎲 Surprise Me!</span>
             </button>
 
@@ -180,7 +180,7 @@ export default function TrayMenu() {
               <button
                 key={game.id}
                 onClick={() => handleLaunch(game.executable_path, game.id, game.title)}
-                className="w-full text-left px-3 py-2 flex items-center gap-3 hover:bg-indigo-500/20 hover:text-white rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 group"
+                className="w-full text-left px-3 py-2 flex items-center gap-3 hover:bg-primary-500/20 hover:text-white rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 group"
               >
                 <div className="w-6 h-6 rounded overflow-hidden flex-shrink-0 bg-slate-800">
                   {game.image_url && <img src={game.image_url} alt="" className="w-full h-full object-cover" />}

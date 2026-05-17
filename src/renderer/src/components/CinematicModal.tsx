@@ -145,7 +145,7 @@ const CinematicModal = () => {
                   <Gamepad2 size={22} className="animate-bounce" /> Game Running...
                 </div>
               ) : (
-                <button onClick={() => window.api.launchGame(selectedGame.executable_path, selectedGame.id.toString(), selectedGame.title)} className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex justify-center items-center gap-3 tracking-widest uppercase border border-indigo-400/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10">
+                <button onClick={() => window.api.launchGame(selectedGame.executable_path, selectedGame.id.toString(), selectedGame.title)} className="w-full py-3.5 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex justify-center items-center gap-3 tracking-widest uppercase border border-primary-400/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10">
                   <Gamepad2 size={22} /> Play Game
                 </button>
               )
@@ -158,14 +158,14 @@ const CinematicModal = () => {
                   alert(`Linked save folder: ${newPath}`);
                 }
               }}
-              className="w-full py-2.5 bg-black/40 border border-white/20 hover:border-indigo-500/50 hover:bg-indigo-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center gap-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="w-full py-2.5 bg-black/40 border border-white/20 hover:border-primary-500/50 hover:bg-primary-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center gap-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             >
               <Cloud size={16} /> Link Save Folder
             </button>
 
             {/* Playtime Badge */}
             <div className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/5 border border-white/10 rounded-xl">
-              <Clock size={16} className="text-indigo-400" />
+              <Clock size={16} className="text-primary-400" />
               <span className="text-sm font-semibold text-slate-300">
                 {gamePlaytime > 0 
                   ? (gamePlaytime >= 60 
@@ -181,10 +181,10 @@ const CinematicModal = () => {
               <div className="relative">
                 <div 
                   onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                  className="w-full flex items-center justify-between bg-black/40 border border-white/20 text-white text-base rounded-xl px-4 py-3 cursor-pointer hover:bg-black/60 hover:border-indigo-500/50 backdrop-blur-md shadow-lg transition"
+                  className="w-full flex items-center justify-between bg-black/40 border border-white/20 text-white text-base rounded-xl px-4 py-3 cursor-pointer hover:bg-black/60 hover:border-primary-500/50 backdrop-blur-md shadow-lg transition"
                 >
                   <span>{!isInLibrary ? '-' : (gameDetails?.status || 'Backlog')}</span>
-                  <ChevronDown size={18} className={`transition-transform duration-200 ${isStatusDropdownOpen ? 'rotate-180 text-indigo-400' : 'text-slate-400'}`} />
+                  <ChevronDown size={18} className={`transition-transform duration-200 ${isStatusDropdownOpen ? 'rotate-180 text-primary-400' : 'text-slate-400'}`} />
                 </div>
                 
                 {isStatusDropdownOpen && (
@@ -198,7 +198,7 @@ const CinematicModal = () => {
                         }}
                         className={`px-4 py-3 text-sm cursor-pointer transition flex items-center gap-2 ${
                           (gameDetails?.status || 'Backlog') === status 
-                            ? 'bg-indigo-600/20 text-indigo-300 font-semibold border-l-2 border-indigo-500' 
+                            ? 'bg-primary-600/20 text-primary-300 font-semibold border-l-2 border-primary-500' 
                             : 'text-slate-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent'
                         }`}
                       >
@@ -285,9 +285,9 @@ const CinematicModal = () => {
 
 
               {gameDetails?.rating && (
-                <span className="flex items-center gap-1.5 bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-lg border border-indigo-500/30 backdrop-blur-sm">
-                  <Star size={18} className="fill-indigo-400" />
-                  {gameDetails.rating}/100 <span className="text-sm text-indigo-400/70 ml-1">({gameDetails.ratingCount})</span>
+                <span className="flex items-center gap-1.5 bg-primary-500/20 text-primary-300 px-3 py-1 rounded-lg border border-primary-500/30 backdrop-blur-sm">
+                  <Star size={18} className="fill-primary-400" />
+                  {gameDetails.rating}/100 <span className="text-sm text-primary-400/70 ml-1">({gameDetails.ratingCount})</span>
                 </span>
               )}
               <span>{gameDetails ? gameDetails.genres : 'Loading details...'}</span>
@@ -305,7 +305,7 @@ const CinematicModal = () => {
                       key={idx}
                       className="flex items-center gap-2 px-3 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-xs font-bold text-white/80"
                     >
-                      {isPC ? <Monitor size={14} className="text-sky-400" /> : isConsole ? <Gamepad2 size={14} className="text-indigo-400" /> : null}
+                      {isPC ? <Monitor size={14} className="text-sky-400" /> : isConsole ? <Gamepad2 size={14} className="text-primary-400" /> : null}
                       {platform}
                     </div>
                   );
@@ -320,20 +320,20 @@ const CinematicModal = () => {
                 <div className="flex gap-4 mb-2">
                   {timeToBeat.main > 0 && (
                     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 flex items-center gap-3 shadow-sm">
-                      <Clock className="text-indigo-400" size={18} />
-                      <span className="text-sm font-semibold text-white/90">Main Story: <span className="text-indigo-300">{timeToBeat.main} hrs</span></span>
+                      <Clock className="text-primary-400" size={18} />
+                      <span className="text-sm font-semibold text-white/90">Main Story: <span className="text-primary-300">{timeToBeat.main} hrs</span></span>
                     </div>
                   )}
                   {timeToBeat.extra > 0 && (
                     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 flex items-center gap-3 shadow-sm">
-                      <Clock className="text-indigo-400" size={18} />
-                      <span className="text-sm font-semibold text-white/90">Main + Sides: <span className="text-indigo-300">{timeToBeat.extra} hrs</span></span>
+                      <Clock className="text-primary-400" size={18} />
+                      <span className="text-sm font-semibold text-white/90">Main + Sides: <span className="text-primary-300">{timeToBeat.extra} hrs</span></span>
                     </div>
                   )}
                   {timeToBeat.completionist > 0 && (
                     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 flex items-center gap-3 shadow-sm">
-                      <Clock className="text-indigo-400" size={18} />
-                      <span className="text-sm font-semibold text-white/90">Completionist: <span className="text-indigo-300">{timeToBeat.completionist} hrs</span></span>
+                      <Clock className="text-primary-400" size={18} />
+                      <span className="text-sm font-semibold text-white/90">Completionist: <span className="text-primary-300">{timeToBeat.completionist} hrs</span></span>
                     </div>
                   )}
                 </div>
@@ -375,42 +375,42 @@ const CinematicModal = () => {
                 <div className="grid grid-cols-5 gap-6 mb-6">
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Main Developers</h4>
-                    <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.developers : '-'}</p>
+                    <p className="text-sm text-primary-300 leading-snug">{gameDetails ? gameDetails.developers : '-'}</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Publishers</h4>
-                    <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.publishers : '-'}</p>
+                    <p className="text-sm text-primary-300 leading-snug">{gameDetails ? gameDetails.publishers : '-'}</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Game Modes</h4>
-                    <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.gameModes : '-'}</p>
+                    <p className="text-sm text-primary-300 leading-snug">{gameDetails ? gameDetails.gameModes : '-'}</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Multiplayer</h4>
-                    <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.multiplayer : '-'}</p>
+                    <p className="text-sm text-primary-300 leading-snug">{gameDetails ? gameDetails.multiplayer : '-'}</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Perspectives</h4>
-                    <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.perspectives : '-'}</p>
+                    <p className="text-sm text-primary-300 leading-snug">{gameDetails ? gameDetails.perspectives : '-'}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-6 pt-6 border-t border-white/10">
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Themes</h4>
-                    <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.themes : '-'}</p>
+                    <p className="text-sm text-primary-300 leading-snug">{gameDetails ? gameDetails.themes : '-'}</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Series</h4>
-                    <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.series : '-'}</p>
+                    <p className="text-sm text-primary-300 leading-snug">{gameDetails ? gameDetails.series : '-'}</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Game Engine</h4>
-                    <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.engines : '-'}</p>
+                    <p className="text-sm text-primary-300 leading-snug">{gameDetails ? gameDetails.engines : '-'}</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Alt Titles</h4>
-                    <p className="text-sm text-indigo-300 leading-snug">{gameDetails ? gameDetails.altNames : '-'}</p>
+                    <p className="text-sm text-primary-300 leading-snug">{gameDetails ? gameDetails.altNames : '-'}</p>
                   </div>
                 </div>
               </div>
@@ -448,7 +448,7 @@ const CinematicModal = () => {
                       />
                     </div>
                     <div className="bg-white/5 border border-white/10 rounded-xl p-5 backdrop-blur-sm">
-                      <h4 className="text-xs font-black text-indigo-400/70 uppercase mb-4 tracking-widest border-b border-white/5 pb-2">Recommended Specs</h4>
+                      <h4 className="text-xs font-black text-primary-400/70 uppercase mb-4 tracking-widest border-b border-white/5 pb-2">Recommended Specs</h4>
                       <div 
                         className="text-[11px] leading-relaxed text-slate-400 steam-specs-container"
                         dangerouslySetInnerHTML={{ __html: steamDetails.pcRequirements.recommended }}
@@ -540,7 +540,7 @@ const CinematicModal = () => {
                         alt={`Thumb ${idx + 1}`}
                         onClick={() => setGalleryIndex(idx)}
                         className={`h-14 w-24 object-cover rounded-lg cursor-pointer shrink-0 border-2 transition ${
-                          idx === galleryIndex ? 'border-indigo-500 opacity-100 shadow-[0_0_12px_rgba(99,102,241,0.6)]' : 'border-transparent opacity-50 hover:opacity-80'
+                          idx === galleryIndex ? 'border-primary-500 opacity-100 shadow-[0_0_12px_rgba(99,102,241,0.6)]' : 'border-transparent opacity-50 hover:opacity-80'
                         }`}
                       />
                     ))}
@@ -565,7 +565,7 @@ const CinematicModal = () => {
                         }
                       }} 
                       disabled={isTimelineLoading}
-                      className="px-6 py-3 bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-500 hover:to-pink-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] border border-purple-400/50 rounded-xl text-sm font-black tracking-wide flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                      className="px-6 py-3 bg-gradient-to-r from-secondary-600/80 to-pink-600/80 hover:from-secondary-500 hover:to-pink-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] border border-secondary-400/50 rounded-xl text-sm font-black tracking-wide flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                     >
                       <Sparkles size={18} className={isTimelineLoading ? "animate-pulse" : ""} /> 
                       {isTimelineLoading ? "Consulting lore archives..." : "✨ Generate Canon Play Order"}
@@ -582,9 +582,9 @@ const CinematicModal = () => {
                 )}
 
                 {aiTimeline && (
-                  <div className="mb-8 bg-black/40 border border-purple-500/20 rounded-2xl p-6 shadow-inner relative overflow-hidden">
-                    <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-6 flex items-center gap-3">
-                      <Sparkles size={24} className="text-purple-400"/> Canon Story Play Order
+                  <div className="mb-8 bg-black/40 border border-secondary-500/20 rounded-2xl p-6 shadow-inner relative overflow-hidden">
+                    <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-secondary-400 to-pink-500 mb-6 flex items-center gap-3">
+                      <Sparkles size={24} className="text-secondary-400"/> Canon Story Play Order
                       <button 
                         onClick={async () => { 
                           setIsRefreshingTimeline(true); 
@@ -595,7 +595,7 @@ const CinematicModal = () => {
                         disabled={isRefreshingTimeline} 
                         className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold text-slate-300 transition-all"
                       >
-                        <RefreshCw size={14} className={isRefreshingTimeline ? "animate-spin text-purple-400" : ""} /> 
+                        <RefreshCw size={14} className={isRefreshingTimeline ? "animate-spin text-secondary-400" : ""} /> 
                         {isRefreshingTimeline ? "Updating Lore..." : "Refresh Timeline"}
                       </button>
                     </h3>
@@ -610,12 +610,12 @@ const CinematicModal = () => {
                             src={miniGame.img} 
                             className={`w-28 h-40 rounded-xl object-cover cursor-pointer transition-all duration-300 ${
                               miniGame.isCurrent 
-                                ? 'border-4 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.6)] scale-110 opacity-100' 
+                                ? 'border-4 border-secondary-500 shadow-[0_0_20px_rgba(168,85,247,0.6)] scale-110 opacity-100' 
                                 : 'opacity-60 hover:opacity-100 border border-white/10 hover:border-white/30 hover:scale-105'
                             }`}
                             alt={miniGame.title}
                           />
-                          <span className={`text-xs font-black text-center mt-1 ${miniGame.isCurrent ? 'text-purple-400' : 'text-slate-400 group-hover:text-white transition-colors'}`}>
+                          <span className={`text-xs font-black text-center mt-1 ${miniGame.isCurrent ? 'text-secondary-400' : 'text-slate-400 group-hover:text-white transition-colors'}`}>
                             {miniGame.title}
                           </span>
                         </div>
@@ -718,7 +718,7 @@ const CinematicModal = () => {
                     }}
                     className="flex items-center gap-2.5 px-5 py-3.5 bg-[#181C25]/90 hover:bg-white/10 text-white backdrop-blur-md border border-white/5 rounded-2xl text-sm font-bold transition shadow-2xl"
                   >
-                    {isWatchingGameplay ? <PlayCircle size={18} className="text-indigo-400" /> : <Gamepad2 size={18} className="text-indigo-400" />}
+                    {isWatchingGameplay ? <PlayCircle size={18} className="text-primary-400" /> : <Gamepad2 size={18} className="text-primary-400" />}
                     {isWatchingGameplay ? 'Switch to Trailer' : 'Switch to Gameplay'}
                   </button>
                 )}
@@ -732,7 +732,7 @@ const CinematicModal = () => {
                   }}
                   className="flex items-center gap-2.5 px-5 py-3.5 bg-[#181C25]/90 hover:bg-white/10 text-white backdrop-blur-md border border-white/5 rounded-2xl text-sm font-bold transition shadow-2xl"
                 >
-                  <PlayCircle size={18} className="text-indigo-400" />
+                  <PlayCircle size={18} className="text-primary-400" />
                   Watch Trailer
                 </button>
                 {gameplayVideo && (
@@ -743,7 +743,7 @@ const CinematicModal = () => {
                     }}
                     className="flex items-center gap-2.5 px-5 py-3.5 bg-[#181C25]/90 hover:bg-white/10 text-white backdrop-blur-md border border-white/5 rounded-2xl text-sm font-bold transition shadow-2xl"
                   >
-                    <Gamepad2 size={18} className="text-indigo-400" />
+                    <Gamepad2 size={18} className="text-primary-400" />
                     Watch Gameplay
                   </button>
                 )}
@@ -779,7 +779,7 @@ const CinematicModal = () => {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#0B0E14] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] max-w-md w-full p-6 flex flex-col gap-4 mx-4">
             <div className="flex items-center gap-3">
-              {confirmDialog.isDanger ? <AlertTriangle className="text-red-500" size={28} /> : <AlertTriangle className="text-indigo-400" size={28} />}
+              {confirmDialog.isDanger ? <AlertTriangle className="text-red-500" size={28} /> : <AlertTriangle className="text-primary-400" size={28} />}
               <h2 className="text-xl font-bold text-white">{confirmDialog.title}</h2>
             </div>
             <p className="text-slate-300 text-sm leading-relaxed">{confirmDialog.message}</p>
@@ -798,7 +798,7 @@ const CinematicModal = () => {
                 className={`px-5 py-2.5 rounded-xl font-black tracking-wide shadow-lg transition ${
                   confirmDialog.isDanger 
                     ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50' 
-                    : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                    : 'bg-primary-600 hover:bg-primary-500 text-white'
                 }`}
               >
                 {confirmDialog.confirmText}
@@ -820,7 +820,7 @@ const CinematicModal = () => {
             <div className="flex justify-end mt-4">
               <button 
                 onClick={() => setAlertDialog(null)}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black tracking-wide shadow-lg transition"
+                className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-black tracking-wide shadow-lg transition"
               >
                 Okay
               </button>

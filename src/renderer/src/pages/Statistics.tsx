@@ -134,7 +134,7 @@ const Statistics = () => {
   return (
     <div className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
       <div className="flex items-center gap-4 mb-10">
-        <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-2xl">
+        <div className="p-3 bg-primary-500/20 text-primary-400 rounded-2xl">
           <BarChart2 size={28} />
         </div>
         <div>
@@ -144,14 +144,14 @@ const Statistics = () => {
       </div>
 
       {/* AI Gamer Roast / Profile Banner */}
-      <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/30 rounded-2xl p-6 mb-8 flex items-center justify-between">
+      <div className="bg-gradient-to-r from-secondary-500/10 to-primary-500/10 border border-secondary-500/30 rounded-2xl p-6 mb-8 flex items-center justify-between">
         <div className="flex-1 mr-6">
           <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-            <Sparkles size={20} className="text-purple-400" />
+            <Sparkles size={20} className="text-secondary-400" />
             AI Gamer Profile
           </h2>
           {aiProfile ? (
-            <p className="text-purple-200/80 italic leading-relaxed text-sm">{aiProfile}</p>
+            <p className="text-secondary-200/80 italic leading-relaxed text-sm">{aiProfile}</p>
           ) : (
             <p className="text-slate-400 text-sm">Let the AI Oracle analyze your library and roast your gaming habits (lovingly).</p>
           )}
@@ -161,7 +161,7 @@ const Statistics = () => {
             <button
               onClick={handleGenerateProfile}
               disabled={isProfileLoading}
-              className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-purple-400 transition-colors border border-white/10"
+              className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-secondary-400 transition-colors border border-white/10"
               title="Regenerate Profile"
             >
               <RefreshCw size={18} className={isProfileLoading ? "animate-spin" : ""} />
@@ -170,7 +170,7 @@ const Statistics = () => {
             <button
               onClick={handleGenerateProfile}
               disabled={isProfileLoading}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold transition-colors border border-purple-500/50"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary-500/20 hover:bg-secondary-500/30 text-secondary-300 font-bold transition-colors border border-secondary-500/50"
             >
               {isProfileLoading ? (
                 <><RefreshCw size={18} className="animate-spin" /> Analyzing...</>
@@ -200,10 +200,10 @@ const Statistics = () => {
         </div>
         <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-2">
-            <Target size={20} className="text-purple-400"/>
+            <Target size={20} className="text-secondary-400"/>
             <p className="text-slate-400 text-sm font-medium">Completion Rate</p>
           </div>
-          <p className="text-5xl font-black bg-gradient-to-r from-purple-400 to-purple-200 bg-clip-text text-transparent">{completionRate}<span className="text-3xl ml-1 text-purple-400/80">%</span></p>
+          <p className="text-5xl font-black bg-gradient-to-r from-secondary-400 to-secondary-200 bg-clip-text text-transparent">{completionRate}<span className="text-3xl ml-1 text-secondary-400/80">%</span></p>
         </div>
         <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-2">
@@ -224,7 +224,7 @@ const Statistics = () => {
           <div className="flex items-center gap-4 text-xs">
             <span className="flex items-center gap-1.5 text-emerald-400"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Completed ({completedGames})</span>
             <span className="flex items-center gap-1.5 text-cyan-400"><div className="w-2 h-2 rounded-full bg-cyan-500"></div>Playing ({playingCount})</span>
-            <span className="flex items-center gap-1.5 text-purple-400"><div className="w-2 h-2 rounded-full bg-purple-500"></div>Backlog ({backlogCount})</span>
+            <span className="flex items-center gap-1.5 text-secondary-400"><div className="w-2 h-2 rounded-full bg-secondary-500"></div>Backlog ({backlogCount})</span>
             <span className="flex items-center gap-1.5 text-amber-400"><div className="w-2 h-2 rounded-full bg-amber-500"></div>Wishlist ({wishlistCount})</span>
             <span className="flex items-center gap-1.5 text-red-400"><div className="w-2 h-2 rounded-full bg-red-500"></div>Dropped ({droppedCount})</span>
           </div>
@@ -241,7 +241,7 @@ const Statistics = () => {
                 style={{ width: `${(playingCount / totalGames) * 100}%` }}
               ></div>
               <div 
-                className="h-full bg-gradient-to-r from-purple-500 to-purple-400 transition-all duration-700"
+                className="h-full bg-gradient-to-r from-secondary-500 to-secondary-400 transition-all duration-700"
                 style={{ width: `${(backlogCount / totalGames) * 100}%` }}
               ></div>
               <div 
@@ -266,7 +266,7 @@ const Statistics = () => {
       <div className="relative grid grid-cols-3 gap-6 mb-8">
         {isBackfilling && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#121620]/80 backdrop-blur-sm rounded-2xl">
-            <RefreshCw className="animate-spin text-indigo-400 mb-4" size={32}/>
+            <RefreshCw className="animate-spin text-primary-400 mb-4" size={32}/>
             <p className="text-white font-bold">Syncing Historical Metadata...</p>
             <p className="text-slate-400 text-sm">Upgrading your library with genres and studio data.</p>
           </div>
@@ -298,7 +298,7 @@ const Statistics = () => {
         {/* Favorite Genres */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md h-96 flex flex-col">
           <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <Gamepad2 className="text-indigo-400"/> Favorite Genres
+            <Gamepad2 className="text-primary-400"/> Favorite Genres
           </h3>
           <div className="flex-1 flex flex-col gap-4 justify-center">
             {topGenres.length > 0 ? topGenres.map((genre, i) => (
@@ -306,7 +306,7 @@ const Statistics = () => {
                 <div className="w-24 text-sm font-medium text-slate-300 truncate" title={genre.name}>{genre.name}</div>
                 <div className="flex-1 h-3 bg-slate-800/80 rounded-full overflow-hidden border border-white/5">
                   <div 
-                    className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full"
+                    className="h-full bg-gradient-to-r from-primary-500 to-primary-400 rounded-full"
                     style={{ width: `${(genre.count / maxGenreCount) * 100}%` }}
                   ></div>
                 </div>
@@ -345,7 +345,7 @@ const Statistics = () => {
       {/* Era/Decade Area Chart */}
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md mb-8 h-80">
         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+          <div className="w-2 h-2 rounded-full bg-secondary-400"></div>
           Release Eras
         </h3>
         {eraData.length > 0 ? (

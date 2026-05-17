@@ -82,8 +82,8 @@ const Library = () => {
           <p className="text-slate-400">{libraryGames.length} games in your collection</p>
         </div>
         <div className="flex items-center bg-[#121620] border border-white/10 rounded-xl p-1 shadow-inner">
-          <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-indigo-500/20 text-indigo-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}><Grid size={18} /></button>
-          <button onClick={() => setViewMode('rows')} className={`p-2 rounded-lg transition-all ${viewMode === 'rows' ? 'bg-indigo-500/20 text-indigo-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}><List size={18} /></button>
+          <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-primary-500/20 text-primary-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}><Grid size={18} /></button>
+          <button onClick={() => setViewMode('rows')} className={`p-2 rounded-lg transition-all ${viewMode === 'rows' ? 'bg-primary-500/20 text-primary-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}><List size={18} /></button>
         </div>
       </div>
       
@@ -91,7 +91,7 @@ const Library = () => {
         <div 
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(suggestedGame); }}
-          className="w-full relative rounded-2xl overflow-hidden mb-8 group cursor-pointer border border-indigo-500/40 shadow-[0_0_25px_rgba(99,102,241,0.15),inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-purple-400/50 hover:shadow-[0_0_40px_rgba(139,92,246,0.25)] focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all duration-500" 
+          className="w-full relative rounded-2xl overflow-hidden mb-8 group cursor-pointer border border-primary-500/40 shadow-[0_0_25px_rgba(99,102,241,0.15),inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-secondary-400/50 hover:shadow-[0_0_40px_rgba(139,92,246,0.25)] focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all duration-500" 
           onClick={() => handleGameClick(suggestedGame)}
         >
           {/* Background Image */}
@@ -104,17 +104,17 @@ const Library = () => {
           {/* Content */}
           <div className="relative z-10 flex items-center gap-6 p-6">
             {/* Cover Art */}
-            <div className="w-24 h-36 shrink-0 rounded-xl overflow-hidden border-2 border-indigo-500/40 shadow-[0_0_20px_rgba(99,102,241,0.3)] group-hover:border-indigo-400/60 group-hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] transition-all duration-300">
+            <div className="w-24 h-36 shrink-0 rounded-xl overflow-hidden border-2 border-primary-500/40 shadow-[0_0_20px_rgba(99,102,241,0.3)] group-hover:border-primary-400/60 group-hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] transition-all duration-300">
               <img src={suggestedGame.img || suggestedGame.image_url} alt={suggestedGame.title} className="w-full h-full object-cover" />
             </div>
 
             {/* Text */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest bg-indigo-500/20 text-indigo-400 px-2.5 py-1 rounded-md border border-indigo-500/30">🎲 Random Pick</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest bg-primary-500/20 text-primary-400 px-2.5 py-1 rounded-md border border-primary-500/30">🎲 Random Pick</span>
               </div>
               <p className="text-slate-400 text-sm mb-1">Not sure what to play? Try this from your backlog:</p>
-              <h3 className="text-3xl font-black text-white truncate group-hover:text-indigo-200 transition-colors">{suggestedGame.title}</h3>
+              <h3 className="text-3xl font-black text-white truncate group-hover:text-primary-200 transition-colors">{suggestedGame.title}</h3>
             </div>
 
             {/* CTA */}
@@ -130,7 +130,7 @@ const Library = () => {
               </button>
             ) : (
               <button 
-                className="shrink-0 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] hover:scale-105 transition-all flex items-center gap-2"
+                className="shrink-0 px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] hover:scale-105 transition-all flex items-center gap-2"
               >
                 <Search size={16} /> View Details
               </button>
@@ -157,7 +157,7 @@ const Library = () => {
                     tabIndex={0}
                     onClick={() => handleGameClick(game)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(game); }}
-                    className="flex-shrink-0 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-xl transition-all relative z-0 hover:z-50"
+                    className="flex-shrink-0 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-xl transition-all relative z-0 hover:z-50"
                   >
                     <Tilt
                       glareEnable={true}
@@ -177,7 +177,7 @@ const Library = () => {
                         </div>
                         {(game.playtime_minutes || 0) > 0 && (
                           <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 border border-white/10">
-                            <Clock size={10} className="text-indigo-400" />
+                            <Clock size={10} className="text-primary-400" />
                             {(game.playtime_minutes || 0) >= 60 
                               ? `${Math.floor(game.playtime_minutes / 60)}h ${game.playtime_minutes % 60}m`
                               : `${game.playtime_minutes}m`
@@ -201,7 +201,7 @@ const Library = () => {
                 tabIndex={0}
                 onClick={() => handleGameClick(game)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(game); }}
-                className="w-full aspect-[2/3] cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-xl transition-all relative z-0 hover:z-50"
+                className="w-full aspect-[2/3] cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-xl transition-all relative z-0 hover:z-50"
               >
                 <Tilt
                   glareEnable={true}
@@ -221,7 +221,7 @@ const Library = () => {
                     </div>
                     {(game.playtime_minutes || 0) > 0 && (
                       <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 border border-white/10">
-                        <Clock size={10} className="text-indigo-400" />
+                        <Clock size={10} className="text-primary-400" />
                         {(game.playtime_minutes || 0) >= 60 
                           ? `${Math.floor(game.playtime_minutes / 60)}h ${game.playtime_minutes % 60}m`
                           : `${game.playtime_minutes}m`
@@ -251,11 +251,11 @@ const Library = () => {
       >
         {/* Left Panel: Profile Card */}
         <div className="w-[1000px] h-full flex flex-col items-center justify-center p-20 relative shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 to-purple-900/20 backdrop-blur-3xl border-r border-white/10"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 to-secondary-900/20 backdrop-blur-3xl border-r border-white/10"></div>
           <div className="relative z-10 flex flex-col items-center text-center w-full">
-            <Gamepad2 className="text-indigo-500 w-48 h-48 mb-8 drop-shadow-[0_0_30px_rgba(99,102,241,0.5)]" />
+            <Gamepad2 className="text-primary-500 w-48 h-48 mb-8 drop-shadow-[0_0_30px_rgba(99,102,241,0.5)]" />
             <h1 className="text-[100px] font-black text-white tracking-tight leading-none mb-6 drop-shadow-2xl">TierForge</h1>
-            <p className="text-[40px] text-indigo-300 font-bold tracking-widest uppercase mb-20 drop-shadow-lg">Player Profile</p>
+            <p className="text-[40px] text-primary-300 font-bold tracking-widest uppercase mb-20 drop-shadow-lg">Player Profile</p>
             
             <div className="w-full max-w-4xl bg-black/40 rounded-3xl border border-white/10 p-12 mb-10 flex flex-col gap-10 shadow-2xl backdrop-blur-md">
               <div className="flex items-center justify-between border-b border-white/10 pb-10">
@@ -270,7 +270,7 @@ const Library = () => {
                 <div className="flex items-center gap-6 text-slate-300 text-[40px] font-semibold"><Star size={48} /> Top Genres</div>
                 <div className="flex flex-wrap gap-4">
                   {topGenres.map(g => (
-                    <span key={g} className="px-6 py-3 bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-indigo-300 text-[32px] font-bold shadow-lg">{g}</span>
+                    <span key={g} className="px-6 py-3 bg-primary-500/20 border border-primary-500/30 rounded-xl text-primary-300 text-[32px] font-bold shadow-lg">{g}</span>
                   ))}
                   {topGenres.length === 0 && <span className="text-slate-500 text-[32px] italic">Not enough data</span>}
                 </div>
