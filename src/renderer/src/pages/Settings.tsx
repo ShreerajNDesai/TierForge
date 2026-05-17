@@ -14,7 +14,8 @@ import {
   Shield,
   Cloud,
   LogIn,
-  LogOut
+  LogOut,
+  Puzzle
 } from 'lucide-react'
 import { useGlobal } from '../context/GlobalContext'
 
@@ -60,11 +61,14 @@ const Settings = () => {
     initialized: false
   })
   const [appVersion, setAppVersion] = useState<string>('Loading...')
+  const [plugins, setPlugins] = useState<any[]>([])
+  const [pluginStatus, setPluginStatus] = useState<string>('')
 
   const { updateStatus, updateProgress, appTheme, changeTheme } = useGlobal()
 
   useEffect(() => {
     window.api.getAppVersion().then(setAppVersion)
+    window.api.getLoadedPlugins().then(setPlugins)
     window.api.getSetting('backup_folder').then((val) => {
       if (val) setBackupFolder(val)
     })
@@ -133,6 +137,25 @@ const Settings = () => {
       setStatusMessage(result.message)
     }
     setTimeout(() => setRestoreStatus('idle'), 4000)
+  }
+
+  const togglePlugin = async (name: string, enabled: boolean) => {
+    await window.api.togglePlugin(name, enabled)
+    const updated = await window.api.getLoadedPlugins()
+    setPlugins(updated)
+  }
+
+  const reloadPlugins = async () => {
+    setPluginStatus('Reloading...')
+    await window.api.reloadPlugins()
+    const updated = await window.api.getLoadedPlugins()
+    setPlugins(updated)
+    setPluginStatus('Reloaded successfully!')
+    setTimeout(() => setPluginStatus(''), 3000)
+  }
+
+  const openPluginsFolder = () => {
+    window.api.openPluginsFolder()
   }
 
   const formatDate = (iso: string) => {
@@ -673,6 +696,66 @@ const Settings = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Extensions & Plugins */}
+        <div className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-700/50">
+            <h2 className="text-xl font-bold text-white flex items-center gap-3">
+              <Puzzle size={22} className="text-purple-400" />
+              Extensions & Plugins
+            </h2>
+            <div className="flex gap-3">
+              <button
+                onClick={openPluginsFolder}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700/50 transition flex items-center gap-2"
+              >
+                <FolderOpen size={14} /> Open Folder
+              </button>
+              <button
+                onClick={reloadPlugins}
+                className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 font-bold text-xs rounded-xl border border-purple-500/30 transition flex items-center gap-2"
+              >
+                <RefreshCw size={14} className={pluginStatus === 'Reloading...' ? 'animate-spin' : ''} />
+                Reload Engine
+              </button>
+            </div>
+          </div>
+          
+          {pluginStatus && (
+            <div className="mb-4 text-xs font-semibold text-purple-400 animate-in fade-in flex items-center gap-2">
+              <Check size={14} /> {pluginStatus}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {plugins.length === 0 ? (
+              <div className="text-center py-6 text-slate-500 text-sm border border-dashed border-slate-700/50 rounded-2xl bg-slate-800/20">
+                No plugins found. Drop .js files in the plugins folder and click Reload Engine.
+              </div>
+            ) : (
+              plugins.map((plugin, idx) => (
+                <div key={idx} className="flex items-center justify-between bg-slate-800/30 border border-slate-700/50 p-4 rounded-2xl">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                      {plugin.name} 
+                      <span className="text-[10px] bg-slate-700 px-2 py-0.5 rounded-full text-slate-400 font-mono tracking-wider">v{plugin.version}</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1">By {plugin.author}</p>
+                    <p className="text-[10px] text-slate-600 mt-1 font-mono truncate max-w-sm">{plugin.path}</p>
+                  </div>
+                  <button
+                    onClick={() => togglePlugin(plugin.name, !plugin.enabled)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${plugin.enabled ? 'bg-purple-500' : 'bg-slate-700'}`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${plugin.enabled ? 'translate-x-6' : 'translate-x-1'}`}
+                    />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

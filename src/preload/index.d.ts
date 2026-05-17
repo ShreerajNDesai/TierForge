@@ -90,6 +90,11 @@ declare global {
       checkForUpdates: () => Promise<boolean>
       installUpdate: () => Promise<void>
       getAppVersion: () => Promise<string>
+      getLoadedPlugins: () => Promise<any[]>
+      togglePlugin: (name: string, enabled: boolean) => Promise<boolean>
+      openPluginsFolder: () => Promise<void>
+      reloadPlugins: () => Promise<boolean>
+      onPluginUiUpdate: (callback: (tabs: any[]) => void) => () => void
       onUpdateAvailable: (callback: () => void) => () => void
       onUpdateProgress: (callback: (percent: number) => void) => () => void
       onUpdateDownloaded: (callback: () => void) => () => void

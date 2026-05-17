@@ -16,7 +16,6 @@ import {
   ChevronDown,
   Cpu,
   HardDrive,
-  Database,
   Activity
 } from 'lucide-react'
 import { Droppable, Draggable } from '@hello-pangea/dnd'

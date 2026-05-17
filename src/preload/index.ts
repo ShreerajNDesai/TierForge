@@ -91,6 +91,14 @@ const api = {
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   installUpdate: () => ipcRenderer.invoke('install-update'),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  getLoadedPlugins: () => ipcRenderer.invoke('get-loaded-plugins'),
+  togglePlugin: (name: string, enabled: boolean) => ipcRenderer.invoke('toggle-plugin', name, enabled),
+  openPluginsFolder: () => ipcRenderer.invoke('open-plugins-folder'),
+  reloadPlugins: () => ipcRenderer.invoke('reload-plugins'),
+  onPluginUiUpdate: (callback: (tabs: any[]) => void) => {
+    ipcRenderer.on('plugin-ui-update', (_, tabs) => callback(tabs))
+    return () => ipcRenderer.removeAllListeners('plugin-ui-update')
+  },
   onUpdateAvailable: (callback: () => void) => {
     ipcRenderer.on('update-available', () => callback())
     return () => ipcRenderer.removeAllListeners('update-available')

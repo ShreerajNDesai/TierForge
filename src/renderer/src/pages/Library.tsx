@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import * as htmlToImage from 'html-to-image'
 import Tilt from 'react-parallax-tilt'
 import {
@@ -9,10 +9,6 @@ import {
   Trophy,
   Star,
   Library as LibraryIcon,
-  ExternalLink,
-  Activity,
-  Target,
-  Flame,
   Grid,
   List
 } from 'lucide-react'

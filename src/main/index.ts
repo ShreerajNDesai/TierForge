@@ -68,6 +68,7 @@ import {
   getDiscordStatus
 } from './discord'
 import { backupGameSave, getExeNameFromManifest } from './ludusavi'
+import { pluginManager } from './plugins/PluginManager'
 
 export async function getValidDriveToken(): Promise<string | null> {
   const clientId = GDRIVE_CLIENT_ID
@@ -611,6 +612,7 @@ app.whenReady().then(() => {
           const elapsedMs = Date.now() - startTime
           const elapsedMinutes = Math.max(1, Math.round(elapsedMs / 60000))
 
+          pluginManager.triggerGameClose(gameId, elapsedMinutes)
           addPlaytime(gameId, elapsedMinutes)
 
           const totalPlaytime = getPlaytime(gameId)
@@ -973,6 +975,25 @@ app.whenReady().then(() => {
     } catch (e) {
       return null
     }
+  })
+
+  // --- Plugin Engine ---
+  ipcMain.handle('get-loaded-plugins', () => {
+    return pluginManager.getLoadedPlugins()
+  })
+
+  ipcMain.handle('toggle-plugin', (_, name: string, enabled: boolean) => {
+    pluginManager.togglePlugin(name, enabled)
+    return true
+  })
+
+  ipcMain.handle('open-plugins-folder', () => {
+    pluginManager.openPluginsFolder()
+  })
+
+  ipcMain.handle('reload-plugins', () => {
+    pluginManager.loadPlugins()
+    return true
   })
 
   // --- Google Drive API Backup ---

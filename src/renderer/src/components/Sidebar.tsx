@@ -31,12 +31,9 @@ const Sidebar = () => {
     setUserAvatar,
     isMasterMenuOpen,
     setIsMasterMenuOpen,
-    gamerTitle,
-    totalPlaytimeMinutes,
     libraryGames,
     defaultMuted,
-    setDefaultMuted,
-    toggleMute
+    setDefaultMuted
   } = useGlobal()
 
   const [discordStatus, setDiscordStatus] = useState({ connected: false, initialized: false })
@@ -74,7 +71,9 @@ const Sidebar = () => {
   ]
 
   const backlogCount = libraryGames.filter((g) => g.status === 'Backlog').length
-  const playtimeHours = Math.round(totalPlaytimeMinutes / 60)
+  
+  // Calculate total playtime
+  const playtimeHours = Math.round(libraryGames.reduce((acc, game) => acc + (game.playtime_minutes || 0), 0) / 60)
 
   return (
     <aside className="w-[260px] bg-[#080B10]/95 backdrop-blur-2xl border-r border-slate-800/50 flex flex-col justify-between z-10 shrink-0">
@@ -200,7 +199,7 @@ const Sidebar = () => {
             <div className="space-y-1 border-t border-white/5 pt-3">
               <button
                 onClick={() => {
-                  window.api.invoke('force-cloud-backup')
+                  window.api.forceCloudBackup()
                   setIsMasterMenuOpen(false)
                 }}
                 className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition text-xs font-bold text-sky-400"
@@ -217,7 +216,7 @@ const Sidebar = () => {
                 <Settings size={14} /> Full Settings
               </button>
               <button
-                onClick={() => window.api.invoke('quit-app')}
+                onClick={() => window.api.quitApp()}
                 className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-red-500/10 transition text-xs font-bold text-red-400"
               >
                 <LogOut size={14} /> Quit TierForge
@@ -240,9 +239,6 @@ const Sidebar = () => {
           <div className="flex-1 min-w-0">
             <div className="text-[13px] font-bold text-white flex items-center gap-2">
               <span className="truncate">{userName}</span>
-              <span className="text-[9px] bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded-md font-bold uppercase border border-primary-500/30 shrink-0">
-                {gamerTitle}
-              </span>
             </div>
             <div className="text-xs text-slate-400 mt-0.5 truncate">
               {libraryGames.length} Games • {playtimeHours}h Total
