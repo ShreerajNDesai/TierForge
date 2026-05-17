@@ -32,8 +32,12 @@ const Settings = () => {
   const [driveMessage, setDriveMessage] = useState('');
   const [lastCloudBackup, setLastCloudBackup] = useState<string | null>(null);
   const [discordStatus, setDiscordStatus] = useState<{ connected: boolean; initialized: boolean }>({ connected: false, initialized: false });
+  const [appVersion, setAppVersion] = useState<string>('Loading...');
+
+  const { updateStatus, updateProgress } = useGlobal();
 
   useEffect(() => {
+    window.api.getAppVersion().then(setAppVersion);
     window.api.getSetting('backup_folder').then((val) => {
       if (val) setBackupFolder(val);
     });
@@ -547,6 +551,52 @@ const Settings = () => {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* App Updates */}
+        <div className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl">
+          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3 pb-4 border-b border-slate-700/50">
+            <RefreshCw size={24} className="text-emerald-400" />
+            App Updates
+          </h2>
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-sm font-bold text-slate-300 block mb-1">Current Version</span>
+                <span className="text-xs text-slate-500 font-mono">v{appVersion}</span>
+              </div>
+              
+              {updateStatus === 'idle' && (
+                <button 
+                  onClick={() => window.api.checkForUpdates()}
+                  className="px-6 py-3 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 font-bold text-sm rounded-xl border border-emerald-500/30 transition"
+                >
+                  Check for Updates
+                </button>
+              )}
+              
+              {updateStatus === 'downloading' && (
+                <div className="w-64">
+                  <div className="flex justify-between text-xs text-emerald-400 font-bold mb-1">
+                    <span>Downloading...</span>
+                    <span>{Math.round(updateProgress)}%</span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-2">
+                    <div className="bg-emerald-500 h-2 rounded-full transition-all duration-300" style={{ width: `${updateProgress}%` }}></div>
+                  </div>
+                </div>
+              )}
+              
+              {updateStatus === 'ready' && (
+                <button 
+                  onClick={() => window.api.installUpdate()}
+                  className="px-6 py-3 bg-emerald-500 text-white font-bold text-sm rounded-xl hover:bg-emerald-400 transition shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                >
+                  Restart & Install
+                </button>
+              )}
             </div>
           </div>
         </div>

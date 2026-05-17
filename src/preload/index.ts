@@ -74,6 +74,21 @@ const api = {
   showMainWindow: () => ipcRenderer.invoke('show-main-window'),
   getSystemStats: () => ipcRenderer.invoke('get-system-stats'),
   forceCloudBackup: () => ipcRenderer.invoke('force-cloud-backup'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  onUpdateAvailable: (callback: () => void) => {
+    ipcRenderer.on('update-available', () => callback());
+    return () => ipcRenderer.removeAllListeners('update-available');
+  },
+  onUpdateProgress: (callback: (percent: number) => void) => {
+    ipcRenderer.on('download-progress', (_, percent) => callback(percent));
+    return () => ipcRenderer.removeAllListeners('download-progress');
+  },
+  onUpdateDownloaded: (callback: () => void) => {
+    ipcRenderer.on('update-downloaded', () => callback());
+    return () => ipcRenderer.removeAllListeners('update-downloaded');
+  },
   onAppRestored: (callback: () => void) => {
     ipcRenderer.on('app-restored', () => callback());
     return () => ipcRenderer.removeAllListeners('app-restored');

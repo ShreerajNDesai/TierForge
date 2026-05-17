@@ -68,6 +68,12 @@ declare global {
       showMainWindow: () => Promise<void>;
       getSystemStats: () => Promise<any>;
       forceCloudBackup: () => Promise<boolean>;
+      checkForUpdates: () => Promise<boolean>;
+      installUpdate: () => Promise<void>;
+      getAppVersion: () => Promise<string>;
+      onUpdateAvailable: (callback: () => void) => () => void;
+      onUpdateProgress: (callback: (percent: number) => void) => () => void;
+      onUpdateDownloaded: (callback: () => void) => () => void;
       onAppRestored: (callback: () => void) => () => void;
       onSettingUpdated: (callback: (data: { key: string, value: string }) => void) => () => void;
     }
