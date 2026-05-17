@@ -53,7 +53,7 @@ const Sidebar = () => {
     <aside className="w-[260px] bg-[#080B10]/95 backdrop-blur-2xl border-r border-slate-800/50 flex flex-col justify-between z-10 shrink-0">
       <div>
         <div className="flex items-center gap-3 p-8 text-2xl font-black text-white tracking-wide">
-          <Gamepad2 className="text-indigo-500" size={32} />
+          <Gamepad2 className="text-primary-500" size={32} />
           TierForge
         </div>
         
@@ -86,14 +86,14 @@ const Sidebar = () => {
           <div className="absolute bottom-full left-5 mb-4 w-72 bg-[#0B0E14]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl z-[9999] animate-in slide-in-from-bottom-2 duration-200">
             {/* Section 1: Edit Profile */}
             <div className="flex items-center gap-3 pb-4 mb-4 border-b border-white/5">
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center overflow-hidden">
-                {userAvatar ? <img src={userAvatar} className="w-full h-full object-cover" /> : <User className="text-indigo-400" size={24} />}
+              <div className="w-12 h-12 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center overflow-hidden">
+                {userAvatar ? <img src={userAvatar} className="w-full h-full object-cover" /> : <User className="text-primary-400" size={24} />}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-white truncate">{userName}</div>
                 <button 
                   onClick={handleEditProfile}
-                  className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition uppercase tracking-wider"
+                  className="text-[10px] font-bold text-primary-400 hover:text-primary-300 transition uppercase tracking-wider"
                 >
                   Edit Profile
                 </button>
@@ -111,7 +111,7 @@ const Sidebar = () => {
               <div className="bg-white/5 rounded-xl p-3 border border-white/5">
                 <div className="text-slate-500 text-[10px] font-bold uppercase mb-1">Backlog</div>
                 <div className="text-sm font-black text-white flex items-center gap-1.5">
-                  <Library size={14} className="text-indigo-400" /> {backlogCount}
+                  <Library size={14} className="text-primary-400" /> {backlogCount}
                 </div>
               </div>
             </div>
@@ -129,7 +129,7 @@ const Sidebar = () => {
                 <div className="flex items-center gap-2 text-xs font-semibold">
                   {defaultMuted ? <VolumeX size={14} /> : <Volume2 size={14} />} Mute Trailers
                 </div>
-                {defaultMuted ? <CheckSquare size={14} className="text-indigo-500" /> : <Square size={14} className="opacity-20" />}
+                {defaultMuted ? <CheckSquare size={14} className="text-primary-500" /> : <Square size={14} className="opacity-20" />}
               </button>
               <button 
                 onClick={async () => {
@@ -143,7 +143,7 @@ const Sidebar = () => {
                 <div className="flex items-center gap-2 text-xs font-semibold">
                   <Monitor size={14} /> Discord Presence
                 </div>
-                {discordStatus.connected ? <CheckSquare size={14} className="text-indigo-500" /> : <Square size={14} className="opacity-20" />}
+                {discordStatus.connected ? <CheckSquare size={14} className="text-primary-500" /> : <Square size={14} className="opacity-20" />}
               </button>
             </div>
 
@@ -179,15 +179,15 @@ const Sidebar = () => {
 
         <div 
           onClick={() => setIsMasterMenuOpen(!isMasterMenuOpen)}
-          className={`flex items-center gap-3 p-3 rounded-2xl transition border ${isMasterMenuOpen ? 'bg-slate-800 border-indigo-500/50' : 'hover:bg-slate-800/40 border-transparent hover:border-slate-800'} cursor-pointer`}
+          className={`flex items-center gap-3 p-3 rounded-2xl transition border ${isMasterMenuOpen ? 'bg-slate-800 border-primary-500/50' : 'hover:bg-slate-800/40 border-transparent hover:border-slate-800'} cursor-pointer`}
         >
-          <div className="w-11 h-11 rounded-full border-2 border-indigo-500/40 shadow-lg overflow-hidden flex items-center justify-center bg-slate-900">
-            {userAvatar ? <img src={userAvatar} alt="User" className="w-full h-full object-cover" /> : <User className="text-indigo-400" size={20} />}
+          <div className="w-11 h-11 rounded-full border-2 border-primary-500/40 shadow-lg overflow-hidden flex items-center justify-center bg-slate-900">
+            {userAvatar ? <img src={userAvatar} alt="User" className="w-full h-full object-cover" /> : <User className="text-primary-400" size={20} />}
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[13px] font-bold text-white flex items-center gap-2">
               <span className="truncate">{userName}</span>
-              <span className="text-[9px] bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded-md font-bold uppercase border border-indigo-500/30 shrink-0">
+              <span className="text-[9px] bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded-md font-bold uppercase border border-primary-500/30 shrink-0">
                 {gamerTitle}
               </span>
             </div>

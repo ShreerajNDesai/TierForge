@@ -154,7 +154,7 @@ const Discover = () => {
       <div className="flex justify-between items-end mb-6 px-1">
         <div>
           <h1 className="text-[34px] font-extrabold text-white flex items-center gap-4 tracking-tight leading-none mb-2">
-            Discover <span className="text-[10px] bg-indigo-500/10 text-indigo-300 px-2.5 py-1 rounded-md font-semibold border border-indigo-500/20 tracking-wide uppercase align-middle relative -top-1">Find new games</span>
+            Discover <span className="text-[10px] bg-primary-500/10 text-primary-300 px-2.5 py-1 rounded-md font-semibold border border-primary-500/20 tracking-wide uppercase align-middle relative -top-1">Find new games</span>
           </h1>
           <p className="text-slate-400 text-[15px]">Explore for your next adventure</p>
         </div>
@@ -168,7 +168,7 @@ const Discover = () => {
             onClick={() => handleFilterSelect(filter.id)}
             className={`px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap shrink-0 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10 ${
               discoverFilter === filter.id 
-                ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]' 
+                ? 'bg-primary-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]' 
                 : 'bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300'
             }`}
           >
@@ -180,8 +180,8 @@ const Discover = () => {
           onClick={() => setShowGenreMenu(!showGenreMenu)} 
           className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10 ${
             showGenreMenu 
-              ? 'bg-indigo-500 text-white border-indigo-400' 
-              : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30'
+              ? 'bg-primary-500 text-white border-primary-400' 
+              : 'bg-primary-500/20 text-primary-300 border border-primary-500/30 hover:bg-primary-500/30'
           }`}
         >
           <Search size={16} /> Browse All Genres <ChevronDown size={16} className={`transition-transform duration-300 ${showGenreMenu ? 'rotate-180' : ''}`} />
@@ -199,7 +199,7 @@ const Discover = () => {
                 placeholder="Search hundreds of Steam tags and IGDB genres..." 
                 value={tagSearch} 
                 onChange={(e) => setTagSearch(e.target.value)} 
-                className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-indigo-500 transition" 
+                className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary-500 transition" 
               />
             </div>
           </div>
@@ -212,7 +212,7 @@ const Discover = () => {
                   onClick={() => handleFilterSelect(genre.id)}
                   className={`px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all border focus:outline-none focus:ring-2 focus:ring-white focus:bg-white/10 ${
                     discoverFilter === genre.id
-                      ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
+                      ? 'bg-primary-600 border-primary-400 text-white shadow-lg'
                       : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
                   }`}
                 >
@@ -238,7 +238,7 @@ const Discover = () => {
                 tabIndex={0}
                 onClick={() => handleGameClick(game)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleGameClick(game); }}
-                className="group relative cursor-pointer focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:scale-105 focus:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-2xl transition-all relative z-0 hover:z-50"
+                className="group relative cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary-500 focus:scale-105 focus:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-2xl transition-all relative z-0 hover:z-50"
               >
                 <Tilt
                   glareEnable={true}
@@ -251,7 +251,7 @@ const Discover = () => {
                   transitionSpeed={400}
                   className="w-full h-72 rounded-2xl"
                 >
-                  <div className="w-full h-full rounded-2xl overflow-hidden shadow-lg border border-slate-700/50 group-hover:border-indigo-500/50 transition duration-300 relative">
+                  <div className="w-full h-full rounded-2xl overflow-hidden shadow-lg border border-slate-700/50 group-hover:border-primary-500/50 transition duration-300 relative">
                     <img src={game.image_url} alt={game.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                       {data.collection.some((g: any) => g.id === game.id.toString()) || 
@@ -260,13 +260,13 @@ const Discover = () => {
                           <Check size={20} className="text-green-400" />
                         </div>
                       ) : (
-                        <Plus size={24} className="text-white hover:text-indigo-400 transition ml-auto" onClick={(e) => { e.stopPropagation(); handleAddGame(game); }} />
+                        <Plus size={24} className="text-white hover:text-primary-400 transition ml-auto" onClick={(e) => { e.stopPropagation(); handleAddGame(game); }} />
                       )}
                     </div>
                   </div>
                 </Tilt>
                 <div className="mt-3 text-center">
-                  <h3 className="text-sm font-semibold text-slate-200 group-hover:text-indigo-300 transition line-clamp-1">{game.title}</h3>
+                  <h3 className="text-sm font-semibold text-slate-200 group-hover:text-primary-300 transition line-clamp-1">{game.title}</h3>
                 </div>
               </div>
             ))}

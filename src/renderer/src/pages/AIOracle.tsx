@@ -33,7 +33,7 @@ const AIOracle = () => {
     <div className="flex items-center gap-4 mb-8 bg-[#121620] p-1.5 rounded-2xl w-fit border border-white/5">
       <button
         onClick={() => { setActiveTab('oracle'); setOracleError(null); }}
-        className={`px-6 py-2.5 rounded-xl font-bold text-sm transition ${activeTab === 'oracle' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+        className={`px-6 py-2.5 rounded-xl font-bold text-sm transition ${activeTab === 'oracle' ? 'bg-secondary-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
       >
         <div className="flex items-center gap-2"><Wand2 size={16} /> Vibe Search</div>
       </button>
@@ -57,7 +57,7 @@ const AIOracle = () => {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-3">
-          <div className="p-3 bg-purple-500/20 text-purple-400 rounded-2xl">
+          <div className="p-3 bg-secondary-500/20 text-secondary-400 rounded-2xl">
             <Wand2 size={28} />
           </div>
           <div>
@@ -85,9 +85,9 @@ const AIOracle = () => {
       {oracleLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="relative mb-8">
-            <div className="w-28 h-28 rounded-full border-4 border-purple-500/30 border-t-purple-500 animate-spin"></div>
+            <div className="w-28 h-28 rounded-full border-4 border-secondary-500/30 border-t-secondary-500 animate-spin"></div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <Sparkles size={36} className="text-purple-400 animate-pulse" />
+              <Sparkles size={36} className="text-secondary-400 animate-pulse" />
             </div>
           </div>
           <h2 className="text-2xl font-bold text-white mb-3 animate-pulse">{oraclePhase}</h2>
@@ -102,10 +102,10 @@ const AIOracle = () => {
           {/* Main 1-Click Generation */}
           <div className="w-full flex flex-col items-center mb-8 pb-8 border-b border-white/10">
             <div className="relative mb-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600/20 to-pink-600/20 border border-purple-500/30 flex items-center justify-center">
-                <Wand2 size={40} className="text-purple-400" />
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-secondary-600/20 to-pink-600/20 border border-secondary-500/30 flex items-center justify-center">
+                <Wand2 size={40} className="text-secondary-400" />
               </div>
-              <div className="absolute inset-0 w-24 h-24 rounded-full bg-purple-500/10 animate-ping" style={{ animationDuration: '3s' }}></div>
+              <div className="absolute inset-0 w-24 h-24 rounded-full bg-secondary-500/10 animate-ping" style={{ animationDuration: '3s' }}></div>
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">Ready to discover your next obsession?</h2>
             <p className="text-slate-400 text-center mb-8 max-w-md">The Oracle analyzes your S-Tier favorites and Dropped games to find perfect matches you've never played.</p>
@@ -122,7 +122,7 @@ const AIOracle = () => {
                 if (result.error) setOracleError(result.error);
                 else setOracleRecs(result.recommendations);
               }}
-              className="group relative px-10 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg rounded-2xl shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_40px_rgba(168,85,247,0.5)] transition-all overflow-hidden flex justify-center items-center gap-3 w-full"
+              className="group relative px-10 py-4 bg-gradient-to-r from-secondary-600 to-pink-600 text-white font-bold text-lg rounded-2xl shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_40px_rgba(168,85,247,0.5)] transition-all overflow-hidden flex justify-center items-center gap-3 w-full"
             >
               <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors"></div>
               <Sparkles size={22} /> Generate Recommendations
@@ -147,7 +147,7 @@ const AIOracle = () => {
 
           {/* Vibe Search Alternative */}
           <div className="w-full bg-[#121620]/50 border border-white/5 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2"><Search size={18} className="text-purple-400" /> The "Vibe" Search</h3>
+            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2"><Search size={18} className="text-secondary-400" /> The "Vibe" Search</h3>
             <p className="text-slate-400 text-sm mb-4">Or tell the Oracle exactly what you're in the mood for to narrow down the search.</p>
             
             <div className="w-full relative mb-4">
@@ -155,7 +155,7 @@ const AIOracle = () => {
                 value={vibeText}
                 onChange={(e) => setVibeText(e.target.value)}
                 placeholder="e.g. 'I just had a stressful day at work. I want a relaxing sci-fi game under 10 hours.'"
-                className="w-full bg-[#0B0E14] border border-purple-500/30 rounded-2xl p-4 text-slate-200 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none h-24 text-[14px] leading-relaxed shadow-inner"
+                className="w-full bg-[#0B0E14] border border-secondary-500/30 rounded-2xl p-4 text-slate-200 focus:outline-none focus:border-secondary-500 focus:ring-1 focus:ring-secondary-500 resize-none h-24 text-[14px] leading-relaxed shadow-inner"
               />
             </div>
             
@@ -186,7 +186,7 @@ const AIOracle = () => {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-              <Sparkles size={24} className="text-purple-400" /> Vibe Matches
+              <Sparkles size={24} className="text-secondary-400" /> Vibe Matches
             </h2>
             <button
               onClick={() => { setOracleRecs([]); setOracleError(null); setVibeText(''); setDeepCuts(false); }}
@@ -198,22 +198,22 @@ const AIOracle = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {oracleRecs.map((rec, index) => (
-              <div key={index} className="group flex flex-col bg-gradient-to-br from-[#121620] to-[#151a28] border border-slate-700/50 hover:border-purple-500/40 rounded-2xl overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(168,85,247,0.1)] transition-all duration-300 h-full">
+              <div key={index} className="group flex flex-col bg-gradient-to-br from-[#121620] to-[#151a28] border border-slate-700/50 hover:border-secondary-500/40 rounded-2xl overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(168,85,247,0.1)] transition-all duration-300 h-full">
                 <div className="w-full h-48 relative overflow-hidden">
                   {rec.image_url ? (
                     <img src={rec.image_url} alt={rec.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-900/30 to-slate-900 flex items-center justify-center">
+                    <div className="w-full h-full bg-gradient-to-br from-secondary-900/30 to-slate-900 flex items-center justify-center">
                       <Gamepad2 size={40} className="text-slate-600" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#121620] to-transparent"></div>
                   <div className="absolute bottom-4 left-5">
-                    <span className="text-[10px] font-bold uppercase tracking-widest bg-purple-500/80 text-white px-2.5 py-1 rounded-md shadow-lg backdrop-blur-md border border-white/20">Pick #{index + 1}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest bg-secondary-500/80 text-white px-2.5 py-1 rounded-md shadow-lg backdrop-blur-md border border-white/20">Pick #{index + 1}</span>
                   </div>
                 </div>
                 <div className="p-6 flex flex-col flex-1">
-                  <h3 className="text-2xl font-black text-white mb-3 group-hover:text-purple-300 transition-colors">{rec.title}</h3>
+                  <h3 className="text-2xl font-black text-white mb-3 group-hover:text-secondary-300 transition-colors">{rec.title}</h3>
                   <p className="text-slate-400 text-sm leading-relaxed mb-6 flex-1 italic">"{rec.reason}"</p>
                   <div className="flex items-center gap-3 mt-auto">
                     <button
@@ -224,7 +224,7 @@ const AIOracle = () => {
                           setOracleRecs(prev => prev.filter((_, i) => i !== index));
                         }
                       }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-lg transition"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-secondary-600 hover:bg-secondary-500 text-white font-bold rounded-xl shadow-lg transition"
                     >
                       <Plus size={18} /> Add to Backlog
                     </button>

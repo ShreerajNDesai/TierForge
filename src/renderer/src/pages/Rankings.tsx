@@ -79,7 +79,7 @@ const Rankings = () => {
           disabled={isRefreshing || rankingsLoading} 
           className="ml-auto flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-slate-300 transition-all disabled:opacity-50"
         >
-          <RefreshCw size={16} className={isRefreshing ? "animate-spin text-indigo-400" : ""} /> 
+          <RefreshCw size={16} className={isRefreshing ? "animate-spin text-primary-400" : ""} /> 
           {isRefreshing ? "Scraping fresh data..." : "Refresh Rankings"}
         </button>
       </div>
@@ -92,7 +92,7 @@ const Rankings = () => {
             onClick={() => setRankingsGenre(genre.key)}
             className={`px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap shrink-0 transition-all ${
               rankingsGenre === genre.key
-                ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]'
+                ? 'bg-primary-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]'
                 : 'bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300'
             }`}
           >
@@ -103,8 +103,8 @@ const Rankings = () => {
           onClick={() => setShowMegaMenu(!showMegaMenu)}
           className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 shrink-0 ${
             showMegaMenu 
-              ? 'bg-indigo-500 text-white border-indigo-400' 
-              : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30'
+              ? 'bg-primary-500 text-white border-primary-400' 
+              : 'bg-primary-500/20 text-primary-300 border border-primary-500/30 hover:bg-primary-500/30'
           }`}
         >
           <Search size={16} /> Browse All Genres <ChevronDown size={16} className={`transition-transform duration-300 ${showMegaMenu ? 'rotate-180' : ''}`} />
@@ -122,7 +122,7 @@ const Rankings = () => {
                 placeholder="Search hundreds of Steam tags and IGDB genres..." 
                 value={tagSearch} 
                 onChange={(e) => setTagSearch(e.target.value)} 
-                className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-indigo-500 transition" 
+                className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary-500 transition" 
               />
             </div>
           </div>
@@ -135,7 +135,7 @@ const Rankings = () => {
                   onClick={() => handleGenreSelect(genre.id)}
                   className={`px-4 py-2.5 rounded-xl text-left text-xs font-bold transition-all border ${
                     rankingsGenre === genre.id
-                      ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
+                      ? 'bg-primary-600 border-primary-400 text-white shadow-lg'
                       : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
                   }`}
                 >
@@ -178,7 +178,7 @@ const Rankings = () => {
                       if (matches && matches.length > 0) handleGameClick(matches[0]);
                     }
                   }}
-                  className={`relative cursor-pointer group flex flex-col items-center focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all relative z-0 hover:z-50 ${isFirst ? 'w-64' : 'w-52'}`}
+                  className={`relative cursor-pointer group flex flex-col items-center focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all relative z-0 hover:z-50 ${isFirst ? 'w-64' : 'w-52'}`}
                 >
                   <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${medalColor} flex items-center justify-center font-black text-lg shadow-xl mb-3 border-4 border-[#0B0E14]`}>
                     {podiumIdx === 0 ? <Crown size={22} /> : `#${podiumIdx + 1}`}
@@ -231,7 +231,7 @@ const Rankings = () => {
                       if (matches && matches.length > 0) handleGameClick(matches[0]);
                     }
                   }}
-                  className="group relative h-32 w-full overflow-hidden rounded-2xl border border-white/5 hover:border-yellow-500/40 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] relative z-0 hover:z-50"
+                  className="group relative h-32 w-full overflow-hidden rounded-2xl border border-white/5 hover:border-yellow-500/40 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] relative z-0 hover:z-50"
                 >
                   {/* Atmospheric Backdrop */}
                   <div className="absolute inset-0 overflow-hidden">

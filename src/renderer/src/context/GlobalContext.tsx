@@ -126,6 +126,8 @@ interface GlobalContextType {
   handleFilterClick: () => void;
   toggleMute: () => void;
   filteredAndSortedCollection: any[];
+  appTheme: string;
+  changeTheme: (theme: string) => void;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
@@ -195,7 +197,23 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'downloading' | 'ready'>('idle');
   const [updateProgress, setUpdateProgress] = useState<number>(0);
 
+  const [appTheme, setAppTheme] = useState('default');
+
+  const changeTheme = (theme: string) => {
+    setAppTheme(theme);
+    document.body.setAttribute('data-theme', theme);
+    window.api.saveSetting('app_theme', theme);
+  };
+
   useEffect(() => {
+    window.api.getSetting('app_theme').then((theme: string | null) => {
+      if (theme) {
+        setAppTheme(theme);
+        document.body.setAttribute('data-theme', theme);
+      } else {
+        document.body.setAttribute('data-theme', 'default');
+      }
+    });
     window.api.getSetting('user_name').then((name: string | null) => {
       if (name) setUserName(name);
     });
@@ -608,6 +626,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     isMasterMenuOpen, setIsMasterMenuOpen,
     updateStatus, setUpdateStatus, updateProgress, setUpdateProgress,
     gamerTitle, totalPlaytimeMinutes,
+    appTheme, changeTheme,
     loadGames, handleGameClick, handleSearch, handleAddGame,
     handleScanPC, handleSaveGameData, onDragStart, onDragEnd,
     handleAIImport, handleTextImport, handleSortClick, handleFilterClick, toggleMute,

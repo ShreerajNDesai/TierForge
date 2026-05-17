@@ -34,7 +34,7 @@ const Settings = () => {
   const [discordStatus, setDiscordStatus] = useState<{ connected: boolean; initialized: boolean }>({ connected: false, initialized: false });
   const [appVersion, setAppVersion] = useState<string>('Loading...');
 
-  const { updateStatus, updateProgress } = useGlobal();
+  const { updateStatus, updateProgress, appTheme, changeTheme } = useGlobal();
 
   useEffect(() => {
     window.api.getAppVersion().then(setAppVersion);
@@ -124,7 +124,7 @@ const Settings = () => {
         {/* General Settings */}
         <div className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl">
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3 pb-4 border-b border-slate-700/50">
-            <SettingsIcon size={22} className="text-indigo-400" />
+            <SettingsIcon size={22} className="text-primary-400" />
             General Settings
           </h2>
           
@@ -141,7 +141,7 @@ const Settings = () => {
                     setBgMode('video');
                     localStorage.setItem('bgMode', 'video');
                   }}
-                  className={`flex-1 py-3 text-sm font-semibold rounded-lg transition ${bgMode === 'video' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`flex-1 py-3 text-sm font-semibold rounded-lg transition ${bgMode === 'video' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   Live Video Trailer
                 </button>
@@ -150,7 +150,7 @@ const Settings = () => {
                     setBgMode('image');
                     localStorage.setItem('bgMode', 'image');
                   }}
-                  className={`flex-1 py-3 text-sm font-semibold rounded-lg transition ${bgMode === 'image' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`flex-1 py-3 text-sm font-semibold rounded-lg transition ${bgMode === 'image' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   High-Res Image
                 </button>
@@ -169,7 +169,7 @@ const Settings = () => {
                     setDefaultMuted(false);
                     localStorage.setItem('defaultMuted', 'false');
                   }}
-                  className={`flex-1 py-3 text-sm font-semibold rounded-lg transition ${!defaultMuted ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`flex-1 py-3 text-sm font-semibold rounded-lg transition ${!defaultMuted ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   Sound On
                 </button>
@@ -178,7 +178,7 @@ const Settings = () => {
                     setDefaultMuted(true);
                     localStorage.setItem('defaultMuted', 'true');
                   }}
-                  className={`flex-1 py-3 text-sm font-semibold rounded-lg transition ${defaultMuted ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`flex-1 py-3 text-sm font-semibold rounded-lg transition ${defaultMuted ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   Muted
                 </button>
@@ -480,7 +480,7 @@ const Settings = () => {
           <div className="space-y-8">
             <div className="flex flex-col gap-4 max-w-md">
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles size={18} className="text-purple-400" />
+                <Sparkles size={18} className="text-secondary-400" />
                 <label className="text-sm font-semibold text-slate-300 block">Gemini API Key</label>
               </div>
               <p className="text-xs text-slate-500 mb-1">Required for AI Vision imports. Your key is stored securely in your local database.</p>
@@ -493,7 +493,7 @@ const Settings = () => {
                   window.api.saveSetting('geminiKey', e.target.value);
                 }}
                 placeholder="Enter Gemini API Key..." 
-                className="w-full bg-slate-800/50 border border-slate-700/50 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-purple-500/50 text-slate-200 placeholder-slate-600 transition"
+                className="w-full bg-slate-800/50 border border-slate-700/50 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-secondary-500/50 text-slate-200 placeholder-slate-600 transition"
               />
             </div>
 
@@ -518,7 +518,7 @@ const Settings = () => {
 
             <div className="flex flex-col gap-4 max-w-md pt-6 border-t border-slate-700/50">
               <div className="flex items-center gap-2 mb-1">
-                <Gamepad2 size={18} className="text-indigo-400" />
+                <Gamepad2 size={18} className="text-primary-400" />
                 <label className="text-sm font-semibold text-slate-300 block">IGDB (Twitch) API Integration</label>
               </div>
               <p className="text-xs text-slate-500 mb-1">Required for game search and cinematic details. Create an app at dev.twitch.tv.</p>
@@ -534,7 +534,7 @@ const Settings = () => {
                       window.api.saveSetting('igdb_client_id', e.target.value);
                     }}
                     placeholder="Enter IGDB Client ID..." 
-                    className="w-full bg-slate-800/50 border border-slate-700/50 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500/50 text-slate-200 placeholder-slate-600 transition"
+                    className="w-full bg-slate-800/50 border border-slate-700/50 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500/50 text-slate-200 placeholder-slate-600 transition"
                   />
                 </div>
                 <div>
@@ -547,11 +547,39 @@ const Settings = () => {
                       window.api.saveSetting('igdb_client_secret', e.target.value);
                     }}
                     placeholder="Enter IGDB Client Secret..." 
-                    className="w-full bg-slate-800/50 border border-slate-700/50 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500/50 text-slate-200 placeholder-slate-600 transition"
+                    className="w-full bg-slate-800/50 border border-slate-700/50 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500/50 text-slate-200 placeholder-slate-600 transition"
                   />
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Appearance & Theming */}
+        <div className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl">
+          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3 pb-4 border-b border-slate-700/50">
+            🎨 Appearance & Theming
+          </h2>
+          <div className="flex items-center gap-6">
+            {[
+              { id: 'default', bg: 'bg-gradient-to-br from-indigo-500 to-purple-500', name: 'Default' },
+              { id: 'cyberpunk', bg: 'bg-gradient-to-br from-yellow-500 to-amber-500', name: 'Cyberpunk' },
+              { id: 'matrix', bg: 'bg-gradient-to-br from-emerald-500 to-teal-500', name: 'Matrix' },
+              { id: 'sith', bg: 'bg-gradient-to-br from-rose-500 to-red-500', name: 'Sith' }
+            ].map(theme => (
+              <div key={theme.id} className="flex flex-col items-center gap-2">
+                <button
+                  onClick={() => changeTheme(theme.id)}
+                  title={theme.name}
+                  className={`w-12 h-12 rounded-full cursor-pointer hover:scale-110 transition-all ${theme.bg} ${
+                    appTheme === theme.id 
+                      ? 'ring-4 ring-white/50 shadow-[0_0_20px_rgba(255,255,255,0.5)]' 
+                      : 'border-2 border-transparent hover:border-white/20'
+                  }`}
+                />
+                <span className="text-xs font-bold text-slate-400">{theme.name}</span>
+              </div>
+            ))}
           </div>
         </div>
 

@@ -78,7 +78,7 @@ const Header = () => {
       {/* Search Box - Left */}
       <div className="flex items-center" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
         <div className="flex items-center relative w-72 group">
-          <Search className="absolute left-3.5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={16} />
+          <Search className="absolute left-3.5 text-slate-500 group-focus-within:text-primary-400 transition-colors" size={16} />
           <input 
             type="text" 
             value={activeTab === 'library' ? librarySearch : searchQuery}
@@ -90,7 +90,7 @@ const Header = () => {
               }
             }}
             placeholder={activeTab === 'library' ? "Search your library..." : "Search games..."} 
-            className="w-full bg-[#121620]/80 border border-slate-700/50 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-indigo-500/50 focus:bg-[#151924]/90 text-slate-200 placeholder-slate-500 transition shadow-inner"
+            className="w-full bg-[#121620]/80 border border-slate-700/50 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary-500/50 focus:bg-[#151924]/90 text-slate-200 placeholder-slate-500 transition shadow-inner"
           />
           {searchResults.length > 0 && activeTab !== 'library' && activeTab !== 'discover' && (
             <Droppable droppableId="search-results" isDropDisabled={true}>
@@ -109,7 +109,7 @@ const Header = () => {
                           {...provided.dragHandleProps}
                           onClick={() => handleAddGame(game)}
                           className={`flex items-center gap-3 p-3 transition-colors ${
-                            snapshot.isDragging ? 'bg-slate-800 shadow-2xl border border-indigo-400 rounded-lg z-[200]' : 'hover:bg-slate-800 bg-[#121620] cursor-pointer'
+                            snapshot.isDragging ? 'bg-slate-800 shadow-2xl border border-primary-400 rounded-lg z-[200]' : 'hover:bg-slate-800 bg-[#121620] cursor-pointer'
                           }`}
                         >
                           <img src={game.image_url} alt={game.title} className="w-8 h-12 object-cover rounded pointer-events-none" />
@@ -118,7 +118,7 @@ const Header = () => {
                            Object.values(data.tiers).some((tier: any) => tier.items.some((g: any) => g.id === game.id.toString())) ? (
                             <Check size={16} className="ml-auto text-green-400" />
                           ) : (
-                            <Plus size={16} className="ml-auto text-indigo-400" />
+                            <Plus size={16} className="ml-auto text-primary-400" />
                           )}
                         </div>
                       )}
@@ -141,7 +141,7 @@ const Header = () => {
               if (key) setGeminiKey(key);
               setShowImportModal(true);
             }}
-            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 hover:text-indigo-200 rounded-lg text-sm font-medium transition"
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary-500/20 text-primary-300 hover:bg-primary-500/30 hover:text-primary-200 rounded-lg text-sm font-medium transition"
           >
             <UploadCloud size={16} /> Import Hub
           </button>
@@ -150,7 +150,7 @@ const Header = () => {
             <button 
               onClick={() => setShowExportMenu(!showExportMenu)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-                showExportMenu ? 'bg-purple-500/30 text-purple-200' : 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 hover:text-purple-200'
+                showExportMenu ? 'bg-secondary-500/30 text-secondary-200' : 'bg-secondary-500/20 text-secondary-300 hover:bg-secondary-500/30 hover:text-secondary-200'
               }`}
             >
               <Camera size={16} /> Export Hub <ChevronDown size={14} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
@@ -160,15 +160,15 @@ const Header = () => {
               <div className="absolute top-full right-0 mt-2 w-56 bg-[#151924] border border-slate-700/80 rounded-xl shadow-2xl py-2 z-[200]">
                 <button 
                   onClick={() => handleExportClick('tierlist')}
-                  className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-indigo-500/20 hover:text-indigo-300 flex items-center gap-3 transition-colors"
+                  className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-primary-500/20 hover:text-primary-300 flex items-center gap-3 transition-colors"
                 >
-                  <Camera size={16} className="text-indigo-400" /> Export Tier List
+                  <Camera size={16} className="text-primary-400" /> Export Tier List
                 </button>
                 <button 
                   onClick={() => handleExportClick('library')}
-                  className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-purple-500/20 hover:text-purple-300 flex items-center gap-3 transition-colors"
+                  className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-secondary-500/20 hover:text-secondary-300 flex items-center gap-3 transition-colors"
                 >
-                  <ImageIcon size={16} className="text-purple-400" /> Export Library Mosaic
+                  <ImageIcon size={16} className="text-secondary-400" /> Export Library Mosaic
                 </button>
               </div>
             )}
@@ -178,8 +178,8 @@ const Header = () => {
             disabled={isScanning}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition relative overflow-hidden group ${
               isScanning 
-                ? 'bg-purple-500/20 text-purple-400 cursor-not-allowed border border-purple-500/30' 
-                : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white border border-indigo-400/30'
+                ? 'bg-secondary-500/20 text-secondary-400 cursor-not-allowed border border-secondary-500/30' 
+                : 'bg-gradient-to-r from-primary-500 to-secondary-600 text-white border border-primary-400/30'
             }`}
           >
             <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors"></div>
@@ -230,7 +230,7 @@ const Header = () => {
           </div>
           <div className="relative" ref={systemMonitorRef}>
             <div 
-              className={`cursor-pointer transition ${showSystemMonitor ? 'text-indigo-400' : 'text-slate-400 hover:text-white'}`}
+              className={`cursor-pointer transition ${showSystemMonitor ? 'text-primary-400' : 'text-slate-400 hover:text-white'}`}
               onClick={() => setShowSystemMonitor(!showSystemMonitor)}
             >
               <BarChart2 size={18} />
@@ -256,7 +256,7 @@ const Header = () => {
                     </div>
                     <div className="w-full bg-slate-800 rounded-full h-1.5">
                       <div 
-                        className="bg-indigo-500 h-1.5 rounded-full" 
+                        className="bg-primary-500 h-1.5 rounded-full" 
                         style={{ width: `${Math.round((libraryGames.filter(g => g.status === 'Completed').length / Math.max(1, libraryGames.filter(g => g.status === 'Backlog' || g.status === 'Completed').length)) * 100)}%` }}
                       ></div>
                     </div>
@@ -307,7 +307,7 @@ const Header = () => {
                       <div>
                         <div className="flex justify-between text-xs mb-1 items-center">
                           <div className="flex items-center gap-1.5 text-slate-300">
-                            <HardDrive size={12} className="text-purple-400" /> C: Drive
+                            <HardDrive size={12} className="text-secondary-400" /> C: Drive
                           </div>
                           <span className={sysStats.disk.percent > 85 ? 'text-rose-400' : 'text-slate-400'}>
                             {sysStats.disk.freeGB}GB Free
@@ -315,7 +315,7 @@ const Header = () => {
                         </div>
                         <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
                           <div 
-                            className={`h-1.5 rounded-full transition-all ${sysStats.disk.percent > 85 ? 'bg-rose-500' : 'bg-purple-500'}`}
+                            className={`h-1.5 rounded-full transition-all ${sysStats.disk.percent > 85 ? 'bg-rose-500' : 'bg-secondary-500'}`}
                             style={{ width: `${sysStats.disk.percent}%` }}
                           ></div>
                         </div>
