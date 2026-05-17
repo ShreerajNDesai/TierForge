@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, Notification } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import { getSetting, saveSetting } from '../database'
@@ -23,6 +23,18 @@ export class TierForgeAPI {
 
   registerSidebarTab(id: string, icon: string, label: string) {
     this.sidebarTabs.push({ id, icon, label })
+  }
+
+  injectCSS(cssString: string) {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.insertCSS(cssString)
+    })
+  }
+
+  showNotification(title: string, body: string) {
+    if (Notification.isSupported()) {
+      new Notification({ title, body }).show()
+    }
   }
 }
 
