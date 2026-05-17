@@ -6,38 +6,47 @@ import { ipcRenderer } from 'electron'
 const api = {
   searchGames: (query: string) => ipcRenderer.invoke('search-games', query),
   getAllGames: () => ipcRenderer.invoke('get-all-games'),
-  addGame: (id: string, title: string, imageUrl: string) => ipcRenderer.invoke('add-game', id, title, imageUrl),
+  addGame: (id: string, title: string, imageUrl: string) =>
+    ipcRenderer.invoke('add-game', id, title, imageUrl),
   updateGameTier: (id: string, tier: string) => ipcRenderer.invoke('update-game-tier', id, tier),
   deleteGame: (id: string) => ipcRenderer.invoke('delete-game', id),
-  uninstallGame: (id: string, executablePath: string) => ipcRenderer.invoke('uninstall-game', id, executablePath),
+  uninstallGame: (id: string, executablePath: string) =>
+    ipcRenderer.invoke('uninstall-game', id, executablePath),
   scanPC: () => ipcRenderer.invoke('scan-pc'),
   getExtendedDetails: (id: string) => ipcRenderer.invoke('get-extended-details', id),
-  updateGameData: (id: string, notes: string, status: string) => ipcRenderer.invoke('update-game-data', id, notes, status),
+  updateGameData: (id: string, notes: string, status: string) =>
+    ipcRenderer.invoke('update-game-data', id, notes, status),
   getTimeToBeat: (name: string) => ipcRenderer.invoke('get-time-to-beat', name),
-  getDiscoverGames: (filterType: string, offset: number) => ipcRenderer.invoke('get-discover-games', filterType, offset),
-  launchGame: (path: string, gameId: string, gameTitle: string) => ipcRenderer.invoke('launch-game', path, gameId, gameTitle),
+  getDiscoverGames: (filterType: string, offset: number) =>
+    ipcRenderer.invoke('get-discover-games', filterType, offset),
+  launchGame: (path: string, gameId: string, gameTitle: string) =>
+    ipcRenderer.invoke('launch-game', path, gameId, gameTitle),
   getPlaytime: (gameId: string) => ipcRenderer.invoke('get-playtime', gameId),
   onGameStarted: (callback: (gameId: string) => void) => {
-    ipcRenderer.on('game-started', (_, gameId) => callback(gameId));
-    return () => ipcRenderer.removeAllListeners('game-started');
+    ipcRenderer.on('game-started', (_, gameId) => callback(gameId))
+    return () => ipcRenderer.removeAllListeners('game-started')
   },
   onGameStopped: (callback: (gameId: string, totalPlaytime: number) => void) => {
-    ipcRenderer.on('game-stopped', (_, gameId, totalPlaytime) => callback(gameId, totalPlaytime));
-    return () => ipcRenderer.removeAllListeners('game-stopped');
+    ipcRenderer.on('game-stopped', (_, gameId, totalPlaytime) => callback(gameId, totalPlaytime))
+    return () => ipcRenderer.removeAllListeners('game-stopped')
   },
   getSetting: (key: string) => ipcRenderer.invoke('get-setting', key),
   saveSetting: (key: string, value: string) => ipcRenderer.invoke('save-setting', key, value),
   updateDiscordRpc: (isEnabled: boolean) => ipcRenderer.invoke('update-discord-rpc', isEnabled),
   checkDiscordStatus: () => ipcRenderer.invoke('check-discord-status'),
-  updateUserProfile: (username: string, avatarPath: string | null) => ipcRenderer.invoke('update-user-profile', username, avatarPath),
+  updateUserProfile: (username: string, avatarPath: string | null) =>
+    ipcRenderer.invoke('update-user-profile', username, avatarPath),
   browseAvatar: () => ipcRenderer.invoke('browse-avatar'),
   browseImage: () => ipcRenderer.invoke('browse-image'),
-  analyzeImage: (imagePath: string, apiKey: string) => ipcRenderer.invoke('analyze-image', imagePath, apiKey),
+  analyzeImage: (imagePath: string, apiKey: string) =>
+    ipcRenderer.invoke('analyze-image', imagePath, apiKey),
   bulkImportText: (text: string) => ipcRenderer.invoke('bulk-import-text', text),
-  getAIRecommendations: (vibe?: string, deepCuts?: boolean) => ipcRenderer.invoke('get-ai-recommendations', vibe, deepCuts),
-  getAICompatibility: (targetGame: string) => ipcRenderer.invoke('get-ai-compatibility', targetGame),
+  getAIRecommendations: (vibe?: string, deepCuts?: boolean) =>
+    ipcRenderer.invoke('get-ai-recommendations', vibe, deepCuts),
+  getAICompatibility: (targetGame: string) =>
+    ipcRenderer.invoke('get-ai-compatibility', targetGame),
   getAIBacklogCure: () => ipcRenderer.invoke('get-ai-backlog-cure'),
-  
+
   // Window Controls
   windowMinimize: () => ipcRenderer.invoke('window-minimize'),
   windowMaximize: () => ipcRenderer.invoke('window-maximize'),
@@ -47,17 +56,22 @@ const api = {
   getScrapedRankings: (category: string) => ipcRenderer.invoke('get-scraped-rankings', category),
   getGlobalRankings: () => ipcRenderer.invoke('get-global-rankings'),
   getCachedRankings: (categoryId: string) => ipcRenderer.invoke('get-cached-rankings', categoryId),
-  clearRankingsCache: (categoryId: string) => ipcRenderer.invoke('clear-rankings-cache', categoryId),
-  getAIPlayOrder: (gameId: string, gameTitle: string, forceRefresh: boolean = false) => ipcRenderer.invoke('get-ai-play-order', gameId, gameTitle, forceRefresh),
-  checkCachedTimeline: (gameId: string, gameTitle: string) => ipcRenderer.invoke('check-cached-timeline', gameId, gameTitle),
+  clearRankingsCache: (categoryId: string) =>
+    ipcRenderer.invoke('clear-rankings-cache', categoryId),
+  getAIPlayOrder: (gameId: string, gameTitle: string, forceRefresh: boolean = false) =>
+    ipcRenderer.invoke('get-ai-play-order', gameId, gameTitle, forceRefresh),
+  checkCachedTimeline: (gameId: string, gameTitle: string) =>
+    ipcRenderer.invoke('check-cached-timeline', gameId, gameTitle),
   syncSteam: (steamId: string, apiKey: string) => ipcRenderer.invoke('sync-steam', steamId, apiKey),
-  showNotification: (title: string, body: string) => ipcRenderer.invoke('show-notification', title, body),
+  showNotification: (title: string, body: string) =>
+    ipcRenderer.invoke('show-notification', title, body),
   getSteamDetails: (steamId: string) => ipcRenderer.invoke('get-steam-details', steamId),
   getSteamTags: () => ipcRenderer.invoke('get-steam-tags'),
   getSteamAchievements: (appId: string) => ipcRenderer.invoke('get-steam-achievements', appId),
   getGamerProfile: (statsJson: string) => ipcRenderer.invoke('get-gamer-profile', statsJson),
   backfillMetadata: () => ipcRenderer.invoke('backfill-metadata'),
-  saveImage: (dataUrl: string, defaultPath: string) => ipcRenderer.invoke('save-image', dataUrl, defaultPath),
+  saveImage: (dataUrl: string, defaultPath: string) =>
+    ipcRenderer.invoke('save-image', dataUrl, defaultPath),
   browseBackupFolder: () => ipcRenderer.invoke('browse-backup-folder'),
   manualBackup: () => ipcRenderer.invoke('manual-backup'),
   restoreBackup: () => ipcRenderer.invoke('restore-backup'),
@@ -78,24 +92,24 @@ const api = {
   installUpdate: () => ipcRenderer.invoke('install-update'),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   onUpdateAvailable: (callback: () => void) => {
-    ipcRenderer.on('update-available', () => callback());
-    return () => ipcRenderer.removeAllListeners('update-available');
+    ipcRenderer.on('update-available', () => callback())
+    return () => ipcRenderer.removeAllListeners('update-available')
   },
   onUpdateProgress: (callback: (percent: number) => void) => {
-    ipcRenderer.on('download-progress', (_, percent) => callback(percent));
-    return () => ipcRenderer.removeAllListeners('download-progress');
+    ipcRenderer.on('download-progress', (_, percent) => callback(percent))
+    return () => ipcRenderer.removeAllListeners('download-progress')
   },
   onUpdateDownloaded: (callback: () => void) => {
-    ipcRenderer.on('update-downloaded', () => callback());
-    return () => ipcRenderer.removeAllListeners('update-downloaded');
+    ipcRenderer.on('update-downloaded', () => callback())
+    return () => ipcRenderer.removeAllListeners('update-downloaded')
   },
   onAppRestored: (callback: () => void) => {
-    ipcRenderer.on('app-restored', () => callback());
-    return () => ipcRenderer.removeAllListeners('app-restored');
+    ipcRenderer.on('app-restored', () => callback())
+    return () => ipcRenderer.removeAllListeners('app-restored')
   },
-  onSettingUpdated: (callback: (data: { key: string, value: string }) => void) => {
-    ipcRenderer.on('setting-updated', (_, data) => callback(data));
-    return () => ipcRenderer.removeAllListeners('setting-updated');
+  onSettingUpdated: (callback: (data: { key: string; value: string }) => void) => {
+    ipcRenderer.on('setting-updated', (_, data) => callback(data))
+    return () => ipcRenderer.removeAllListeners('setting-updated')
   }
 }
 
