@@ -7,6 +7,7 @@ export class TierForgeAPI {
   gameLaunchCallbacks: Function[] = []
   gameCloseCallbacks: Function[] = []
   sidebarTabs: any[] = []
+  cssKeys: string[] = []
 
   onGameLaunch(callback: (gameId: string, gameTitle: string) => void) {
     this.gameLaunchCallbacks.push(callback)
@@ -25,10 +26,24 @@ export class TierForgeAPI {
     this.sidebarTabs.push({ id, icon, label })
   }
 
-  injectCSS(cssString: string) {
-    BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.insertCSS(cssString)
-    })
+  async injectCSS(cssString: string) {
+    const wins = BrowserWindow.getAllWindows()
+    for (const win of wins) {
+      const key = await win.webContents.insertCSS(cssString)
+      this.cssKeys.push(key)
+    }
+  }
+
+  async clearCSS() {
+    const wins = BrowserWindow.getAllWindows()
+    for (const win of wins) {
+      for (const key of this.cssKeys) {
+        try {
+          await win.webContents.removeInsertedCSS(key)
+        } catch (e) {}
+      }
+    }
+    this.cssKeys = []
   }
 
   showNotification(title: string, body: string) {
@@ -55,9 +70,13 @@ export class PluginManager {
     }
   }
 
-  loadPlugins() {
+  async loadPlugins() {
     console.log('\n--- PLUGIN ENGINE STARTING ---')
     console.log('Scanning directory:', this.pluginsDir)
+
+    if (this.api && this.api.clearCSS) {
+      await this.api.clearCSS()
+    }
 
     this.loadedPlugins = []
     this.api = new TierForgeAPI() // reset API state
@@ -135,7 +154,7 @@ export class PluginManager {
     return this.loadedPlugins
   }
 
-  togglePlugin(name: string, enabled: boolean) {
+  async togglePlugin(name: string, enabled: boolean) {
     const disabledPluginsStr = getSetting('disabled_plugins') || '[]'
     let disabledPlugins = JSON.parse(disabledPluginsStr)
     
@@ -149,10 +168,8 @@ export class PluginManager {
     
     saveSetting('disabled_plugins', JSON.stringify(disabledPlugins))
 
-    const plugin = this.loadedPlugins.find(p => p.name === name)
-    if (plugin) {
-      plugin.enabled = enabled
-    }
+    // Automatically reload the plugin engine so changes take effect immediately
+    await this.loadPlugins()
   }
 
   openPluginsFolder() {

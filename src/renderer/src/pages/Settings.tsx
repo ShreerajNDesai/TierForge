@@ -470,10 +470,15 @@ const Settings = () => {
 
         {/* Google Drive API */}
         <div className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl relative overflow-hidden">
-          <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
-            <Cloud size={22} className="text-blue-400" />
-            Google Drive
-          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-bold text-white flex items-center gap-3">
+              <Cloud size={22} className="text-blue-400" />
+              Google Drive
+            </h2>
+            <div className="text-[11px] font-medium text-slate-500 flex items-center gap-1 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50">
+              <Clock size={12} /> Last backup: {lastCloudBackup ? formatDate(lastCloudBackup) : 'Never'}
+            </div>
+          </div>
           <p className="text-slate-400 text-sm mb-6 pb-4 border-b border-slate-700/50">
             Securely back up your entire library directly to your Google account. One click to
             connect, fully automatic.
@@ -494,11 +499,6 @@ const Settings = () => {
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                       </div>
                       <p className="text-xs text-slate-400 mt-0.5">{driveEmail}</p>
-                      {lastCloudBackup && (
-                        <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                          <Clock size={10} /> Last backup: {formatDate(lastCloudBackup)}
-                        </p>
-                      )}
                     </div>
                   </div>
                   <button

@@ -1,7 +1,7 @@
 import {
   Gamepad2,
   LayoutGrid,
-  Bot,
+  Compass,
   Wand2,
   Library,
   Trophy,
@@ -61,13 +61,13 @@ const Sidebar = () => {
   }
 
   const navItems = [
-    { id: 'tierlist', label: 'Tier List', icon: LayoutGrid, color: 'indigo' },
-    { id: 'discover', label: 'Discover', icon: Bot, color: 'indigo' },
-    { id: 'oracle', label: 'AI Oracle', icon: Wand2, color: 'purple' },
-    { id: 'library', label: 'Library', icon: Library, color: 'indigo' },
-    { id: 'rankings', label: 'Rankings', icon: Trophy, color: 'yellow' },
-    { id: 'statistics', label: 'Statistics', icon: BarChart2, color: 'indigo' },
-    { id: 'settings', label: 'Settings', icon: Settings, color: 'indigo', marginTop: 'mt-6' }
+    { id: 'tierlist', label: 'Tier List', icon: LayoutGrid, activeBorder: 'border-rose-500/30', activeText: 'text-rose-300', activeIcon: 'text-rose-400', activeBg: 'bg-gradient-to-r from-rose-600/20 to-pink-600/10 shadow-[0_0_20px_rgba(244,63,94,0.15)]', hoverBg: 'bg-rose-500/10', groupHover: 'group-hover:bg-rose-500/20' },
+    { id: 'library', label: 'Library', icon: Library, activeBorder: 'border-emerald-500/30', activeText: 'text-emerald-300', activeIcon: 'text-emerald-400', activeBg: 'bg-gradient-to-r from-emerald-600/20 to-teal-600/10 shadow-[0_0_20px_rgba(16,185,129,0.15)]', hoverBg: 'bg-emerald-500/10', groupHover: 'group-hover:bg-emerald-500/20' },
+    { id: 'oracle', label: 'AI Oracle', icon: Wand2, activeBorder: 'border-purple-500/30', activeText: 'text-purple-300', activeIcon: 'text-purple-400', activeBg: 'bg-gradient-to-r from-purple-600/20 to-pink-600/10 shadow-[0_0_20px_rgba(168,85,247,0.15)]', hoverBg: 'bg-purple-500/10', groupHover: 'group-hover:bg-purple-500/20' },
+    { id: 'discover', label: 'Discover', icon: Compass, activeBorder: 'border-cyan-500/30', activeText: 'text-cyan-300', activeIcon: 'text-cyan-400', activeBg: 'bg-gradient-to-r from-cyan-600/20 to-blue-600/10 shadow-[0_0_20px_rgba(6,182,212,0.15)]', hoverBg: 'bg-cyan-500/10', groupHover: 'group-hover:bg-cyan-500/20' },
+    { id: 'rankings', label: 'Rankings', icon: Trophy, activeBorder: 'border-amber-500/30', activeText: 'text-amber-300', activeIcon: 'text-amber-400', activeBg: 'bg-gradient-to-r from-amber-600/20 to-yellow-600/10 shadow-[0_0_20px_rgba(245,158,11,0.15)]', hoverBg: 'bg-amber-500/10', groupHover: 'group-hover:bg-amber-500/20' },
+    { id: 'statistics', label: 'Statistics', icon: BarChart2, activeBorder: 'border-blue-500/30', activeText: 'text-blue-300', activeIcon: 'text-blue-400', activeBg: 'bg-gradient-to-r from-blue-600/20 to-indigo-600/10 shadow-[0_0_20px_rgba(59,130,246,0.15)]', hoverBg: 'bg-blue-500/10', groupHover: 'group-hover:bg-blue-500/20' },
+    { id: 'settings', label: 'Settings', icon: Settings, activeBorder: 'border-slate-500/30', activeText: 'text-slate-300', activeIcon: 'text-slate-400', activeBg: 'bg-gradient-to-r from-slate-600/20 to-gray-600/10 shadow-[0_0_20px_rgba(100,116,139,0.15)]', hoverBg: 'bg-slate-500/10', groupHover: 'group-hover:bg-slate-500/20', marginTop: 'mt-6' }
   ]
 
   const backlogCount = libraryGames.filter((g) => g.status === 'Backlog').length
@@ -87,8 +87,6 @@ const Sidebar = () => {
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = activeTab === item.id
-            const colorClass =
-              item.color === 'indigo' ? 'indigo' : item.color === 'purple' ? 'purple' : 'yellow'
 
             return (
               <div
@@ -98,16 +96,16 @@ const Sidebar = () => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') setActiveTab(item.id)
                 }}
-                className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl cursor-pointer relative overflow-hidden group transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10 ${item.marginTop || ''} ${isActive ? `bg-gradient-to-r from-${colorClass}-600/20 to-${colorClass === 'indigo' ? 'purple' : colorClass === 'purple' ? 'pink' : 'amber'}-600/10 text-${colorClass}-300 border border-${colorClass}-500/30 shadow-[0_0_20px_rgba(${colorClass === 'indigo' ? '99,102,241' : colorClass === 'purple' ? '168,85,247' : '234,179,8'},0.15)]` : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'}`}
+                className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl cursor-pointer relative overflow-hidden group transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10 ${item.marginTop || ''} ${isActive ? `${item.activeBg} ${item.activeText} border ${item.activeBorder}` : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'}`}
               >
                 {isActive && (
                   <div
-                    className={`absolute inset-0 bg-${colorClass}-500/10 group-hover:bg-${colorClass}-500/20 transition-colors`}
+                    className={`absolute inset-0 ${item.hoverBg} ${item.groupHover} transition-colors`}
                   ></div>
                 )}
                 <Icon
                   size={20}
-                  className={isActive ? `text-${colorClass}-400 relative z-10` : ''}
+                  className={`relative z-10 ${isActive ? item.activeIcon : ''}`}
                 />
                 <span className="font-semibold text-sm relative z-10">{item.label}</span>
               </div>

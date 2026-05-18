@@ -245,6 +245,7 @@ app.whenReady().then(() => {
   autoUpdater.checkForUpdatesAndNotify()
 
   initDB()
+  pluginManager.loadPlugins()
 
   createTrayWindow()
 
@@ -982,8 +983,8 @@ app.whenReady().then(() => {
     return pluginManager.getLoadedPlugins()
   })
 
-  ipcMain.handle('toggle-plugin', (_, name: string, enabled: boolean) => {
-    pluginManager.togglePlugin(name, enabled)
+  ipcMain.handle('toggle-plugin', async (_, name: string, enabled: boolean) => {
+    await pluginManager.togglePlugin(name, enabled)
     return true
   })
 
@@ -991,8 +992,8 @@ app.whenReady().then(() => {
     pluginManager.openPluginsFolder()
   })
 
-  ipcMain.handle('reload-plugins', () => {
-    pluginManager.loadPlugins()
+  ipcMain.handle('reload-plugins', async () => {
+    await pluginManager.loadPlugins()
     return true
   })
 

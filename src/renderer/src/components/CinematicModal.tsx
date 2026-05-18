@@ -733,7 +733,7 @@ const CinematicModal = () => {
                       <Sparkles size={18} className={isTimelineLoading ? 'animate-pulse' : ''} />
                       {isTimelineLoading
                         ? 'Consulting lore archives...'
-                        : '✨ Generate Canon Play Order'}
+                        : 'Generate Canon Play Order'}
                     </button>
                   </div>
                 )}
