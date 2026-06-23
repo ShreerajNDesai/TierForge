@@ -35,8 +35,7 @@ const Sidebar = () => {
     totalPlaytimeMinutes,
     libraryGames,
     defaultMuted,
-    setDefaultMuted,
-    toggleMute
+    setDefaultMuted
   } = useGlobal()
 
   const [discordStatus, setDiscordStatus] = useState({ connected: false, initialized: false })
@@ -200,7 +199,7 @@ const Sidebar = () => {
             <div className="space-y-1 border-t border-white/5 pt-3">
               <button
                 onClick={() => {
-                  window.api.invoke('force-cloud-backup')
+                  window.api.forceCloudBackup()
                   setIsMasterMenuOpen(false)
                 }}
                 className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition text-xs font-bold text-sky-400"
@@ -217,7 +216,7 @@ const Sidebar = () => {
                 <Settings size={14} /> Full Settings
               </button>
               <button
-                onClick={() => window.api.invoke('quit-app')}
+                onClick={() => window.api.quitApp()}
                 className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-red-500/10 transition text-xs font-bold text-red-400"
               >
                 <LogOut size={14} /> Quit TierForge

@@ -21,6 +21,7 @@ const api = {
     ipcRenderer.invoke('get-discover-games', filterType, offset),
   launchGame: (path: string, gameId: string, gameTitle: string) =>
     ipcRenderer.invoke('launch-game', path, gameId, gameTitle),
+  stopGameTracking: (gameId: string) => ipcRenderer.invoke('stop-game-tracking', gameId),
   getPlaytime: (gameId: string) => ipcRenderer.invoke('get-playtime', gameId),
   onGameStarted: (callback: (gameId: string) => void) => {
     ipcRenderer.on('game-started', (_, gameId) => callback(gameId))

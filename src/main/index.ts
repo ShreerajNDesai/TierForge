@@ -299,6 +299,9 @@ app.whenReady().then(() => {
     setBrowsingStatus(totalGames)
   }
 
+  const activeGameIntervals: Record<string, NodeJS.Timeout> = {}
+  const activeGameStartTimes: Record<string, number> = {}
+
   // --- IPC LISTENERS (The Backend receiving messages) ---
 
   // 1. Search RAWG API
@@ -393,6 +396,29 @@ app.whenReady().then(() => {
   ipcMain.handle('scan-pc', async () => {
     const games = scanLocalGames()
     console.log(`Found ${games.length} games locally.`)
+
+    // Verify existing games and remove executable_path if they are uninstalled
+    const allGames = getAllGames()
+    for (const dbGame of allGames) {
+      if (dbGame.executable_path) {
+        let stillInstalled = true
+        if (dbGame.executable_path.startsWith('steam://')) {
+          stillInstalled = games.some((g) => g.path === dbGame.executable_path)
+        } else {
+          try {
+            const fs = require('fs')
+            stillInstalled = fs.existsSync(dbGame.executable_path)
+          } catch (e) {
+            stillInstalled = false
+          }
+        }
+
+        if (!stillInstalled) {
+          console.log(`Game ${dbGame.title} is no longer installed. Removing executable_path.`)
+          db.prepare('UPDATE games SET executable_path = ? WHERE id = ?').run('', dbGame.id)
+        }
+      }
+    }
 
     for (const game of games) {
       try {
@@ -568,6 +594,7 @@ app.whenReady().then(() => {
         exeName = manifestExe
       } else {
         const startTime = Date.now()
+        activeGameStartTimes[gameId] = startTime
         db.prepare('UPDATE games SET last_played_at = ? WHERE id = ?').run(startTime, gameId)
         const isDiscordEnabled = getSetting('discord_rpc') !== 'false'
         if (isDiscordEnabled) {
@@ -584,6 +611,7 @@ app.whenReady().then(() => {
     }
 
     const startTime = Date.now()
+    activeGameStartTimes[gameId] = startTime
 
     db.prepare('UPDATE games SET last_played_at = ? WHERE id = ?').run(startTime, gameId)
 
@@ -607,6 +635,8 @@ app.whenReady().then(() => {
           hasActuallyStarted = true
         } else if (hasActuallyStarted && !isRunning) {
           clearInterval(pollInterval)
+          delete activeGameIntervals[gameId]
+          delete activeGameStartTimes[gameId]
 
           const elapsedMs = Date.now() - startTime
           const elapsedMinutes = Math.max(1, Math.round(elapsedMs / 60000))
@@ -653,6 +683,45 @@ app.whenReady().then(() => {
         }
       })
     }, 3000)
+
+    activeGameIntervals[gameId] = pollInterval
+
+    return true
+  })
+
+  ipcMain.handle('stop-game-tracking', async (_, gameId: string) => {
+    if (activeGameIntervals[gameId]) {
+      clearInterval(activeGameIntervals[gameId])
+      delete activeGameIntervals[gameId]
+    }
+
+    const startTime = activeGameStartTimes[gameId]
+    if (startTime) {
+      const elapsedMs = Date.now() - startTime
+      const elapsedMinutes = Math.max(1, Math.round(elapsedMs / 60000))
+      addPlaytime(gameId, elapsedMinutes)
+      
+      const dbRow = db.prepare('SELECT title FROM games WHERE id = ?').get(gameId) as { title?: string }
+      const title = dbRow ? dbRow.title || 'Game' : 'Game'
+      
+      sendDesktopNotification(
+        'Game Session Ended Manually',
+        `Logged ${elapsedMinutes} minutes in ${title}.`
+      )
+    }
+    delete activeGameStartTimes[gameId]
+
+    const totalPlaytime = getPlaytime(gameId)
+
+    const isDiscordEnabled = getSetting('discord_rpc') !== 'false'
+    if (isDiscordEnabled) {
+      const totalGames = getAllGames().length
+      setBrowsingStatus(totalGames)
+    }
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('game-stopped', gameId, totalPlaytime)
+    }
 
     return true
   })

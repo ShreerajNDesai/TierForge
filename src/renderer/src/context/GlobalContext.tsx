@@ -125,6 +125,8 @@ interface GlobalContextType {
   setUpdateStatus: React.Dispatch<React.SetStateAction<'idle' | 'downloading' | 'ready'>>
   updateProgress: number
   setUpdateProgress: React.Dispatch<React.SetStateAction<number>>
+  gamerTitle: string
+  totalPlaytimeMinutes: number
 
   loadGames: () => Promise<void>
   handleGameClick: (game: any) => Promise<void>
