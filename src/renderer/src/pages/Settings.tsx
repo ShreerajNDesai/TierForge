@@ -67,22 +67,27 @@ const Settings = () => {
   const { updateStatus, updateProgress, appTheme, changeTheme } = useGlobal()
 
   useEffect(() => {
-    window.api.getAppVersion().then(setAppVersion)
-    window.api.getLoadedPlugins().then(setPlugins)
-    window.api.getSetting('backup_folder').then((val) => {
-      if (val) setBackupFolder(val)
-    })
-    window.api.getBackupInfo().then(setBackupInfo)
-    window.api.checkDriveConnection().then((res) => {
-      setDriveConnected(res.connected)
-      if (res.email) setDriveEmail(res.email)
-    })
-    window.api.getSetting('last_cloud_backup').then((val) => {
-      if (val) setLastCloudBackup(val)
-    })
-    window.api.getSetting('discord_rpc').then((val) => {
-      setDiscordRpcEnabled(val !== 'false')
-    })
+    const fetchSettingsData = () => {
+      window.api.getAppVersion().then(setAppVersion)
+      window.api.getLoadedPlugins().then(setPlugins)
+      window.api.getSetting('backup_folder').then((val) => {
+        if (val) setBackupFolder(val)
+      })
+      window.api.getBackupInfo().then(setBackupInfo)
+      window.api.checkDriveConnection().then((res) => {
+        setDriveConnected(res.connected)
+        if (res.email) setDriveEmail(res.email)
+      })
+      window.api.getSetting('last_cloud_backup').then((val) => {
+        if (val) setLastCloudBackup(val)
+      })
+      window.api.getSetting('discord_rpc').then((val) => {
+        setDiscordRpcEnabled(val !== 'false')
+      })
+    }
+
+    fetchSettingsData()
+    window.addEventListener('focus', fetchSettingsData)
 
     const interval = setInterval(() => {
       window.api.checkDiscordStatus().then(setDiscordStatus)
@@ -97,6 +102,7 @@ const Settings = () => {
 
     return () => {
       clearInterval(interval)
+      window.removeEventListener('focus', fetchSettingsData)
       if (removeListener) removeListener()
     }
   }, [])

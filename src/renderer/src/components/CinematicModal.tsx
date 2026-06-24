@@ -190,9 +190,15 @@ const CinematicModal = () => {
             {selectedGame.executable_path &&
               selectedGame.executable_path !== '' &&
               (runningGameId === selectedGame.id.toString() ? (
-                <div className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.5)] flex justify-center items-center gap-3 tracking-widest uppercase border border-emerald-400/50 animate-pulse cursor-not-allowed">
-                  <Gamepad2 size={22} className="animate-bounce" /> Game Running...
-                </div>
+                <button
+                  onClick={() => window.api.stopGameTracking(selectedGame.id.toString())}
+                  className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.5)] flex justify-center items-center gap-3 tracking-widest uppercase border border-emerald-400/50 animate-pulse transition-transform hover:scale-105 group"
+                >
+                  <Gamepad2 size={22} className="animate-bounce group-hover:hidden" />
+                  <X size={22} className="hidden group-hover:block" />
+                  <span className="group-hover:hidden">Game Running...</span>
+                  <span className="hidden group-hover:block text-sm">Stop Tracking</span>
+                </button>
               ) : (
                 <button
                   onClick={() =>
