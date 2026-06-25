@@ -19,9 +19,7 @@ import {
   initDB,
   getAllGames,
   addGame,
-  updateGameTier,
   deleteGame,
-  updateGameData,
   getSetting,
   saveSetting,
   addPlaytime,
@@ -31,6 +29,7 @@ import {
   db,
   checkCachedTimelineForGame
 } from './database'
+import { registerAllHandlers } from './handlers'
 import { scanLocalGames } from './scanner'
 import {
   searchGames,
@@ -305,33 +304,11 @@ app.whenReady().then(() => {
   const activeGameStartTimes: Record<string, number> = {}
 
   // --- IPC LISTENERS (The Backend receiving messages) ---
+  registerAllHandlers()
 
   // 1. Search RAWG API
   ipcMain.handle('search-games', async (_, query) => {
     return await searchGames(query)
-  })
-
-  // 2. Get all games from Database
-  ipcMain.handle('get-all-games', () => {
-    return getAllGames()
-  })
-
-  // 3. Add a game to Database
-  ipcMain.handle('add-game', (_, id, title, imageUrl) => {
-    addGame(id, title, imageUrl)
-    return true
-  })
-
-  // 4. Update a game's tier (Drag & Drop)
-  ipcMain.handle('update-game-tier', (_, id, tier) => {
-    updateGameTier(id, tier)
-    return true
-  })
-
-  // 5. Delete a game
-  ipcMain.handle('delete-game', (_, id) => {
-    deleteGame(id)
-    return true
   })
 
   // 5.5 Uninstall Game
@@ -377,12 +354,6 @@ app.whenReady().then(() => {
   // 6. Get extended details
   ipcMain.handle('get-extended-details', async (_, id) => {
     return await getGameExtendedDetails(id)
-  })
-
-  // 7. Update game data
-  ipcMain.handle('update-game-data', (_, id, notes, status) => {
-    updateGameData(id, notes, status)
-    return true
   })
 
   ipcMain.handle('get-time-to-beat', (_, name) => {
@@ -729,22 +700,7 @@ app.whenReady().then(() => {
     return true
   })
 
-  ipcMain.handle('get-playtime', (_, gameId: string) => {
-    return getPlaytime(gameId)
-  })
 
-  ipcMain.handle('get-setting', (_, key) => {
-    return getSetting(key)
-  })
-
-  ipcMain.handle('save-setting', (_, key, value) => {
-    saveSetting(key, value)
-    // Broadcast the change to ALL windows (Main App and Tray Menu)
-    BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('setting-updated', { key, value })
-    })
-    return true
-  })
 
   ipcMain.handle('update-discord-rpc', (_, isEnabled: boolean) => {
     if (isEnabled) {
@@ -1080,8 +1036,8 @@ app.whenReady().then(() => {
       // Start a tiny local server to catch the OAuth callback
       const http = require('http')
       return new Promise((resolve) => {
-        const server = http.createServer(async (req: any, res: any) => {
-          const url = new URL(req.url, 'http://localhost:19847')
+        const server = http.createServer(async (req: import('http').IncomingMessage, res: import('http').ServerResponse) => {
+          const url = new URL(req.url || '', 'http://localhost:19847')
           const code = url.searchParams.get('code')
           if (code) {
             res.writeHead(200, { 'Content-Type': 'text/html' })
