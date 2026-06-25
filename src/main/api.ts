@@ -15,8 +15,6 @@ import {
 } from './database'
 import { BrowserWindow } from 'electron'
 
-const DEFAULT_CLIENT_ID = '3mejs4touc121msgxhw5mxy31medg3'
-const DEFAULT_CLIENT_SECRET = 'p71goredxlcacagkigxok0vm9sx92n'
 
 const { HowLongToBeatService } = require('howlongtobeat-ts')
 const hltbService = new HowLongToBeatService()
@@ -25,8 +23,9 @@ let accessToken = ''
 
 async function getAccessToken() {
   if (accessToken) return accessToken
-  const clientId = getSetting('igdb_client_id') || DEFAULT_CLIENT_ID
-  const clientSecret = getSetting('igdb_client_secret') || DEFAULT_CLIENT_SECRET
+  const clientId = getSetting('igdb_client_id')
+  const clientSecret = getSetting('igdb_client_secret')
+  if (!clientId || !clientSecret) return null
   try {
     const response = await fetch(
       'https://id.twitch.tv/oauth2/token?client_id=' +
@@ -53,7 +52,7 @@ export async function searchGames(query: string) {
     const response = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: {
-        'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID,
+        'Client-ID': getSetting('igdb_client_id') || '',
         Authorization: 'Bearer ' + token,
         Accept: 'application/json'
       },
@@ -141,7 +140,7 @@ export async function getGameExtendedDetails(gameId: string) {
     const response = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: {
-        'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID,
+        'Client-ID': getSetting('igdb_client_id') || '',
         Authorization: 'Bearer ' + token,
         Accept: 'application/json'
       },
@@ -647,7 +646,7 @@ export async function getDiscoverGames(
     const response = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
       headers: {
-        'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID,
+        'Client-ID': getSetting('igdb_client_id') || '',
         Authorization: 'Bearer ' + token,
         Accept: 'application/json'
       },
@@ -714,7 +713,7 @@ export async function getSmartAIPlayOrder(
       const response = await fetch('https://api.igdb.com/v4/games', {
         method: 'POST',
         headers: {
-          'Client-ID': getSetting('igdb_client_id') || DEFAULT_CLIENT_ID,
+          'Client-ID': getSetting('igdb_client_id') || '',
           Authorization: 'Bearer ' + token,
           Accept: 'application/json'
         },
