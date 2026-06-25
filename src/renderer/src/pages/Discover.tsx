@@ -232,7 +232,7 @@ const Discover = () => {
       )}
 
       {/* Grid */}
-      <div className="grid grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
         {(isDiscoverLoading && discoverOffset === 0 && searchQuery.length <= 2) ||
         isSearchLoading ? (
           Array.from({ length: 10 }).map((_, i) => (

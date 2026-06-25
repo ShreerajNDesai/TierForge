@@ -76,7 +76,7 @@ const Sidebar = () => {
   const playtimeHours = Math.round(libraryGames.reduce((acc, game) => acc + (game.playtime_minutes || 0), 0) / 60)
 
   return (
-    <aside className="w-[260px] bg-[#080B10]/95 backdrop-blur-2xl border-r border-slate-800/50 flex flex-col justify-between z-10 shrink-0">
+    <aside className="w-[280px] bg-slate-950/40 backdrop-blur-3xl border-r border-white/5 flex flex-col justify-between z-10 shrink-0">
       <div>
         <div className="flex items-center gap-3 p-8 text-2xl font-black text-white tracking-wide">
           <Gamepad2 className="text-primary-500" size={32} />
@@ -96,7 +96,7 @@ const Sidebar = () => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') setActiveTab(item.id)
                 }}
-                className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl cursor-pointer relative overflow-hidden group transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10 ${item.marginTop || ''} ${isActive ? `${item.activeBg} ${item.activeText} border ${item.activeBorder}` : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'}`}
+                className={`flex items-center gap-4 px-5 py-3.5 rounded-xl cursor-pointer relative overflow-hidden group transition-all duration-300 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${item.marginTop || ''} ${isActive ? `${item.activeBg} ${item.activeText} border ${item.activeBorder} shadow-lg` : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent'}`}
               >
                 {isActive && (
                   <div

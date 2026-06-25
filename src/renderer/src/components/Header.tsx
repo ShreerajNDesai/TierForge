@@ -117,7 +117,7 @@ const Header = () => {
               }
             }}
             placeholder={activeTab === 'library' ? 'Search your library...' : 'Search games...'}
-            className="w-full bg-[#121620]/80 border border-slate-700/50 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary-500/50 focus:bg-[#151924]/90 text-slate-200 placeholder-slate-500 transition shadow-inner"
+            className="w-full bg-white/5 border border-white/10 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary-500/50 focus:bg-white/10 text-slate-200 placeholder-slate-500 transition-all shadow-inner"
           />
           {searchResults.length > 0 && activeTab !== 'library' && activeTab !== 'discover' && (
             <Droppable droppableId="search-results" isDropDisabled={true}>
@@ -183,7 +183,7 @@ const Header = () => {
               if (key) setGeminiKey(key)
               setShowImportModal(true)
             }}
-            className="flex items-center gap-2 px-3 py-1.5 bg-primary-500/20 text-primary-300 hover:bg-primary-500/30 hover:text-primary-200 rounded-lg text-sm font-medium transition"
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary-500/20 text-primary-300 hover:bg-primary-500/30 hover:text-primary-200 rounded-lg text-sm font-medium transition-all duration-300 active:scale-95"
           >
             <UploadCloud size={16} /> Import Hub
           </button>
@@ -191,7 +191,7 @@ const Header = () => {
           <div className="relative" ref={exportMenuRef}>
             <button
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 active:scale-95 ${
                 showExportMenu
                   ? 'bg-secondary-500/30 text-secondary-200'
                   : 'bg-secondary-500/20 text-secondary-300 hover:bg-secondary-500/30 hover:text-secondary-200'
@@ -224,7 +224,7 @@ const Header = () => {
           <button
             onClick={handleScanPC}
             disabled={isScanning}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition relative overflow-hidden group ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-300 active:scale-95 relative overflow-hidden group shadow-lg ${
               isScanning
                 ? 'bg-secondary-500/20 text-secondary-400 cursor-not-allowed border border-secondary-500/30'
                 : 'bg-gradient-to-r from-primary-500 to-secondary-600 text-white border border-primary-400/30'
