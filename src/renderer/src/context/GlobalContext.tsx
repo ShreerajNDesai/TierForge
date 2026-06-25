@@ -391,7 +391,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         img: game.image_url,
         notes: game.notes || '',
         status: game.status || 'Backlog',
-        executable_path: game.executable_path || ''
+        executable_path: game.executable_path || '',
+        custom_save_path: game.custom_save_path || ''
       }
       if (game.tier === 'unranked' || !tierDef[game.tier]) {
         collection.push(gameObj)

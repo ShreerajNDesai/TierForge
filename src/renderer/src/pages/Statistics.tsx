@@ -537,7 +537,7 @@ const Statistics = () => {
             Trophy Cabinet
             <span className="text-xs text-slate-500 font-normal ml-2">Your Hall of Fame</span>
           </h3>
-          <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+          <div className="flex gap-4 overflow-x-auto pt-4 -mt-4 pb-4 custom-scrollbar">
             {completedList.map((game: any) => (
               <div
                 key={game.id}

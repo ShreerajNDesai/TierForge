@@ -48,7 +48,9 @@ const CinematicModal = () => {
     toggleMute,
     setTimeToBeat,
     handleGameClick,
-    setLibraryGames
+    setLibraryGames,
+    setGameDetails,
+    loadGames
   } = useGlobal()
 
   const [aiTimeline, setAiTimeline] = useState<any[] | null>(null)
@@ -215,17 +217,41 @@ const CinematicModal = () => {
               ))}
 
             {selectedGame.executable_path && selectedGame.executable_path !== '' && (
-              <button
-                onClick={async () => {
-                  const newPath = await window.api.setCustomSavePath(selectedGame.id.toString())
-                  if (newPath) {
-                    alert(`Linked save folder: ${newPath}`)
-                  }
-                }}
-                className="w-full py-2.5 bg-black/40 border border-white/20 hover:border-primary-500/50 hover:bg-primary-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center gap-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              >
-                <Cloud size={16} /> Link Save Folder
-              </button>
+              <div className="w-full flex flex-col gap-2">
+                {gameDetails?.custom_save_path ? (
+                  <div className="w-full flex gap-2">
+                    <div className="flex-1 py-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold text-sm rounded-xl flex justify-center items-center gap-2" title={gameDetails.custom_save_path}>
+                      <Cloud size={16} /> Save Linked
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const newPath = await window.api.setCustomSavePath(selectedGame.id.toString(), true)
+                        if (newPath) {
+                          setGameDetails((prev: any) => ({ ...prev, custom_save_path: newPath }))
+                          loadGames()
+                        }
+                      }}
+                      className="px-4 py-2.5 bg-black/40 border border-white/20 hover:border-primary-500/50 hover:bg-primary-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                      title="Change Save Folder"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      const newPath = await window.api.setCustomSavePath(selectedGame.id.toString(), false)
+                      if (newPath) {
+                        setGameDetails((prev: any) => ({ ...prev, custom_save_path: newPath }))
+                        loadGames()
+                      }
+                    }}
+                    className="w-full py-2.5 bg-black/40 border border-white/20 hover:border-primary-500/50 hover:bg-primary-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center gap-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                  >
+                    <Cloud size={16} /> Link Save Folder
+                  </button>
+                )}
+              </div>
             )}
 
             {/* Playtime Badge */}

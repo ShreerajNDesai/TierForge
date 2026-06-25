@@ -68,7 +68,7 @@ declare global {
       restoreFromDrive: () => Promise<{ success: boolean; message: string }>
       checkDriveConnection: () => Promise<{ connected: boolean; email?: string }>
       disconnectDrive: () => Promise<boolean>
-      setCustomSavePath: (gameId: string) => Promise<string | false>
+      setCustomSavePath: (gameId: string, forceManual?: boolean) => Promise<string | false>
 
       // Window Controls
       windowMinimize: () => Promise<void>

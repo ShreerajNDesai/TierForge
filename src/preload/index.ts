@@ -82,7 +82,7 @@ const api = {
   restoreFromDrive: () => ipcRenderer.invoke('restore-from-drive'),
   checkDriveConnection: () => ipcRenderer.invoke('check-drive-connection'),
   disconnectDrive: () => ipcRenderer.invoke('disconnect-drive'),
-  setCustomSavePath: (gameId: string) => ipcRenderer.invoke('set-custom-save-path', gameId),
+  setCustomSavePath: (gameId: string, forceManual: boolean = false) => ipcRenderer.invoke('set-custom-save-path', gameId, forceManual),
   getTrayData: () => ipcRenderer.invoke('get-tray-data'),
   hideTrayWindow: () => ipcRenderer.invoke('hide-tray-window'),
   quitApp: () => ipcRenderer.invoke('quit-app'),

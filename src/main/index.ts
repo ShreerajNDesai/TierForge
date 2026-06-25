@@ -66,7 +66,7 @@ import {
   disconnectDiscord,
   getDiscordStatus
 } from './discord'
-import { backupGameSave, getExeNameFromManifest } from './ludusavi'
+import { backupGameSave, getExeNameFromManifest, findGameSavePath } from './ludusavi'
 import { pluginManager } from './plugins/PluginManager'
 
 export async function getValidDriveToken(): Promise<string | null> {
@@ -882,8 +882,20 @@ app.whenReady().then(() => {
     }
   })
 
-  ipcMain.handle('set-custom-save-path', async (_, gameId) => {
+  ipcMain.handle('set-custom-save-path', async (_, gameId, forceManual = false) => {
     try {
+      if (!forceManual) {
+        const stmt = db.prepare('SELECT title FROM games WHERE id = ?')
+        const row = stmt.get(gameId)
+        if (row && row.title) {
+          const autoPath = await findGameSavePath(row.title)
+          if (autoPath) {
+            db.prepare('UPDATE games SET custom_save_path = ? WHERE id = ?').run(autoPath, gameId)
+            return autoPath
+          }
+        }
+      }
+
       const result = await dialog.showOpenDialog({
         properties: ['openDirectory']
       })
