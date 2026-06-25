@@ -214,17 +214,19 @@ const CinematicModal = () => {
                 </button>
               ))}
 
-            <button
-              onClick={async () => {
-                const newPath = await window.api.setCustomSavePath(selectedGame.id.toString())
-                if (newPath) {
-                  alert(`Linked save folder: ${newPath}`)
-                }
-              }}
-              className="w-full py-2.5 bg-black/40 border border-white/20 hover:border-primary-500/50 hover:bg-primary-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center gap-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-            >
-              <Cloud size={16} /> Link Save Folder
-            </button>
+            {selectedGame.executable_path && selectedGame.executable_path !== '' && (
+              <button
+                onClick={async () => {
+                  const newPath = await window.api.setCustomSavePath(selectedGame.id.toString())
+                  if (newPath) {
+                    alert(`Linked save folder: ${newPath}`)
+                  }
+                }}
+                className="w-full py-2.5 bg-black/40 border border-white/20 hover:border-primary-500/50 hover:bg-primary-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center gap-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              >
+                <Cloud size={16} /> Link Save Folder
+              </button>
+            )}
 
             {/* Playtime Badge */}
             <div className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/5 border border-white/10 rounded-xl">

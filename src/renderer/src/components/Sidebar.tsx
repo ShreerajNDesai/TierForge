@@ -37,6 +37,8 @@ const Sidebar = () => {
   } = useGlobal()
 
   const [discordStatus, setDiscordStatus] = useState({ connected: false, initialized: false })
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [tempName, setTempName] = useState(userName)
 
   useEffect(() => {
     if (isMasterMenuOpen) {
@@ -44,21 +46,7 @@ const Sidebar = () => {
     }
   }, [isMasterMenuOpen])
 
-  const handleEditProfile = async () => {
-    const newName = prompt('Enter your name:', userName)
-    if (newName === null) return
 
-    const avatarPath = await window.api.browseAvatar()
-    await window.api.updateUserProfile(newName, avatarPath)
-
-    setUserName(newName)
-    if (avatarPath) {
-      // Reload setting to get base64
-      window.api.getSetting('user_avatar').then((avatar: string | null) => {
-        if (avatar) setUserAvatar(avatar)
-      })
-    }
-  }
 
   const navItems = [
     { id: 'tierlist', label: 'Tier List', icon: LayoutGrid, activeBorder: 'border-rose-500/30', activeText: 'text-rose-300', activeIcon: 'text-rose-400', activeBg: 'bg-gradient-to-r from-rose-600/20 to-pink-600/10 shadow-[0_0_20px_rgba(244,63,94,0.15)]', hoverBg: 'bg-rose-500/10', groupHover: 'group-hover:bg-rose-500/20' },
@@ -120,21 +108,67 @@ const Sidebar = () => {
           <div className="absolute bottom-full left-5 mb-4 w-72 bg-[#0B0E14]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl z-[9999] animate-in slide-in-from-bottom-2 duration-200">
             {/* Section 1: Edit Profile */}
             <div className="flex items-center gap-3 pb-4 mb-4 border-b border-white/5">
-              <div className="w-12 h-12 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center overflow-hidden">
+              <div 
+                className="w-12 h-12 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center overflow-hidden cursor-pointer group relative shrink-0"
+                onClick={async () => {
+                  const avatarPath = await window.api.browseAvatar()
+                  if (avatarPath) {
+                    await window.api.updateUserProfile(userName, avatarPath)
+                    window.api.getSetting('user_avatar').then((avatar: string | null) => {
+                      if (avatar) setUserAvatar(avatar)
+                    })
+                  }
+                }}
+              >
                 {userAvatar ? (
-                  <img src={userAvatar} className="w-full h-full object-cover" />
+                  <img src={userAvatar} className="w-full h-full object-cover group-hover:opacity-30 transition" />
                 ) : (
-                  <User className="text-primary-400" size={24} />
+                  <User className="text-primary-400 group-hover:opacity-30 transition" size={24} />
                 )}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[8px] font-bold text-white bg-black/40 text-center leading-tight">
+                  CHANGE<br/>AVATAR
+                </div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-white truncate">{userName}</div>
-                <button
-                  onClick={handleEditProfile}
-                  className="text-[10px] font-bold text-primary-400 hover:text-primary-300 transition uppercase tracking-wider"
-                >
-                  Edit Profile
-                </button>
+                {isEditingProfile ? (
+                  <div className="flex flex-col gap-1.5">
+                    <input 
+                      type="text" 
+                      value={tempName}
+                      onChange={e => setTempName(e.target.value)}
+                      onKeyDown={async e => {
+                         if (e.key === 'Enter') {
+                           await window.api.updateUserProfile(tempName, null)
+                           setUserName(tempName)
+                           setIsEditingProfile(false)
+                         }
+                      }}
+                      className="w-full bg-black/40 border border-primary-500/50 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-primary-400"
+                      autoFocus
+                    />
+                    <div className="flex gap-3 mt-0.5">
+                       <button onClick={async () => {
+                           await window.api.updateUserProfile(tempName, null)
+                           setUserName(tempName)
+                           setIsEditingProfile(false)
+                       }} className="text-[10px] text-emerald-400 hover:text-emerald-300 font-black uppercase tracking-wider">Save</button>
+                       <button onClick={() => setIsEditingProfile(false)} className="text-[10px] text-slate-400 hover:text-slate-300 font-bold uppercase tracking-wider">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-sm font-bold text-white truncate">{userName}</div>
+                    <button
+                      onClick={() => {
+                        setTempName(userName)
+                        setIsEditingProfile(true)
+                      }}
+                      className="text-[10px] font-bold text-primary-400 hover:text-primary-300 transition uppercase tracking-wider mt-0.5 block"
+                    >
+                      Edit Name
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
