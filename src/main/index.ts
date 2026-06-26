@@ -379,10 +379,13 @@ app.whenReady().then(() => {
     return getHowLongToBeat(name)
   })
 
-  ipcMain.handle('get-discover-games', async (_, filterType, offset) => {
-    const localIds = getAllGames().map((g: any) => g.id)
-    return await getDiscoverGames(localIds, filterType, offset)
-  })
+  ipcMain.handle(
+    'get-discover-games',
+    async (_, filterType: string = 'trending', offset: number = 0, forceRefresh: boolean = false) => {
+      const localIds = getAllGames().map((g: any) => g.id.toString())
+      return await getDiscoverGames(localIds, filterType, offset, forceRefresh)
+    }
+  )
 
   // 8. Scan PC for Steam Games
   ipcMain.handle('scan-pc', async () => {

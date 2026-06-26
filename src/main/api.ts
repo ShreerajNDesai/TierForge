@@ -476,7 +476,8 @@ async function fetchSteamTrending(offset: number): Promise<string[]> {
 export async function getDiscoverGames(
   existingIds: string[],
   filterType: string = 'trending',
-  offset: number = 0
+  offset: number = 0,
+  forceRefresh: boolean = false
 ) {
   try {
     const token = await getAccessToken()
@@ -489,7 +490,7 @@ export async function getDiscoverGames(
         const isTrending = filterType === 'trending' || filterType === 'popular'
         const ttlMs = isTrending ? 2 * 24 * 60 * 60 * 1000 : 15 * 24 * 60 * 60 * 1000
         const lastUpdated = pool[0].last_updated || 0
-        if (Date.now() - lastUpdated < ttlMs) {
+        if (Date.now() - lastUpdated < ttlMs && !forceRefresh) {
           const games = pool
             .map((p: any) => JSON.parse(p.data_json))
             .filter((g: any) => !existingIds.includes(g.id.toString()))

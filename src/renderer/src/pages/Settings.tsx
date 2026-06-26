@@ -341,7 +341,7 @@ const Settings = () => {
             Offline Folder Backup
           </h2>
           <p className="text-slate-400 text-sm mb-6 pb-4 border-b border-slate-700/50">
-            Use a synced folder (Google Drive, Dropbox, OneDrive) for passive cloud sync.
+            Use a synced folder (Google Drive, Dropbox, OneDrive) for passive cloud sync or a Local folder
           </p>
 
           <div className="space-y-6">

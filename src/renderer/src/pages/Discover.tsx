@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Check, Plus, Search, ChevronDown } from 'lucide-react'
+import { Check, Plus, Search, ChevronDown, RefreshCw } from 'lucide-react'
 import Tilt from 'react-parallax-tilt'
 import { useGlobal } from '../context/GlobalContext'
 
@@ -17,7 +17,8 @@ const Discover = () => {
     handleAddGame,
     hasMoreDiscover,
     searchQuery,
-    setSearchQuery
+    setSearchQuery,
+    refreshDiscoverGames
   } = useGlobal()
 
   const [showGenreMenu, setShowGenreMenu] = useState(false)
@@ -26,6 +27,13 @@ const Discover = () => {
   const [discoverSearchResults, setDiscoverSearchResults] = useState<any[]>([])
   const [isSearchLoading, setIsSearchLoading] = useState(false)
   const [previousFilter, setPreviousFilter] = useState<string>('trending')
+  const [isRefreshingDiscover, setIsRefreshingDiscover] = useState(false)
+
+  const handleDiscoverRefresh = async () => {
+    setIsRefreshingDiscover(true)
+    await refreshDiscoverGames()
+    setIsRefreshingDiscover(false)
+  }
 
   const handleDiscoverScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
@@ -172,6 +180,14 @@ const Discover = () => {
           </h1>
           <p className="text-slate-400 text-[15px]">Explore for your next adventure</p>
         </div>
+        <button
+          onClick={handleDiscoverRefresh}
+          disabled={isRefreshingDiscover || isDiscoverLoading}
+          className="ml-auto flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-slate-300 transition-all disabled:opacity-50"
+        >
+          <RefreshCw size={16} className={isRefreshingDiscover ? 'animate-spin text-primary-400' : ''} />
+          {isRefreshingDiscover ? 'Getting fresh data...' : 'Refresh Discover'}
+        </button>
       </div>
 
       {/* Filter Row */}
