@@ -5,13 +5,15 @@ import {
   getSetting,
   getCachedRanking,
   updateRankingsCache,
-  clearRankingsCache,
   syncSteamGame,
   getAllGames,
   updateGameMetadata,
   getCachedTimeline,
   saveCachedTimeline,
-  db
+  db,
+  getDiscoverPool,
+  clearDiscoverPool,
+  insertDiscoverPoolBatch
 } from './database'
 import { BrowserWindow } from 'electron'
 
@@ -470,8 +472,6 @@ async function fetchSteamTrending(offset: number): Promise<string[]> {
   }
 }
 
-const discoverSteamTitlesCache: Record<string, string[]> = {}
-
 // MAIN EXPORTED FUNCTIONS
 export async function getDiscoverGames(
   existingIds: string[],
@@ -482,203 +482,149 @@ export async function getDiscoverGames(
     const token = await getAccessToken()
     if (!token) return []
 
-    if (filterType.startsWith('steamtag_')) {
-      const cacheKey = offset === 0 ? 'discover_' + filterType : null
-      if (cacheKey) {
-        const cached = getCachedRanking(cacheKey)
-        if (cached)
-          return JSON.parse(cached.games_json).filter(
-            (g: any) => !existingIds.includes(g.id.toString())
-          )
-      }
-
-      if (offset === 0 || !discoverSteamTitlesCache[filterType]) {
-        const rawTag = filterType.replace('steamtag_', '')
-        const tags = await fetchSteamTags()
-        const tagId = tags[rawTag] || ''
-
-        let titles: string[] = []
-        for (let i = 0; i < 2; i++) {
-          let steamUrl = ''
-          if (tagId)
-            steamUrl = `https://store.steampowered.com/search/results/?query&start=${i * 100}&count=100&tags=${tagId}&category1=998&ignore_preferences=1&supportedlang=english&infinite=1`
-          else
-            steamUrl = `https://store.steampowered.com/search/results/?term=${encodeURIComponent(rawTag)}&start=${i * 100}&count=100&category1=998&ignore_preferences=1&supportedlang=english&infinite=1`
-
-          try {
-            const res = await fetch(steamUrl)
-            const data = await res.json()
-            if (data && data.results_html) {
-              const regex = /<span class="title">([^<]+)<\/span>/g
-              let match
-              while ((match = regex.exec(data.results_html)) !== null) {
-                titles.push(match[1])
-              }
-            }
-          } catch (e) {}
-        }
-
-        titles = titles.filter((text) => {
-          const lower = text.toLowerCase()
-          return (
-            text.length > 0 &&
-            !lower.includes('bundle') &&
-            !lower.includes('pack') &&
-            !lower.includes('collection') &&
-            !lower.includes('season pass') &&
-            !lower.includes('expansion') &&
-            !lower.includes('dlc') &&
-            !lower.includes('franchise')
-          )
-        })
-        discoverSteamTitlesCache[filterType] = [...new Set(titles)].sort(() => 0.5 - Math.random())
-      }
-
-      const shuffledTitles = discoverSteamTitlesCache[filterType] || []
-      const startIndex = Math.floor(offset * 1.5) // Read a larger chunk to account for IGDB dropoffs
-      const titlesChunk = shuffledTitles.slice(startIndex, startIndex + 50)
-
-      if (!titlesChunk || titlesChunk.length === 0) return []
-
-      const enriched: any[] = []
-      for (const title of titlesChunk) {
-        if (enriched.length >= 30) break
-        const results = await searchGames(title)
-        if (results && results.length > 0 && !existingIds.includes(results[0].id.toString())) {
-          enriched.push(results[0])
-        }
-        await new Promise((r) => setTimeout(r, 250))
-      }
-
-      if (cacheKey && enriched.length > 0) updateRankingsCache(cacheKey, JSON.stringify(enriched))
-      return enriched
-    }
-
-    if (filterType === 'trending' || filterType === 'popular') {
-      const cacheKey = offset === 0 ? 'discover_trending' : null
-      if (cacheKey) {
-        const cached = getCachedRanking(cacheKey)
-        if (cached)
-          return JSON.parse(cached.games_json).filter(
-            (g: any) => !existingIds.includes(g.id.toString())
-          )
-      }
-
-      if (offset === 0 || !discoverSteamTitlesCache['trending']) {
-        let allTitles: string[] = []
-        for (let i = 0; i < 2; i++) {
-          const titles = await fetchSteamTrending(i * 100)
-          allTitles = allTitles.concat(titles)
-        }
-        discoverSteamTitlesCache['trending'] = [...new Set(allTitles)]
-      }
-
-      const trendingTitles = discoverSteamTitlesCache['trending'] || []
-      const startIndex = Math.floor(offset * 1.5)
-      const titlesChunk = trendingTitles.slice(startIndex, startIndex + 50)
-
-      if (!titlesChunk || titlesChunk.length === 0) return []
-
-      const enriched: any[] = []
-      for (const title of titlesChunk) {
-        if (enriched.length >= 30) break
-        const results = await searchGames(title)
-        if (results && results.length > 0 && !existingIds.includes(results[0].id.toString())) {
-          enriched.push(results[0])
-        }
-        await new Promise((r) => setTimeout(r, 250))
-      }
-
-      if (cacheKey && enriched.length > 0) updateRankingsCache(cacheKey, JSON.stringify(enriched))
-      return enriched
-    }
-
-    if (filterType === 'highly_rated' && offset === 0) clearRankingsCache('discover_highly_rated')
-    else {
-      const cached = getCachedRanking('discover_' + filterType)
-      if (cached && offset === 0)
-        return JSON.parse(cached.games_json).filter(
-          (g: any) => !existingIds.includes(g.id.toString())
-        )
-    }
-
-    let whereClause = ''
-    let sortClause = ''
-    let limit = 30
-    const now = Math.floor(Date.now() / 1000)
-    const sixMonthsAgo = now - 6 * 30 * 24 * 60 * 60
-    const isGenre = !!IGDB_GENRE_MAP[filterType.toLowerCase()]
-
-    switch (filterType) {
-      case 'new':
-        whereClause =
-          'first_release_date > ' +
-          sixMonthsAgo +
-          ' & first_release_date < ' +
-          now +
-          ' & game_type = (0,8,9) & total_rating_count > 0'
-        sortClause = 'sort total_rating_count desc;'
-        break
-      case 'upcoming':
-        whereClause = 'first_release_date > ' + now + ' & game_type = (0,8,9)'
-        sortClause = 'sort hypes desc;'
-        break
-      case 'highly_rated':
-        whereClause = 'rating > 85 & rating_count > 200 & game_type = (0,8,9)'
-        sortClause = 'sort rating desc;'
-        break
-      default:
-        if (isGenre) {
-          whereClause =
-            IGDB_GENRE_MAP[filterType.toLowerCase()] +
-            ' & rating > 60 & rating_count > 10 & game_type = (0,8,9)'
-          sortClause = 'sort total_rating_count desc;'
-          limit = 200
+    // 1. Initial Page Load (Shuffle & Serve)
+    if (offset === 0) {
+      const pool = getDiscoverPool(filterType)
+      if (pool && pool.length > 0) {
+        const isTrending = filterType === 'trending' || filterType === 'popular'
+        const ttlMs = isTrending ? 2 * 24 * 60 * 60 * 1000 : 15 * 24 * 60 * 60 * 1000
+        const lastUpdated = pool[0].last_updated || 0
+        if (Date.now() - lastUpdated < ttlMs) {
+          const games = pool
+            .map((p: any) => JSON.parse(p.data_json))
+            .filter((g: any) => !existingIds.includes(g.id.toString()))
+          if (isTrending) return games
+          return games.sort(() => 0.5 - Math.random())
         } else {
-          whereClause = 'rating > 80 & rating_count > 100 & game_type = (0,8,9)'
-          sortClause = 'sort rating desc;'
+          clearDiscoverPool(filterType)
         }
-        break
+      }
     }
 
-    if (existingIds && existingIds.length > 0)
-      whereClause += ' & id != (' + existingIds.join(',') + ')'
-    const response = await fetch('https://api.igdb.com/v4/games', {
-      method: 'POST',
-      headers: {
-        'Client-ID': getSetting('igdb_client_id') || '',
-        Authorization: 'Bearer ' + token,
-        Accept: 'application/json'
-      },
-      body:
-        'where ' +
-        whereClause +
-        '; fields name, cover.image_id; limit ' +
-        limit +
-        '; offset ' +
-        offset +
-        '; ' +
-        sortClause
-    })
-    let data = await response.json()
-    if (isGenre && Array.isArray(data)) {
-      data = data.sort(() => 0.5 - Math.random())
-      data = data.slice(0, 30)
+    // 2. Fetching / Scraping New Data
+    let newGames: any[] = []
+
+    if (filterType.startsWith('steamtag_') || filterType === 'trending' || filterType === 'popular') {
+      const isTrending = filterType === 'trending' || filterType === 'popular'
+      const rawTag = filterType.replace('steamtag_', '')
+      const tags = isTrending ? {} : await fetchSteamTags()
+      const tagId = isTrending ? '' : tags[rawTag] || ''
+
+      let titles: string[] = []
+      const start = offset // offset is an absolute index (0, 30, 60...) from the frontend
+
+      if (isTrending) {
+        titles = await fetchSteamTrending(start)
+      } else {
+        let steamUrl = ''
+        if (tagId)
+          steamUrl = `https://store.steampowered.com/search/results/?query&start=${start}&count=50&tags=${tagId}&category1=998&ignore_preferences=1&supportedlang=english&infinite=1`
+        else
+          steamUrl = `https://store.steampowered.com/search/results/?term=${encodeURIComponent(rawTag)}&start=${start}&count=50&category1=998&ignore_preferences=1&supportedlang=english&infinite=1`
+
+        try {
+          const res = await fetch(steamUrl)
+          const data = await res.json()
+          if (data && data.results_html) {
+            const regex = /<span class="title">([^<]+)<\/span>/g
+            let match
+            while ((match = regex.exec(data.results_html)) !== null) {
+              titles.push(match[1])
+            }
+          }
+        } catch (e) {}
+      }
+
+      titles = titles.filter((text) => {
+        const lower = text.toLowerCase()
+        return (
+          text.length > 0 &&
+          !lower.includes('bundle') &&
+          !lower.includes('pack') &&
+          !lower.includes('collection') &&
+          !lower.includes('season pass') &&
+          !lower.includes('expansion') &&
+          !lower.includes('dlc') &&
+          !lower.includes('franchise')
+        )
+      })
+      titles = [...new Set(titles)]
+
+      for (const title of titles) {
+        if (newGames.length >= 30) break
+        const results = await searchGames(title)
+        if (results && results.length > 0) {
+          newGames.push(results[0])
+        }
+        await new Promise((r) => setTimeout(r, 200))
+      }
+    } else {
+      let whereClause = ''
+      let sortClause = ''
+      let limit = 30
+      const now = Math.floor(Date.now() / 1000)
+      const sixMonthsAgo = now - 6 * 30 * 24 * 60 * 60
+      const isGenre = !!IGDB_GENRE_MAP[filterType.toLowerCase()]
+
+      switch (filterType) {
+        case 'new':
+          whereClause = 'first_release_date > ' + sixMonthsAgo + ' & first_release_date < ' + now + ' & game_type = (0,8,9) & total_rating_count > 0'
+          sortClause = 'sort total_rating_count desc;'
+          break
+        case 'upcoming':
+          whereClause = 'first_release_date > ' + now + ' & game_type = (0,8,9)'
+          sortClause = 'sort hypes desc;'
+          break
+        case 'highly_rated':
+          whereClause = 'rating > 85 & rating_count > 200 & game_type = (0,8,9)'
+          sortClause = 'sort rating desc;'
+          break
+        default:
+          if (isGenre) {
+            whereClause = IGDB_GENRE_MAP[filterType.toLowerCase()] + ' & rating > 60 & rating_count > 10 & game_type = (0,8,9)'
+            sortClause = 'sort total_rating_count desc;'
+            limit = 50
+          } else {
+            whereClause = 'rating > 80 & rating_count > 100 & game_type = (0,8,9)'
+            sortClause = 'sort rating desc;'
+          }
+          break
+      }
+
+      const response = await fetch('https://api.igdb.com/v4/games', {
+        method: 'POST',
+        headers: {
+          'Client-ID': getSetting('igdb_client_id') || '',
+          Authorization: 'Bearer ' + token,
+          Accept: 'application/json'
+        },
+        body: 'where ' + whereClause + '; fields name, cover.image_id; limit ' + limit + '; offset ' + offset + '; ' + sortClause
+      })
+      const data = await response.json()
+      if (Array.isArray(data)) {
+        newGames = data.map((game: any) => {
+          let imageUrl = 'https://placehold.co/150x200/2d3748/fff?text=No+Cover'
+          if (game.cover && game.cover.image_id)
+            imageUrl = 'https://images.igdb.com/igdb/image/upload/t_1080p/' + game.cover.image_id + '.jpg'
+          return { id: game.id.toString(), title: game.name, image_url: imageUrl }
+        })
+      }
     }
-    if (!Array.isArray(data)) return []
 
-    const result = data.map((game: any) => {
-      let imageUrl = 'https://placehold.co/150x200/2d3748/fff?text=No+Cover'
-      if (game.cover && game.cover.image_id)
-        imageUrl =
-          'https://images.igdb.com/igdb/image/upload/t_1080p/' + game.cover.image_id + '.jpg'
-      return { id: game.id.toString(), title: game.name, image_url: imageUrl }
-    })
+    // 3. Append to Pool
+    if (newGames.length > 0) {
+      insertDiscoverPoolBatch(filterType, newGames)
+    }
 
-    if (offset === 0 && result.length > 0)
-      updateRankingsCache('discover_' + filterType, JSON.stringify(result))
-    return result
+    // 4. Filter duplicates locally and shuffle if offset 0 (unless trending)
+    const filteredGames = newGames.filter((g: any) => !existingIds.includes(g.id.toString()))
+    const isTrending = filterType === 'trending' || filterType === 'popular'
+    if (offset === 0 && !isTrending) {
+      return filteredGames.sort(() => 0.5 - Math.random())
+    }
+    return filteredGames
   } catch (error) {
+    console.error('Discover error:', error)
     return []
   }
 }

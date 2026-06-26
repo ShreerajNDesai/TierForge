@@ -74,6 +74,25 @@ export function initDB() {
     );
   `)
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS genre_analytics (
+      genre_id TEXT PRIMARY KEY,
+      visit_count INTEGER DEFAULT 0,
+      last_visited INTEGER
+    );
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS discover_pool (
+      genre_id TEXT,
+      game_id TEXT,
+      title TEXT,
+      data_json TEXT,
+      last_updated INTEGER,
+      UNIQUE(genre_id, title)
+    );
+  `)
+
   // Safe migrations for existing databases
   try {
     db.exec("ALTER TABLE games ADD COLUMN notes TEXT DEFAULT ''")
@@ -218,7 +237,14 @@ export function getPlaytime(id: string): number {
 // Rankings Cache Functions
 export function getCachedRanking(categoryId: string) {
   const stmt = db.prepare('SELECT * FROM rankings_cache WHERE category_id = ?')
-  return stmt.get(categoryId) as any
+  const result = stmt.get(categoryId) as any
+  if (result && result.last_updated) {
+    const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000
+    if (Date.now() - result.last_updated > FIFTEEN_DAYS_MS) {
+      return null // TTL Expired
+    }
+  }
+  return result
 }
 
 export function updateRankingsCache(categoryId: string, gamesJson: string) {
@@ -259,6 +285,46 @@ export function checkCachedTimelineForGame(gameId: string, gameTitle: string) {
     }
   }
   return null
+}
+
+export function trackGenreVisit(genreId: string) {
+  const stmt = db.prepare(`
+    INSERT INTO genre_analytics (genre_id, visit_count, last_visited)
+    VALUES (?, 1, ?)
+    ON CONFLICT(genre_id) DO UPDATE SET
+      visit_count = visit_count + 1,
+      last_visited = excluded.last_visited
+  `)
+  stmt.run(genreId, Date.now())
+}
+
+export function getTopGenres(limit: number = 3) {
+  const stmt = db.prepare('SELECT genre_id FROM genre_analytics ORDER BY visit_count DESC LIMIT ?')
+  const results = stmt.all(limit) as any[]
+  return results.map(r => r.genre_id)
+}
+
+export function getDiscoverPool(genreId: string) {
+  const stmt = db.prepare('SELECT * FROM discover_pool WHERE genre_id = ?')
+  return stmt.all(genreId) as any[]
+}
+
+export function insertDiscoverPoolBatch(genreId: string, games: any[]) {
+  const stmt = db.prepare(
+    'INSERT OR IGNORE INTO discover_pool (genre_id, game_id, title, data_json, last_updated) VALUES (?, ?, ?, ?, ?)'
+  )
+  const now = Date.now()
+  const transaction = db.transaction((games) => {
+    for (const game of games) {
+      stmt.run(genreId, game.id?.toString() || '', game.title || '', JSON.stringify(game), now)
+    }
+  })
+  transaction(games)
+}
+
+export function clearDiscoverPool(genreId: string) {
+  const stmt = db.prepare('DELETE FROM discover_pool WHERE genre_id = ?')
+  stmt.run(genreId)
 }
 
 export function saveCachedTimeline(franchise: string, data: any) {

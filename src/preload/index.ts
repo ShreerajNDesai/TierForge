@@ -47,6 +47,7 @@ const api = {
   getAICompatibility: (targetGame: string) =>
     ipcRenderer.invoke('get-ai-compatibility', targetGame),
   getAIBacklogCure: () => ipcRenderer.invoke('get-ai-backlog-cure'),
+  trackGenreVisit: (genreId: string) => ipcRenderer.invoke('track-genre-visit', genreId),
 
   // Window Controls
   windowMinimize: () => ipcRenderer.invoke('window-minimize'),

@@ -29,7 +29,13 @@ const Discover = () => {
 
   const handleDiscoverScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
-    if (scrollHeight - scrollTop <= clientHeight + 100 && !isDiscoverLoading && hasMoreDiscover) {
+    
+    const isScraped = discoverFilter.startsWith('steamtag_') || discoverFilter === 'trending' || discoverFilter === 'popular'
+    const thresholdMet = isScraped 
+      ? scrollTop >= scrollHeight * 0.25 
+      : scrollHeight - scrollTop <= clientHeight + 100
+
+    if (thresholdMet && !isDiscoverLoading && hasMoreDiscover) {
       setDiscoverOffset((prev) => prev + 30)
     }
   }
@@ -115,6 +121,11 @@ const Discover = () => {
     setHasMoreDiscover(true)
     setShowGenreMenu(false)
     setTagSearch('')
+
+    // Background analytics tracking
+    if ((window as any).api && (window as any).api.trackGenreVisit) {
+      (window as any).api.trackGenreVisit(id)
+    }
   }
 
   useEffect(() => {

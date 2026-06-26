@@ -160,7 +160,7 @@ const Rankings = () => {
           <RefreshCw size={48} className="text-yellow-400 animate-spin mb-4" />
           <p className="text-white text-xl font-bold mb-2">Fetching Rankings...</p>
           <p className="text-slate-400 text-sm max-w-xs text-center">
-            We're scraping leaderboards and enriching them with metadata. This takes a few seconds.
+            This takes a few seconds.
           </p>
         </div>
       ) : (

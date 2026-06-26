@@ -54,7 +54,7 @@ const CinematicModal = () => {
   } = useGlobal()
 
   const [aiTimeline, setAiTimeline] = useState<any[] | null>(null)
-  const [isTimelineLoading, setIsTimelineLoading] = useState(false)
+  const [loadingTimelines, setLoadingTimelines] = useState<Set<string>>(new Set())
   const [isRefreshingTimeline, setIsRefreshingTimeline] = useState(false)
   const [steamDetails, setSteamDetails] = useState<any>(null)
   const [achievements, setAchievements] = useState<any>(null)
@@ -85,7 +85,10 @@ const CinematicModal = () => {
     return false
   }, [selectedGame, data])
 
+  const selectedGameIdRef = React.useRef<string | null>(null)
+
   useEffect(() => {
+    selectedGameIdRef.current = selectedGame?.id?.toString() || null
     setAiTimeline(null)
     setSteamDetails(null)
     setAchievements(null)
@@ -748,31 +751,38 @@ const CinematicModal = () => {
                   <div className="flex items-center justify-end mb-4">
                     <button
                       onClick={async () => {
-                        setIsTimelineLoading(true)
+                        const requestedId = selectedGame.id.toString()
+                        setLoadingTimelines((prev) => new Set(prev).add(requestedId))
                         try {
                           const result = await window.api.getAIPlayOrder(
-                            selectedGame.id.toString(),
+                            requestedId,
                             selectedGame.title
                           )
-                          setAiTimeline(result)
+                          if (selectedGameIdRef.current === requestedId) {
+                            setAiTimeline(result)
+                          }
                         } catch (err) {
                           console.error('AI Timeline failed:', err)
                         } finally {
-                          setIsTimelineLoading(false)
+                          setLoadingTimelines((prev) => {
+                            const newSet = new Set(prev)
+                            newSet.delete(requestedId)
+                            return newSet
+                          })
                         }
                       }}
-                      disabled={isTimelineLoading}
+                      disabled={loadingTimelines.has(selectedGame?.id?.toString())}
                       className="px-6 py-3 bg-gradient-to-r from-secondary-600/80 to-pink-600/80 hover:from-secondary-500 hover:to-pink-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] border border-secondary-400/50 rounded-xl text-sm font-black tracking-wide flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                     >
-                      <Sparkles size={18} className={isTimelineLoading ? 'animate-pulse' : ''} />
-                      {isTimelineLoading
+                      <Sparkles size={18} className={loadingTimelines.has(selectedGame?.id?.toString()) ? 'animate-pulse' : ''} />
+                      {loadingTimelines.has(selectedGame?.id?.toString())
                         ? 'Consulting lore archives...'
                         : 'Generate Canon Play Order'}
                     </button>
                   </div>
                 )}
 
-                {isTimelineLoading && (
+                {loadingTimelines.has(selectedGame?.id?.toString()) && (
                   <div className="flex gap-4 overflow-x-auto pb-4 items-center">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <div
@@ -784,8 +794,8 @@ const CinematicModal = () => {
                 )}
 
                 {aiTimeline && (
-                  <div className="mb-8 bg-black/40 border border-secondary-500/20 rounded-2xl p-6 shadow-inner relative overflow-hidden">
-                    <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-secondary-400 to-pink-500 mb-6 flex items-center gap-3">
+                  <div className="mb-8 bg-black/40 border border-secondary-500/20 rounded-2xl py-6 shadow-inner relative">
+                    <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-secondary-400 to-pink-500 mb-6 flex items-center gap-3 px-6">
                       <Sparkles size={24} className="text-secondary-400" /> Canon Story Play Order
                       <button
                         onClick={async () => {
@@ -808,7 +818,7 @@ const CinematicModal = () => {
                         {isRefreshingTimeline ? 'Updating Lore...' : 'Refresh Timeline'}
                       </button>
                     </h3>
-                    <div className="flex gap-4 overflow-x-auto py-4 -my-2 custom-scrollbar items-start">
+                    <div className="flex gap-4 overflow-x-auto pt-4 pb-6 px-6 custom-scrollbar items-start min-h-[220px]">
                       {aiTimeline.map((miniGame: any) => (
                         <div
                           key={miniGame.id}

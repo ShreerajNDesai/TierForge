@@ -443,7 +443,11 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         if (discoverOffset === 0) {
           setDiscoverGames(games)
         } else {
-          setDiscoverGames((prev) => [...prev, ...games])
+          setDiscoverGames((prev) => {
+            const existingIds = new Set(prev.map((g) => g.id))
+            const uniqueNewGames = games.filter((g: any) => !existingIds.has(g.id))
+            return [...prev, ...uniqueNewGames]
+          })
         }
         setHasMoreDiscover(games.length > 0)
         setIsDiscoverLoading(false)

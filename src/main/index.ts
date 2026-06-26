@@ -27,7 +27,9 @@ import {
   clearRankingsCache,
   getDbPath,
   db,
-  checkCachedTimelineForGame
+  checkCachedTimelineForGame,
+  trackGenreVisit,
+  getTopGenres
 } from './database'
 import { registerAllHandlers } from './handlers'
 import { scanLocalGames } from './scanner'
@@ -246,6 +248,19 @@ app.whenReady().then(() => {
   initDB()
   pluginManager.loadPlugins()
 
+  // Predictive Background Caching for Rankings
+  setTimeout(async () => {
+    try {
+      const topGenres = getTopGenres(3)
+      for (const genre of topGenres) {
+        if (!genre) continue
+        await getScrapedRankings(genre).catch(() => {})
+      }
+    } catch (e) {
+      console.error('Background scraping error:', e)
+    }
+  }, 10000)
+
   createTrayWindow()
 
   // Initialize Tray
@@ -309,6 +324,10 @@ app.whenReady().then(() => {
   // 1. Search RAWG API
   ipcMain.handle('search-games', async (_, query) => {
     return await searchGames(query)
+  })
+
+  ipcMain.handle('track-genre-visit', async (_, genreId) => {
+    trackGenreVisit(genreId)
   })
 
   // 5.5 Uninstall Game
