@@ -522,64 +522,64 @@ const CinematicModal = () => {
                 )}
 
               {/* Details Grid */}
-              <div className="bg-black/30 border border-white/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
-                <div className="grid grid-cols-5 gap-6 mb-6">
+              <div className="bg-black/40 border border-white/10 backdrop-blur-xl rounded-2xl p-7 shadow-inner">
+                <div className="grid grid-cols-5 gap-8 mb-8">
                   <div>
-                    <h4 className="text-xs font-bold text-white/50 uppercase mb-2">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
                       Main Developers
                     </h4>
-                    <p className="text-sm text-primary-300 leading-snug">
+                    <p className="text-[14px] font-bold text-slate-200 leading-snug">
                       {gameDetails ? gameDetails.developers : '-'}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Publishers</h4>
-                    <p className="text-sm text-primary-300 leading-snug">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Publishers</h4>
+                    <p className="text-[14px] font-bold text-slate-200 leading-snug">
                       {gameDetails ? gameDetails.publishers : '-'}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Game Modes</h4>
-                    <p className="text-sm text-primary-300 leading-snug">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Game Modes</h4>
+                    <p className="text-[14px] font-bold text-slate-200 leading-snug">
                       {gameDetails ? gameDetails.gameModes : '-'}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Multiplayer</h4>
-                    <p className="text-sm text-primary-300 leading-snug">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Multiplayer</h4>
+                    <p className="text-[14px] font-bold text-slate-200 leading-snug">
                       {gameDetails ? gameDetails.multiplayer : '-'}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Perspectives</h4>
-                    <p className="text-sm text-primary-300 leading-snug">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Perspectives</h4>
+                    <p className="text-[14px] font-bold text-slate-200 leading-snug">
                       {gameDetails ? gameDetails.perspectives : '-'}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-6 pt-6 border-t border-white/10">
+                <div className="grid grid-cols-4 gap-8 pt-7 border-t border-white/5">
                   <div>
-                    <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Themes</h4>
-                    <p className="text-sm text-primary-300 leading-snug">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Themes</h4>
+                    <p className="text-[14px] font-bold text-slate-200 leading-snug">
                       {gameDetails ? gameDetails.themes : '-'}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Series</h4>
-                    <p className="text-sm text-primary-300 leading-snug">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Series</h4>
+                    <p className="text-[14px] font-bold text-slate-200 leading-snug">
                       {gameDetails ? gameDetails.series : '-'}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Game Engine</h4>
-                    <p className="text-sm text-primary-300 leading-snug">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Game Engine</h4>
+                    <p className="text-[14px] font-bold text-slate-200 leading-snug">
                       {gameDetails ? gameDetails.engines : '-'}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white/50 uppercase mb-2">Alt Titles</h4>
-                    <p className="text-sm text-primary-300 leading-snug">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Alt Titles</h4>
+                    <p className="text-[14px] font-bold text-slate-200 leading-snug line-clamp-2" title={gameDetails ? gameDetails.altNames : ''}>
                       {gameDetails ? gameDetails.altNames : '-'}
                     </p>
                   </div>

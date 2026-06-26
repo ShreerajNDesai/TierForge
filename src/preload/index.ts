@@ -17,8 +17,8 @@ const api = {
   updateGameData: (id: string, notes: string, status: string) =>
     ipcRenderer.invoke('update-game-data', id, notes, status),
   getTimeToBeat: (name: string) => ipcRenderer.invoke('get-time-to-beat', name),
-  getDiscoverGames: (filterType: string, offset: number) =>
-    ipcRenderer.invoke('get-discover-games', filterType, offset),
+  getDiscoverGames: (filterType: string, offset: number, forceRefresh: boolean = false) =>
+    ipcRenderer.invoke('get-discover-games', filterType, offset, forceRefresh),
   launchGame: (path: string, gameId: string, gameTitle: string) =>
     ipcRenderer.invoke('launch-game', path, gameId, gameTitle),
   stopGameTracking: (gameId: string) => ipcRenderer.invoke('stop-game-tracking', gameId),

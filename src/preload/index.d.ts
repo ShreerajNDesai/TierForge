@@ -14,7 +14,7 @@ declare global {
       getExtendedDetails: (id: string) => Promise<any>
       updateGameData: (id: string, notes: string, status: string) => Promise<boolean>
       getTimeToBeat: (name: string) => Promise<any>
-      getDiscoverGames: (filterType: string, offset: number) => Promise<any[]>
+      getDiscoverGames: (filterType: string, offset: number, forceRefresh?: boolean) => Promise<any[]>
       launchGame: (path: string, gameId: string, gameTitle: string) => Promise<boolean>
       stopGameTracking: (gameId: string) => Promise<boolean>
       getPlaytime: (gameId: string) => Promise<number>

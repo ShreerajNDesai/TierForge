@@ -130,13 +130,13 @@ const TierList = () => {
               <div className="absolute inset-0 border border-primary-500/0 group-hover:border-primary-500/30 rounded-2xl transition-all duration-300 pointer-events-none"></div>
 
               <div
-                className={`${gradientBg} w-[150px] p-6 flex flex-col justify-center relative overflow-hidden shrink-0 z-10 rounded-l-2xl shadow-[4px_0_25px_rgba(0,0,0,0.25)] border-r border-white/10`}
+                className={`${gradientBg} w-[150px] py-6 px-2 flex flex-col items-center justify-center text-center relative overflow-hidden shrink-0 z-10 rounded-l-2xl shadow-[4px_0_25px_rgba(0,0,0,0.25)] border-r border-white/10`}
               >
                 <TierIcon className="absolute -right-4 -bottom-4 w-[110px] h-[110px] text-white opacity-10 rotate-[15deg] pointer-events-none" />
-                <h2 className="text-3xl font-black text-white tracking-tight drop-shadow-sm relative z-10 leading-none mb-1">
+                <h2 className="text-3xl font-black text-white tracking-tight drop-shadow-sm relative z-10 leading-none mb-1 w-full shrink-0">
                   {tier.title}
                 </h2>
-                <p className="text-[13px] font-semibold text-white/90 drop-shadow-sm relative z-10">
+                <p className="text-[13px] font-semibold text-white/90 drop-shadow-sm relative z-10 w-full shrink-0">
                   {tier.sub}
                 </p>
               </div>

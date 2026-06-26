@@ -57,6 +57,7 @@ interface GlobalContextType {
   setDiscoverOffset: React.Dispatch<React.SetStateAction<number>>
   hasMoreDiscover: boolean
   setHasMoreDiscover: React.Dispatch<React.SetStateAction<boolean>>
+  refreshDiscoverGames: () => Promise<void>
   defaultMuted: boolean
   setDefaultMuted: React.Dispatch<React.SetStateAction<boolean>>
   libraryGames: any[]
@@ -439,7 +440,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (activeTab === 'discover') {
       setIsDiscoverLoading(true)
-      window.api.getDiscoverGames(discoverFilter, discoverOffset).then((games: any) => {
+      window.api.getDiscoverGames(discoverFilter, discoverOffset, false).then((games: any) => {
         if (discoverOffset === 0) {
           setDiscoverGames(games)
         } else {
@@ -454,6 +455,20 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       })
     }
   }, [activeTab, discoverFilter, discoverOffset])
+
+  const refreshDiscoverGames = async () => {
+    setIsDiscoverLoading(true)
+    try {
+      const games = await window.api.getDiscoverGames(discoverFilter, 0, true)
+      setDiscoverGames(games)
+      setDiscoverOffset(0)
+      setHasMoreDiscover(games.length > 0)
+    } catch (err) {
+      console.error('Failed to refresh discover games:', err)
+    } finally {
+      setIsDiscoverLoading(false)
+    }
+  }
 
   const filteredAndSortedCollection = useMemo(() => {
     let result = [...data.collection]
@@ -579,13 +594,34 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const newDetails = { ...gameDetails, [field]: value }
     setGameDetails(newDetails)
 
-    // Optimistic: patch allGames directly — derived `data` auto-recalculates
-    setAllGames((prev) => prev.map((g) => (g.id === gameDetails.id ? { ...g, [field]: value } : g)))
+    const isInLibrary = !!allGames.find((g) => g.id === gameDetails.id)
+    
+    if (!isInLibrary) {
+      const imgUrl = gameDetails.image_url || gameDetails.img || gameDetails.background_url || ''
+      await window.api.addGame(gameDetails.id, gameDetails.title, imgUrl)
+      
+      setAllGames((prev) => [
+        ...prev,
+        {
+          id: gameDetails.id,
+          title: gameDetails.title,
+          image_url: imgUrl,
+          tier: 'unranked',
+          notes: field === 'notes' ? value : '',
+          status: field === 'status' ? value : 'Backlog',
+          executable_path: '',
+          playtime_minutes: 0,
+          custom_save_path: ''
+        }
+      ])
+    } else {
+      setAllGames((prev) => prev.map((g) => (g.id === gameDetails.id ? { ...g, [field]: value } : g)))
+    }
 
     await window.api.updateGameData(
       gameDetails.id,
-      field === 'notes' ? value : gameDetails.notes,
-      field === 'status' ? value : gameDetails.status
+      field === 'notes' ? value : (gameDetails.notes || ''),
+      field === 'status' ? value : (gameDetails.status || 'Backlog')
     )
   }
 
@@ -733,6 +769,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     setDiscoverOffset,
     hasMoreDiscover,
     setHasMoreDiscover,
+    refreshDiscoverGames,
     defaultMuted,
     setDefaultMuted,
     libraryGames,
