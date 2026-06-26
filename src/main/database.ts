@@ -305,7 +305,7 @@ export function getTopGenres(limit: number = 3) {
 }
 
 export function getDiscoverPool(genreId: string) {
-  const stmt = db.prepare('SELECT * FROM discover_pool WHERE genre_id = ?')
+  const stmt = db.prepare('SELECT * FROM discover_pool WHERE genre_id = ? ORDER BY rowid ASC')
   return stmt.all(genreId) as any[]
 }
 

@@ -265,7 +265,7 @@ const Discover = () => {
           Array.from({ length: 10 }).map((_, i) => (
             <div
               key={i}
-              className="animate-pulse bg-white/5 rounded-2xl h-72 border border-white/5"
+              className="animate-pulse bg-white/5 rounded-2xl aspect-[3/4] border border-white/5"
             ></div>
           ))
         ) : (
@@ -289,7 +289,7 @@ const Discover = () => {
                   tiltMaxAngleY={10}
                   scale={1.05}
                   transitionSpeed={400}
-                  className="w-full h-72 rounded-2xl"
+                  className="w-full aspect-[3/4] rounded-2xl"
                 >
                   <div className="w-full h-full rounded-2xl overflow-hidden shadow-lg border border-slate-700/50 group-hover:border-primary-500/50 transition duration-300 relative">
                     <img
@@ -331,7 +331,7 @@ const Discover = () => {
               Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={`loading-more-${i}`}
-                  className="animate-pulse bg-white/5 rounded-2xl h-72 border border-white/5"
+                  className="animate-pulse bg-white/5 rounded-2xl aspect-[3/4] border border-white/5"
                 ></div>
               ))}
             {searchQuery.length > 2 && discoverSearchResults.length === 0 && !isSearchLoading && (

@@ -16,12 +16,21 @@ import {
   Cloud,
   LogOut,
   CheckSquare,
-  Square
+  Square,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react'
 import { useGlobal } from '../context/GlobalContext'
 import { useState, useEffect } from 'react'
 
 const Sidebar = () => {
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    return localStorage.getItem('sidebarCollapsed') === 'true'
+  })
+
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', String(isCollapsed))
+  }, [isCollapsed])
   const {
     activeTab,
     setActiveTab,
@@ -64,14 +73,22 @@ const Sidebar = () => {
   const playtimeHours = Math.round(libraryGames.reduce((acc, game) => acc + (game.playtime_minutes || 0), 0) / 60)
 
   return (
-    <aside className="w-[280px] bg-slate-950/40 backdrop-blur-3xl border-r border-white/5 flex flex-col justify-between z-10 shrink-0">
+    <aside className={`bg-slate-950/40 backdrop-blur-3xl border-r border-white/5 flex flex-col justify-between z-50 shrink-0 transition-all duration-300 ${isCollapsed ? 'w-[88px]' : 'w-[280px]'}`}>
       <div>
-        <div className="flex items-center gap-3 p-8 text-2xl font-black text-white tracking-wide">
-          <Gamepad2 className="text-primary-500" size={32} />
-          TierForge
+        <div className={`flex ${isCollapsed ? 'flex-col gap-4 mt-8 items-center' : 'items-center p-8'} text-2xl font-black text-white tracking-wide relative`}>
+          <div className="flex items-center gap-3">
+            <Gamepad2 className="text-primary-500 shrink-0" size={32} />
+            {!isCollapsed && <span className="truncate">TierForge</span>}
+          </div>
+          <button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className={`text-slate-500 hover:text-white transition-colors ${isCollapsed ? 'mt-4' : 'absolute right-6 top-1/2 -translate-y-1/2'}`}
+          >
+            {isCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={18} />}
+          </button>
         </div>
 
-        <nav className="px-5 space-y-1 mt-2">
+        <nav className={`space-y-1 ${isCollapsed ? 'mt-6 px-4' : 'mt-2 px-5'}`}>
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = activeTab === item.id
@@ -84,7 +101,8 @@ const Sidebar = () => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') setActiveTab(item.id)
                 }}
-                className={`flex items-center gap-4 px-5 py-3.5 rounded-xl cursor-pointer relative overflow-hidden group transition-all duration-300 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${item.marginTop || ''} ${isActive ? `${item.activeBg} ${item.activeText} border ${item.activeBorder} shadow-lg` : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent'}`}
+                title={isCollapsed ? item.label : undefined}
+                className={`flex items-center rounded-xl cursor-pointer relative overflow-hidden group transition-all duration-300 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${item.marginTop || ''} ${isCollapsed ? 'justify-center p-3.5' : 'gap-4 px-5 py-3.5'} ${isActive ? `${item.activeBg} ${item.activeText} border ${item.activeBorder} shadow-lg` : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent'}`}
               >
                 {isActive && (
                   <div
@@ -93,9 +111,9 @@ const Sidebar = () => {
                 )}
                 <Icon
                   size={20}
-                  className={`relative z-10 ${isActive ? item.activeIcon : ''}`}
+                  className={`relative z-10 shrink-0 ${isActive ? item.activeIcon : ''}`}
                 />
-                <span className="font-semibold text-sm relative z-10">{item.label}</span>
+                {!isCollapsed && <span className="font-semibold text-sm relative z-10 truncate">{item.label}</span>}
               </div>
             )
           })}
@@ -103,9 +121,9 @@ const Sidebar = () => {
       </div>
 
       {/* User Profile & Master Menu */}
-      <div className="p-5 mb-2 relative">
+      <div className={`mb-2 relative ${isCollapsed ? 'p-3' : 'p-5'}`}>
         {isMasterMenuOpen && (
-          <div className="absolute bottom-full left-5 mb-4 w-72 bg-[#0B0E14]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl z-[9999] animate-in slide-in-from-bottom-2 duration-200">
+          <div className={`absolute bottom-full mb-4 w-72 bg-[#0B0E14]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl z-[9999] animate-in slide-in-from-bottom-2 duration-200 ${isCollapsed ? 'left-16' : 'left-5'}`}>
             {/* Section 1: Edit Profile */}
             <div className="flex items-center gap-3 pb-4 mb-4 border-b border-white/5">
               <div 
@@ -259,27 +277,31 @@ const Sidebar = () => {
 
         <div
           onClick={() => setIsMasterMenuOpen(!isMasterMenuOpen)}
-          className={`flex items-center gap-3 p-3 rounded-2xl transition border ${isMasterMenuOpen ? 'bg-slate-800 border-primary-500/50' : 'hover:bg-slate-800/40 border-transparent hover:border-slate-800'} cursor-pointer`}
+          className={`flex items-center rounded-2xl transition border ${isMasterMenuOpen ? 'bg-slate-800 border-primary-500/50' : 'hover:bg-slate-800/40 border-transparent hover:border-slate-800'} cursor-pointer ${isCollapsed ? 'justify-center p-2' : 'gap-3 p-3'}`}
         >
-          <div className="w-11 h-11 rounded-full border-2 border-primary-500/40 shadow-lg overflow-hidden flex items-center justify-center bg-slate-900">
+          <div className="w-11 h-11 shrink-0 rounded-full border-2 border-primary-500/40 shadow-lg overflow-hidden flex items-center justify-center bg-slate-900">
             {userAvatar ? (
               <img src={userAvatar} alt="User" className="w-full h-full object-cover" />
             ) : (
               <User className="text-primary-400" size={20} />
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-bold text-white flex items-center gap-2">
-              <span className="truncate">{userName}</span>
-            </div>
-            <div className="text-xs text-slate-400 mt-0.5 truncate">
-              {libraryGames.length} Games • {playtimeHours}h Total
-            </div>
-          </div>
-          <ChevronDown
-            size={16}
-            className={`text-slate-500 transition-transform ${isMasterMenuOpen ? 'rotate-180' : ''}`}
-          />
+          {!isCollapsed && (
+            <>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-bold text-white flex items-center gap-2">
+                  <span className="truncate">{userName}</span>
+                </div>
+                <div className="text-xs text-slate-400 mt-0.5 truncate">
+                  {libraryGames.length} Games • {playtimeHours}h Total
+                </div>
+              </div>
+              <ChevronDown
+                size={16}
+                className={`text-slate-500 shrink-0 transition-transform ${isMasterMenuOpen ? 'rotate-180' : ''}`}
+              />
+            </>
+          )}
         </div>
       </div>
     </aside>
