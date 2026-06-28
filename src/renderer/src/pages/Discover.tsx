@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Check, Plus, Search, ChevronDown, RefreshCw } from 'lucide-react'
 import Tilt from 'react-parallax-tilt'
 import { useGlobal } from '../context/GlobalContext'
+import { TransientScroll } from '../components/TransientScroll';
 
 const Discover = () => {
   const {
@@ -166,7 +167,7 @@ const Discover = () => {
   }, [dynamicTags, tagSearch])
 
   return (
-    <div
+    <TransientScroll
       onScroll={handleDiscoverScroll}
       className="flex-1 overflow-y-auto px-10 pb-12 pt-6 relative custom-scrollbar"
     >
@@ -191,7 +192,7 @@ const Discover = () => {
       </div>
 
       {/* Filter Row */}
-      <div className="flex gap-3 overflow-x-auto pb-4 mb-2 flex-nowrap no-scrollbar items-center">
+      <div className="flex gap-3 overflow-x-auto py-4 -my-2 mb-2 flex-nowrap no-scrollbar items-center">
         {primaryFilters.map((filter) => (
           <button
             key={filter.id}
@@ -237,7 +238,7 @@ const Discover = () => {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <TransientScroll className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             {filteredTags.map((genre) => {
               const isSteam = genre.id.startsWith('steamtag_')
               return (
@@ -254,7 +255,7 @@ const Discover = () => {
                 </button>
               )
             })}
-          </div>
+          </TransientScroll>
         </div>
       )}
 
@@ -278,7 +279,7 @@ const Discover = () => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleGameClick(game)
                 }}
-                className="group relative cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary-500 focus:scale-105 focus:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-2xl transition-all relative z-0 hover:z-50"
+                className="group relative cursor-pointer outline-none focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] rounded-2xl transition-all relative z-0 hover:z-50"
               >
                 <Tilt
                   glareEnable={true}
@@ -344,7 +345,7 @@ const Discover = () => {
           </>
         )}
       </div>
-    </div>
+    </TransientScroll>
   )
 }
 

@@ -24,6 +24,7 @@ import {
   Area
 } from 'recharts'
 import { useGlobal } from '../context/GlobalContext'
+import { TransientScroll } from '../components/TransientScroll';
 
 const Statistics = () => {
   const { libraryGames, handleGameClick, setLibraryGames } = useGlobal()
@@ -175,7 +176,7 @@ const Statistics = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
+    <TransientScroll className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
       <div className="flex items-center gap-4 mb-10">
         <div className="p-3 bg-primary-500/20 text-primary-400 rounded-2xl">
           <BarChart2 size={28} />
@@ -537,7 +538,7 @@ const Statistics = () => {
             Trophy Cabinet
             <span className="text-xs text-slate-500 font-normal ml-2">Your Hall of Fame</span>
           </h3>
-          <div className="flex gap-4 overflow-x-auto pt-4 -mt-4 pb-4 custom-scrollbar">
+          <TransientScroll className="flex gap-4 overflow-x-auto pt-4 -mt-4 pb-4 custom-scrollbar">
             {completedList.map((game: any) => (
               <div
                 key={game.id}
@@ -568,10 +569,10 @@ const Statistics = () => {
                 </div>
               </div>
             ))}
-          </div>
+          </TransientScroll>
         </div>
       )}
-    </div>
+    </TransientScroll>
   )
 }
 

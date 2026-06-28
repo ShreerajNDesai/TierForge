@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Droppable, Draggable } from '@hello-pangea/dnd'
 import { useGlobal } from '../context/GlobalContext'
+import { TransientScroll } from './TransientScroll';
 
 const Header = () => {
   const {
@@ -264,7 +265,7 @@ const Header = () => {
                 <div className="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
                   <h3 className="text-white font-bold">Notifications</h3>
                 </div>
-                <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                <TransientScroll className="max-h-96 overflow-y-auto custom-scrollbar">
                   {notifications.length === 0 ? (
                     <div className="p-8 text-center text-slate-500 text-sm">
                       No new notifications
@@ -283,7 +284,7 @@ const Header = () => {
                       </div>
                     ))
                   )}
-                </div>
+                </TransientScroll>
               </div>
             )}
           </div>

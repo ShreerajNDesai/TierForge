@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Trophy, RefreshCw, Crown, Star, Search, ChevronDown } from 'lucide-react'
+import { Trophy, RefreshCw, Crown, Star, Search, ChevronDown, Settings } from 'lucide-react'
+import { TransientScroll } from '../components/TransientScroll'
 import Tilt from 'react-parallax-tilt'
 import { useGlobal } from '../context/GlobalContext'
 
@@ -67,7 +68,7 @@ const Rankings = () => {
   const showLoader = rankingsLoading && (!globalRankings || !globalRankings[rankingsGenre])
 
   return (
-    <div className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
+    <TransientScroll className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
       {/* Header */}
       <div className="mb-8 flex items-end">
         <div>
@@ -342,7 +343,7 @@ const Rankings = () => {
           </>
         )
       )}
-    </div>
+    </TransientScroll>
   )
 }
 

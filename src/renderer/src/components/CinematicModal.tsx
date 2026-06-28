@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Cloud
 } from 'lucide-react'
+import { TransientScroll } from './TransientScroll'
 import Tilt from 'react-parallax-tilt'
 import { useGlobal } from '../context/GlobalContext'
 
@@ -173,7 +174,7 @@ const CinematicModal = () => {
       {!isVideoMode && (
         <div className="relative z-10 w-full h-full p-16 flex gap-16 overflow-hidden">
           {/* Left Column - scrollable */}
-          <div className="w-[352px] px-4 -mx-4 pt-4 -mt-4 flex flex-col gap-6 shrink-0 self-start h-full overflow-y-auto custom-scrollbar pb-8">
+          <TransientScroll className="w-[352px] px-4 -mx-4 pt-8 flex flex-col gap-6 shrink-0 self-start h-full overflow-y-auto custom-scrollbar pb-8">
             <Tilt
               glareEnable={true}
               glareMaxOpacity={0.3}
@@ -399,9 +400,9 @@ const CinematicModal = () => {
                 </div>
               </div>
             )}
-          </div>
+          </TransientScroll>
 
-          <div className="flex-1 flex flex-col pt-8 overflow-y-auto pr-2 custom-scrollbar">
+          <TransientScroll className="flex-1 flex flex-col pt-8 overflow-y-auto pr-2 custom-scrollbar">
             <h2 className="text-6xl font-black text-white tracking-tight mb-4 drop-shadow-2xl">
               {selectedGame.title}
             </h2>
@@ -925,7 +926,7 @@ const CinematicModal = () => {
                 </div>
               )}
             </div>
-          </div>
+          </TransientScroll>
         </div>
       )}
 

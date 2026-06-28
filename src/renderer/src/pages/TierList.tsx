@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { Droppable, Draggable } from '@hello-pangea/dnd'
 import { useGlobal } from '../context/GlobalContext'
+import { TransientScroll } from '../components/TransientScroll';
 
 const TierList = () => {
   const exportTierList = async () => {
@@ -61,7 +62,7 @@ const TierList = () => {
   const [unrankedViewMode, setUnrankedViewMode] = useState<'rows' | 'grid'>('rows')
 
   return (
-    <div className="flex-1 overflow-y-auto px-10 pb-12 pt-6 relative custom-scrollbar">
+    <TransientScroll className="flex-1 overflow-y-auto px-10 pb-12 pt-6 relative custom-scrollbar">
       {/* PAGE TITLE & ACTIONS */}
       <div className="flex justify-between items-end mb-10 px-1">
         <div>
@@ -359,7 +360,7 @@ const TierList = () => {
           )}
         </Droppable>
       </div>
-    </div>
+    </TransientScroll>
   )
 }
 

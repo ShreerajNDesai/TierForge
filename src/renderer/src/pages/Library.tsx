@@ -13,6 +13,7 @@ import {
   List
 } from 'lucide-react'
 import { useGlobal } from '../context/GlobalContext'
+import { TransientScroll } from '../components/TransientScroll';
 
 const Library = () => {
   const { libraryGames, suggestedGame, librarySearch, handleGameClick } = useGlobal()
@@ -88,7 +89,7 @@ const Library = () => {
   }, [])
 
   return (
-    <div className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
+    <TransientScroll className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
       <div className="mb-12 flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-black text-white mb-2">My Library</h1>
@@ -193,7 +194,7 @@ const Library = () => {
             return (
               <div key={status.id} className="mb-10">
                 <h2 className="text-2xl font-bold text-white mb-4">{status.title}</h2>
-                <div className="flex gap-6 overflow-x-auto py-6 -my-4 scrollbar-hide px-2 custom-scrollbar">
+                <TransientScroll className="flex gap-6 overflow-x-auto py-6 -my-4 scrollbar-hide px-2 custom-scrollbar">
                   {gamesInStatus.map((game) => (
                     <div
                       key={game.id}
@@ -238,7 +239,7 @@ const Library = () => {
                       </Tilt>
                     </div>
                   ))}
-                </div>
+                </TransientScroll>
               </div>
             )
           })}
@@ -378,7 +379,7 @@ const Library = () => {
           ))}
         </div>
       </div>
-    </div>
+    </TransientScroll>
   )
 }
 

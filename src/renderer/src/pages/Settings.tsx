@@ -18,6 +18,7 @@ import {
   Puzzle
 } from 'lucide-react'
 import { useGlobal } from '../context/GlobalContext'
+import { TransientScroll } from '../components/TransientScroll';
 
 const Settings = () => {
   const {
@@ -174,7 +175,7 @@ const Settings = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
+    <TransientScroll className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
       <h1 className="text-[34px] font-extrabold text-white mb-10 flex items-center gap-4 tracking-tight leading-none">
         Settings
       </h1>
@@ -854,7 +855,7 @@ const Settings = () => {
           </div>
         </div>
       </div>
-    </div>
+    </TransientScroll>
   )
 }
 

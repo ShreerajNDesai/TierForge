@@ -12,6 +12,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 import { useGlobal } from '../context/GlobalContext'
+import { TransientScroll } from '../components/TransientScroll';
 
 const AIOracle = () => {
   const {
@@ -83,7 +84,7 @@ const AIOracle = () => {
   )
 
   return (
-    <div className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
+    <TransientScroll className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-3">
@@ -563,7 +564,7 @@ const AIOracle = () => {
           </div>
         </div>
       )}
-    </div>
+    </TransientScroll>
   )
 }
 
