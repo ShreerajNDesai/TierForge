@@ -171,7 +171,7 @@ const Discover = () => {
       onScroll={handleDiscoverScroll}
       className="flex-1 overflow-y-auto px-10 pb-12 pt-6 relative custom-scrollbar"
     >
-      <div className="flex justify-between items-end mb-6 px-1">
+      <div id="tour-discover-filters" className="flex justify-between items-end mb-6 px-1">
         <div>
           <h1 className="text-[34px] font-extrabold text-white flex items-center gap-4 tracking-tight leading-none mb-2">
             Discover{' '}

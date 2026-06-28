@@ -181,7 +181,7 @@ const Library = () => {
         </div>
       )}
 
-      <div className="space-y-4">
+      <div id="tour-library-container" className="space-y-4">
         {viewMode === 'rows' &&
           statuses.map((status) => {
             const gamesInStatus = libraryGames.filter(

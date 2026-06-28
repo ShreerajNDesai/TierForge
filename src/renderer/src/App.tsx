@@ -112,6 +112,7 @@ const AppContent = () => {
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
       <div className="flex h-screen bg-[#05070A] text-slate-200 font-sans relative overflow-hidden selection:bg-primary-500/30 selection:text-primary-100">
+        <InteractiveTour />
         <Sidebar />
         <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
           {updateStatus === 'ready' && (
@@ -136,7 +137,6 @@ const AppContent = () => {
       <ImportHubModal />
       {/* Tutorials */}
       {showFTUE && <FTUEWizard />}
-      <InteractiveTour />
       {activeVideoGuide && <VideoGuideModal />}
     </DragDropContext>
   )

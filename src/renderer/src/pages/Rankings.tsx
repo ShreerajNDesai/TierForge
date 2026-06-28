@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Trophy, RefreshCw, Crown, Star, Search, ChevronDown, Settings } from 'lucide-react'
+import { Trophy, RefreshCw, Crown, Star, Search, ChevronDown } from 'lucide-react'
 import { TransientScroll } from '../components/TransientScroll'
 import Tilt from 'react-parallax-tilt'
 import { useGlobal } from '../context/GlobalContext'
@@ -70,7 +70,7 @@ const Rankings = () => {
   return (
     <TransientScroll className="flex-1 overflow-y-auto px-10 pb-12 pt-10 relative custom-scrollbar">
       {/* Header */}
-      <div className="mb-8 flex items-end">
+      <div id="tour-rankings-board" className="mb-8 flex items-end">
         <div>
           <h1 className="text-4xl font-black text-white mb-2 flex items-center gap-3">
             <Trophy className="text-yellow-400" size={36} /> Global Hall of Fame

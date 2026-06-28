@@ -233,7 +233,7 @@ const Statistics = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
+      <div id="tour-statistics-charts" className="grid grid-cols-4 gap-6 mb-8">
         <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-2">
             <Library size={20} className="text-blue-400" />

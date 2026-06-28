@@ -131,7 +131,7 @@ const AIOracle = () => {
 
       {/* -------------------- ORACLE TAB (Vibe Search) -------------------- */}
       {activeTab === 'oracle' && !oracleLoading && oracleRecs.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4">
+        <div id="tour-oracle-chat" className="flex flex-col items-center justify-center py-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4">
           {/* Main 1-Click Generation */}
           <div className="w-full flex flex-col items-center mb-8 pb-8 border-b border-white/10">
             <div className="relative mb-6">

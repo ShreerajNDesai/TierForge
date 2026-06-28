@@ -615,7 +615,7 @@ const Settings = () => {
         </div>
 
         {/* API Keys */}
-        <div className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl">
+        <div id="tour-settings-keys" className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl">
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3 pb-4 border-b border-slate-700/50">
             🔑 API Keys
           </h2>
