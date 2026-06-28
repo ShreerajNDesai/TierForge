@@ -9,6 +9,9 @@ import Header from './components/Header'
 import CinematicModal from './components/CinematicModal'
 import ImportHubModal from './components/ImportHubModal'
 import TrayMenu from './components/TrayMenu'
+import { FTUEWizard } from './components/FTUEWizard'
+import { VideoGuideModal } from './components/VideoGuideModal'
+import { InteractiveTour } from './components/InteractiveTour'
 
 // Pages
 import TierList from './pages/TierList'
@@ -28,8 +31,31 @@ const AppContent = () => {
     setShowImportModal,
     onDragStart,
     onDragEnd,
-    updateStatus
+    updateStatus,
+    showFTUE,
+    setShowFTUE,
+    setRunTour,
+    activeVideoGuide
   } = useGlobal()
+
+  useEffect(() => {
+    // Check FTUE on boot
+    const checkFTUE = async () => {
+      if (window.api && window.api.getSetting) {
+        const seen = await window.api.getSetting('has_seen_intro')
+        if (seen !== 'true') {
+          setShowFTUE(true)
+        } else {
+          // If FTUE is seen, check if tour is finished
+          const finishedTour = await window.api.getSetting('has_finished_interactive_tour')
+          if (finishedTour === 'false') {
+            setRunTour(true)
+          }
+        }
+      }
+    }
+    checkFTUE()
+  }, [])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -108,6 +134,10 @@ const AppContent = () => {
 
       <CinematicModal />
       <ImportHubModal />
+      {/* Tutorials */}
+      {showFTUE && <FTUEWizard />}
+      <InteractiveTour />
+      {activeVideoGuide && <VideoGuideModal />}
     </DragDropContext>
   )
 }

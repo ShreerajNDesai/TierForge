@@ -1,4 +1,4 @@
-import { UploadCloud, Sparkles, Wand2, FileText, Plus, X, RefreshCw } from 'lucide-react'
+import { UploadCloud, Sparkles, Wand2, FileText, Plus, X, RefreshCw, PlayCircle } from 'lucide-react'
 import { useGlobal } from '../context/GlobalContext'
 
 const ImportHubModal = () => {
@@ -16,7 +16,8 @@ const ImportHubModal = () => {
     steamId,
     setSteamId,
     loadGames,
-    addNotification
+    addNotification,
+    setActiveVideoGuide
   } = useGlobal()
 
   if (!showImportModal) return null
@@ -94,9 +95,18 @@ const ImportHubModal = () => {
             </h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1.5 ml-1">
-                  Steam Web API Key
-                </label>
+                <div className="flex items-center justify-between mb-1.5 ml-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-500 block">
+                    Steam Web API Key
+                  </label>
+                  <button 
+                    onClick={() => setActiveVideoGuide('steam')}
+                    className="text-primary-400 hover:text-primary-300 transition hover:scale-110 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider"
+                    title="Watch Guide"
+                  >
+                    <PlayCircle size={14} /> Guide
+                  </button>
+                </div>
                 <input
                   type="password"
                   value={steamKey}

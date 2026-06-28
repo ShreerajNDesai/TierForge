@@ -15,7 +15,10 @@ import {
   Cloud,
   LogIn,
   LogOut,
-  Puzzle
+  Puzzle,
+  PlayCircle,
+  Video,
+  Compass
 } from 'lucide-react'
 import { useGlobal } from '../context/GlobalContext'
 import { TransientScroll } from '../components/TransientScroll';
@@ -33,7 +36,10 @@ const Settings = () => {
     igdbClientId,
     setIgdbClientId,
     igdbClientSecret,
-    setIgdbClientSecret
+    setIgdbClientSecret,
+    setActiveVideoGuide,
+    setShowFTUE,
+    setRunTour
   } = useGlobal()
 
   const [backupFolder, setBackupFolder] = useState<string>('')
@@ -616,9 +622,18 @@ const Settings = () => {
 
           <div className="space-y-8">
             <div className="flex flex-col gap-4 max-w-md">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles size={18} className="text-secondary-400" />
-                <label className="text-sm font-semibold text-slate-300 block">Gemini API Key</label>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={18} className="text-secondary-400" />
+                  <label className="text-sm font-semibold text-slate-300 block">Gemini API Key</label>
+                </div>
+                <button 
+                  onClick={() => setActiveVideoGuide('gemini')}
+                  className="text-secondary-400 hover:text-secondary-300 transition hover:scale-110 flex items-center gap-1.5 text-xs font-bold"
+                  title="Watch Guide"
+                >
+                  <PlayCircle size={16} /> Guide
+                </button>
               </div>
               <p className="text-xs text-slate-500 mb-1">
                 Required for AI Vision imports. Your key is stored securely in your local database.
@@ -637,11 +652,20 @@ const Settings = () => {
             </div>
 
             <div className="flex flex-col gap-4 max-w-md pt-6 border-t border-slate-700/50">
-              <div className="flex items-center gap-2 mb-1">
-                <Trophy size={18} className="text-yellow-400" />
-                <label className="text-sm font-semibold text-slate-300 block">
-                  RAWG.io API Key
-                </label>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <Trophy size={18} className="text-yellow-400" />
+                  <label className="text-sm font-semibold text-slate-300 block">
+                    RAWG.io API Key
+                  </label>
+                </div>
+                <button 
+                  onClick={() => setActiveVideoGuide('rawg')}
+                  className="text-yellow-400 hover:text-yellow-300 transition hover:scale-110 flex items-center gap-1.5 text-xs font-bold"
+                  title="Watch Guide"
+                >
+                  <PlayCircle size={16} /> Guide
+                </button>
               </div>
               <p className="text-xs text-slate-500 mb-1">
                 Required for the Global Rankings page. Get a free key at rawg.io/apidocs.
@@ -660,11 +684,20 @@ const Settings = () => {
             </div>
 
             <div className="flex flex-col gap-4 max-w-md pt-6 border-t border-slate-700/50">
-              <div className="flex items-center gap-2 mb-1">
-                <Gamepad2 size={18} className="text-primary-400" />
-                <label className="text-sm font-semibold text-slate-300 block">
-                  IGDB (Twitch) API Integration
-                </label>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <Gamepad2 size={18} className="text-primary-400" />
+                  <label className="text-sm font-semibold text-slate-300 block">
+                    IGDB (Twitch) API Integration
+                  </label>
+                </div>
+                <button 
+                  onClick={() => setActiveVideoGuide('igdb')}
+                  className="text-primary-400 hover:text-primary-300 transition hover:scale-110 flex items-center gap-1.5 text-xs font-bold"
+                  title="Watch Guide"
+                >
+                  <PlayCircle size={16} /> Guide
+                </button>
               </div>
               <p className="text-xs text-slate-500 mb-1">
                 Required for game search and cinematic details. Create an app at dev.twitch.tv.
@@ -854,6 +887,61 @@ const Settings = () => {
             </div>
           </div>
         </div>
+
+        {/* Help & Tutorials */}
+        <div className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl mt-8">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-700/50">
+            <h2 className="text-xl font-bold text-white flex items-center gap-3">
+              <Video className="text-indigo-400" size={24} />
+              Help & Tutorials
+            </h2>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  if (window.api && window.api.saveSetting) {
+                    await window.api.saveSetting('has_finished_interactive_tour', 'false')
+                  }
+                  setRunTour(true)
+                }}
+                className="flex items-center gap-2 bg-purple-500/20 text-purple-300 hover:bg-purple-500/40 px-4 py-2 rounded-xl text-sm font-bold transition border border-purple-500/30"
+              >
+                <Compass size={16} /> Replay Spotlight Tour
+              </button>
+              <button
+                onClick={() => setShowFTUE(true)}
+                className="flex items-center gap-2 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/40 px-4 py-2 rounded-xl text-sm font-bold transition border border-indigo-500/30"
+              >
+                <RefreshCw size={16} /> Replay Intro Wizard
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { id: 'gemini', title: 'Get a Gemini Key', icon: <Sparkles size={20} className="text-secondary-400" />, color: 'from-secondary-500/20 to-secondary-900/20 border-secondary-500/30' },
+              { id: 'steam', title: 'Get Steam Credentials', icon: <Cloud size={20} className="text-blue-400" />, color: 'from-blue-500/20 to-blue-900/20 border-blue-500/30' },
+              { id: 'igdb', title: 'Get IGDB Keys', icon: <Gamepad2 size={20} className="text-primary-400" />, color: 'from-primary-500/20 to-primary-900/20 border-primary-500/30' },
+              { id: 'rawg', title: 'Get a RAWG Key', icon: <Trophy size={20} className="text-yellow-400" />, color: 'from-yellow-500/20 to-yellow-900/20 border-yellow-500/30' },
+            ].map((guide) => (
+              <div 
+                key={guide.id}
+                onClick={() => setActiveVideoGuide(guide.id)}
+                className={`bg-gradient-to-br ${guide.color} border rounded-2xl p-4 cursor-pointer hover:scale-105 transition-all duration-300 group`}
+              >
+                <div className="bg-black/40 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:bg-black/60 transition shadow-lg">
+                  {guide.icon}
+                </div>
+                <h3 className="text-white font-bold text-sm mb-1">{guide.title}</h3>
+                <p className="text-xs text-slate-400 flex items-center gap-1 group-hover:text-slate-300">
+                  <PlayCircle size={12} /> Watch Guide
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Padding for bottom */}
+        <div className="h-24"></div>
       </div>
     </TransientScroll>
   )

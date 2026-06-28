@@ -179,6 +179,7 @@ const Header = () => {
       >
         <div className="flex items-center gap-5 text-slate-400">
           <button
+            id="tour-import-hub"
             onClick={async () => {
               const key = await window.api.getSetting('geminiKey')
               if (key) setGeminiKey(key)
@@ -223,6 +224,7 @@ const Header = () => {
             )}
           </div>
           <button
+            id="tour-scan-pc"
             onClick={handleScanPC}
             disabled={isScanning}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-300 active:scale-95 relative overflow-hidden group shadow-lg ${

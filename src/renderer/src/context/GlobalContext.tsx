@@ -58,6 +58,12 @@ interface GlobalContextType {
   hasMoreDiscover: boolean
   setHasMoreDiscover: React.Dispatch<React.SetStateAction<boolean>>
   refreshDiscoverGames: () => Promise<void>
+  showFTUE: boolean
+  setShowFTUE: React.Dispatch<React.SetStateAction<boolean>>
+  activeVideoGuide: string | null
+  setActiveVideoGuide: React.Dispatch<React.SetStateAction<string | null>>
+  runTour: boolean
+  setRunTour: React.Dispatch<React.SetStateAction<boolean>>
   defaultMuted: boolean
   setDefaultMuted: React.Dispatch<React.SetStateAction<boolean>>
   libraryGames: any[]
@@ -177,8 +183,13 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [discoverGames, setDiscoverGames] = useState<any[]>([])
   const [discoverFilter, setDiscoverFilter] = useState('trending')
   const [isDiscoverLoading, setIsDiscoverLoading] = useState(false)
-  const [discoverOffset, setDiscoverOffset] = useState(0)
-  const [hasMoreDiscover, setHasMoreDiscover] = useState(true)
+  const [discoverOffset, setDiscoverOffset] = useState<number>(0)
+  const [hasMoreDiscover, setHasMoreDiscover] = useState<boolean>(true)
+
+  // Tutorial Ecosystem State
+  const [showFTUE, setShowFTUE] = useState<boolean>(false)
+  const [activeVideoGuide, setActiveVideoGuide] = useState<string | null>(null)
+  const [runTour, setRunTour] = useState<boolean>(false)
   const [defaultMuted, setDefaultMuted] = useState<boolean>(
     localStorage.getItem('defaultMuted') === 'true'
   )
@@ -770,6 +781,12 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     hasMoreDiscover,
     setHasMoreDiscover,
     refreshDiscoverGames,
+    showFTUE,
+    setShowFTUE,
+    activeVideoGuide,
+    setActiveVideoGuide,
+    runTour,
+    setRunTour,
     defaultMuted,
     setDefaultMuted,
     libraryGames,

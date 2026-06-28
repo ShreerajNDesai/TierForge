@@ -96,6 +96,7 @@ const Sidebar = () => {
             return (
               <div
                 key={item.id}
+                id={`tour-${item.id}`}
                 tabIndex={0}
                 onClick={() => setActiveTab(item.id)}
                 onKeyDown={(e) => {
