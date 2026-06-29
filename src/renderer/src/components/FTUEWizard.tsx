@@ -53,9 +53,15 @@ export const FTUEWizard: React.FC = () => {
   const handleFinish = async (targetTab: string) => {
     // Mark as seen in SQLite
     if (window.api && window.api.saveSetting && window.api.getSetting) {
-      await window.api.saveSetting('has_seen_intro', 'true')
-      const finishedTour = await window.api.getSetting('has_finished_interactive_tour')
-      if (finishedTour !== 'true') {
+      try {
+        await window.api.saveSetting('has_seen_intro', 'true')
+        const finishedTour = await window.api.getSetting('has_finished_interactive_tour')
+        if (finishedTour !== 'true') {
+          setRunTour(true)
+        }
+      } catch (err: any) {
+        console.error('Failed to save FTUE settings:', err)
+        // Ensure the UI progresses even if saving the state fails
         setRunTour(true)
       }
     }

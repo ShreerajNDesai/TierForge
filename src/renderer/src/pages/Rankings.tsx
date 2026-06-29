@@ -192,13 +192,23 @@ const Rankings = () => {
                     key={game.id}
                     tabIndex={0}
                     onClick={async () => {
-                      const matches = await window.api.searchGames(game.title)
-                      if (matches && matches.length > 0) handleGameClick(matches[0])
+                      try {
+                        const matches = await window.api.searchGames(game.title)
+                        if (matches && matches.length > 0) handleGameClick(matches[0])
+                      } catch (err: any) {
+                        console.error('Failed to search game:', err)
+                        alert('Network Error: Failed to search the database. Please check your connection.')
+                      }
                     }}
                     onKeyDown={async (e) => {
                       if (e.key === 'Enter') {
-                        const matches = await window.api.searchGames(game.title)
-                        if (matches && matches.length > 0) handleGameClick(matches[0])
+                        try {
+                          const matches = await window.api.searchGames(game.title)
+                          if (matches && matches.length > 0) handleGameClick(matches[0])
+                        } catch (err: any) {
+                          console.error('Failed to search game:', err)
+                          alert('Network Error: Failed to search the database. Please check your connection.')
+                        }
                       }
                     }}
                     className={`relative cursor-pointer group flex flex-col items-center focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all relative z-0 hover:z-50 ${isFirst ? 'w-64' : 'w-52'}`}
@@ -263,13 +273,23 @@ const Rankings = () => {
                     key={game.id}
                     tabIndex={0}
                     onClick={async () => {
-                      const matches = await window.api.searchGames(game.title)
-                      if (matches && matches.length > 0) handleGameClick(matches[0])
+                      try {
+                        const matches = await window.api.searchGames(game.title)
+                        if (matches && matches.length > 0) handleGameClick(matches[0])
+                      } catch (err: any) {
+                        console.error('Failed to search game:', err)
+                        alert('Network Error: Failed to search the database. Please check your connection.')
+                      }
                     }}
                     onKeyDown={async (e) => {
                       if (e.key === 'Enter') {
-                        const matches = await window.api.searchGames(game.title)
-                        if (matches && matches.length > 0) handleGameClick(matches[0])
+                        try {
+                          const matches = await window.api.searchGames(game.title)
+                          if (matches && matches.length > 0) handleGameClick(matches[0])
+                        } catch (err: any) {
+                          console.error('Failed to search game:', err)
+                          alert('Network Error: Failed to search the database. Please check your connection.')
+                        }
                       }
                     }}
                     className="group relative h-32 w-full overflow-hidden rounded-2xl border border-white/5 hover:border-yellow-500/40 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500 focus-visible:scale-105 focus-visible:shadow-[0_0_30px_rgba(99,102,241,0.6)] relative z-0 hover:z-50"

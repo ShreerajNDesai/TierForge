@@ -141,19 +141,24 @@ const ImportHubModal = () => {
                   return
                 }
                 setIsImporting(true)
-                const count = await window.api.syncSteam(steamId, steamKey)
-                alert(`Successfully synced ${count} games from Steam!`)
-                await loadGames()
-                setIsImporting(false)
-                setShowImportModal(false)
-                addNotification(
-                  'Steam Sync Complete',
-                  `Successfully synced ${count} games from your Steam library.`
-                )
-                window.api.showNotification(
-                  'Steam Sync Complete',
-                  `Successfully synced ${count} games from your Steam library.`
-                )
+                try {
+                  const count = await window.api.syncSteam(steamId, steamKey)
+                  alert(`Successfully synced ${count} games from Steam!`)
+                  await loadGames()
+                  addNotification(
+                    'Steam Sync Complete',
+                    `Successfully synced ${count} games from your Steam library.`
+                  )
+                  window.api.showNotification(
+                    'Steam Sync Complete',
+                    `Successfully synced ${count} games from your Steam library.`
+                  )
+                } catch (err: any) {
+                  alert(`Steam Sync Failed: ${err.message || 'Check your API key and Steam64 ID.'}`)
+                } finally {
+                  setIsImporting(false)
+                  setShowImportModal(false)
+                }
               }}
               disabled={isImporting}
               className="w-full py-4 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 disabled:opacity-50 text-white font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 active:scale-[0.98]"

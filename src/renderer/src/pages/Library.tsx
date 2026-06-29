@@ -16,7 +16,7 @@ import { useGlobal } from '../context/GlobalContext'
 import { TransientScroll } from '../components/TransientScroll';
 
 const Library = () => {
-  const { libraryGames, suggestedGame, librarySearch, handleGameClick } = useGlobal()
+  const { libraryGames, suggestedGame, librarySearch, handleGameClick, addNotification } = useGlobal()
 
   const [viewMode, setViewMode] = useState<'rows' | 'grid'>('rows')
   const filteredLibraryGames = libraryGames.filter((g: any) =>
@@ -77,8 +77,10 @@ const Library = () => {
         style: { opacity: '1', transform: 'none' }
       })
       await window.api.saveImage(dataUrl, 'MyLibraryMosaic.png')
-    } catch (e) {
+      addNotification('Export Complete', 'Your library mosaic has been saved successfully.')
+    } catch (e: any) {
       console.error(e)
+      addNotification('Export Failed', e.message || 'Failed to save the library mosaic.')
     }
   }
 

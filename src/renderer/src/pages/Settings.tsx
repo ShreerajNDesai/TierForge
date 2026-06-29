@@ -642,9 +642,13 @@ const Settings = () => {
               <input
                 type="password"
                 value={geminiKey}
-                onChange={(e) => {
+                onChange={async (e) => {
                   setGeminiKey(e.target.value)
-                  window.api.saveSetting('geminiKey', e.target.value)
+                  try {
+                    await window.api.saveSetting('geminiKey', e.target.value)
+                  } catch (err) {
+                    console.error('Failed to save Gemini API Key', err)
+                  }
                 }}
                 placeholder="Enter Gemini API Key..."
                 className="w-full bg-slate-800/50 border border-slate-700/50 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-secondary-500/50 text-slate-200 placeholder-slate-600 transition"
@@ -674,9 +678,13 @@ const Settings = () => {
               <input
                 type="password"
                 value={rawgKey}
-                onChange={(e) => {
+                onChange={async (e) => {
                   setRawgKey(e.target.value)
-                  window.api.saveSetting('rawg_key', e.target.value)
+                  try {
+                    await window.api.saveSetting('rawg_key', e.target.value)
+                  } catch (err) {
+                    console.error('Failed to save RAWG API Key', err)
+                  }
                 }}
                 placeholder="Enter RAWG.io API Key..."
                 className="w-full bg-slate-800/50 border border-slate-700/50 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-yellow-500/50 text-slate-200 placeholder-slate-600 transition"
@@ -711,9 +719,13 @@ const Settings = () => {
                   <input
                     type="password"
                     value={igdbClientId}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       setIgdbClientId(e.target.value)
-                      window.api.saveSetting('igdb_client_id', e.target.value)
+                      try {
+                        await window.api.saveSetting('igdb_client_id', e.target.value)
+                      } catch (err) {
+                        console.error('Failed to save IGDB Client ID', err)
+                      }
                     }}
                     placeholder="Enter IGDB Client ID..."
                     className="w-full bg-slate-800/50 border border-slate-700/50 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500/50 text-slate-200 placeholder-slate-600 transition"
@@ -726,9 +738,13 @@ const Settings = () => {
                   <input
                     type="password"
                     value={igdbClientSecret}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       setIgdbClientSecret(e.target.value)
-                      window.api.saveSetting('igdb_client_secret', e.target.value)
+                      try {
+                        await window.api.saveSetting('igdb_client_secret', e.target.value)
+                      } catch (err) {
+                        console.error('Failed to save IGDB Client Secret', err)
+                      }
                     }}
                     placeholder="Enter IGDB Client Secret..."
                     className="w-full bg-slate-800/50 border border-slate-700/50 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500/50 text-slate-200 placeholder-slate-600 transition"

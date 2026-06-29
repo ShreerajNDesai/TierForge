@@ -451,19 +451,26 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (activeTab === 'discover') {
       setIsDiscoverLoading(true)
-      window.api.getDiscoverGames(discoverFilter, discoverOffset, false).then((games: any) => {
-        if (discoverOffset === 0) {
-          setDiscoverGames(games)
-        } else {
-          setDiscoverGames((prev) => {
-            const existingIds = new Set(prev.map((g) => g.id))
-            const uniqueNewGames = games.filter((g: any) => !existingIds.has(g.id))
-            return [...prev, ...uniqueNewGames]
-          })
-        }
-        setHasMoreDiscover(games.length > 0)
-        setIsDiscoverLoading(false)
-      })
+      window.api
+        .getDiscoverGames(discoverFilter, discoverOffset, false)
+        .then((games: any) => {
+          if (discoverOffset === 0) {
+            setDiscoverGames(games)
+          } else {
+            setDiscoverGames((prev) => {
+              const existingIds = new Set(prev.map((g) => g.id))
+              const uniqueNewGames = games.filter((g: any) => !existingIds.has(g.id))
+              return [...prev, ...uniqueNewGames]
+            })
+          }
+          setHasMoreDiscover(games.length > 0)
+        })
+        .catch((err: any) => {
+          console.error('Failed to fetch discover games', err)
+        })
+        .finally(() => {
+          setIsDiscoverLoading(false)
+        })
     }
   }, [activeTab, discoverFilter, discoverOffset])
 
@@ -524,8 +531,13 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     setSearchQuery(query)
 
     if (query.length > 2) {
-      const results = await window.api.searchGames(query)
-      setSearchResults(results)
+      try {
+        const results = await window.api.searchGames(query)
+        setSearchResults(results)
+      } catch (err) {
+        addNotification('Search Failed', 'Unable to connect to the gaming database. Please check your internet connection.')
+        setSearchResults([])
+      }
     } else {
       setSearchResults([])
     }
@@ -559,9 +571,14 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   const handleScanPC = async () => {
     setIsScanning(true)
-    await window.api.scanPC()
-    await loadGames()
-    setIsScanning(false)
+    try {
+      await window.api.scanPC()
+      await loadGames()
+    } catch (err: any) {
+      addNotification('Scan Error', 'An error occurred while scanning your PC. This could be due to restricted folder permissions.')
+    } finally {
+      setIsScanning(false)
+    }
   }
 
   const handleGameClick = async (game: any) => {
@@ -585,14 +602,18 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       .then(setTimeToBeat)
       .catch(() => setTimeToBeat(null))
 
-    const details = await window.api.getExtendedDetails(game.id)
-    if (details) {
-      setCurrentVideoId(details.video_id)
-      setGameDetails({ ...game, ...details, notes: game.notes, status: game.status })
-    } else {
+    try {
+      const details = await window.api.getExtendedDetails(game.id)
+      if (details) {
+        setCurrentVideoId(details.video_id)
+        setGameDetails({ ...game, ...details, notes: game.notes, status: game.status })
+      } else {
+        throw new Error('No details found')
+      }
+    } catch (err) {
       setGameDetails({
         ...game,
-        summary: 'No details found.',
+        summary: 'Details could not be loaded. You might be offline.',
         genres: 'Unknown',
         year: 'Unknown',
         background_url: ''
@@ -606,34 +627,40 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     setGameDetails(newDetails)
 
     const isInLibrary = !!allGames.find((g) => g.id === gameDetails.id)
-    
-    if (!isInLibrary) {
-      const imgUrl = gameDetails.image_url || gameDetails.img || gameDetails.background_url || ''
-      await window.api.addGame(gameDetails.id, gameDetails.title, imgUrl)
-      
-      setAllGames((prev) => [
-        ...prev,
-        {
-          id: gameDetails.id,
-          title: gameDetails.title,
-          image_url: imgUrl,
-          tier: 'unranked',
-          notes: field === 'notes' ? value : '',
-          status: field === 'status' ? value : 'Backlog',
-          executable_path: '',
-          playtime_minutes: 0,
-          custom_save_path: ''
-        }
-      ])
-    } else {
-      setAllGames((prev) => prev.map((g) => (g.id === gameDetails.id ? { ...g, [field]: value } : g)))
-    }
+    try {
+      if (!isInLibrary) {
+        const imgUrl = gameDetails.image_url || gameDetails.img || gameDetails.background_url || ''
+        await window.api.addGame(gameDetails.id, gameDetails.title, imgUrl)
+        
+        setAllGames((prev) => [
+          ...prev,
+          {
+            id: gameDetails.id,
+            title: gameDetails.title,
+            image_url: imgUrl,
+            tier: 'unranked',
+            notes: field === 'notes' ? value : '',
+            status: field === 'status' ? value : 'Backlog',
+            executable_path: '',
+            playtime_minutes: 0,
+            custom_save_path: ''
+          }
+        ])
+      } else {
+        setAllGames((prev) => prev.map((g) => (g.id === gameDetails.id ? { ...g, [field]: value } : g)))
+      }
 
-    await window.api.updateGameData(
-      gameDetails.id,
-      field === 'notes' ? value : (gameDetails.notes || ''),
-      field === 'status' ? value : (gameDetails.status || 'Backlog')
-    )
+      await window.api.updateGameData(
+        gameDetails.id,
+        field === 'notes' ? value : (gameDetails.notes || ''),
+        field === 'status' ? value : (gameDetails.status || 'Backlog')
+      )
+    } catch (err: any) {
+      addNotification('Save Failed', 'Failed to save game data to the database.')
+      console.error(err)
+      // Attempt to reload from DB to fix desync
+      await loadGames()
+    }
   }
 
   const onDragStart = () => {
@@ -676,9 +703,14 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
       setSearchResults([])
       setSearchQuery('')
 
-      await window.api.addGame(game.id.toString(), game.title, game.image_url)
-      if (newTier !== 'unranked') {
-        await window.api.updateGameTier(game.id.toString(), newTier)
+      try {
+        await window.api.addGame(game.id.toString(), game.title, game.image_url)
+        if (newTier !== 'unranked') {
+          await window.api.updateGameTier(game.id.toString(), newTier)
+        }
+      } catch (err: any) {
+        addNotification('Tier List Sync Error', 'Failed to save tier list change. Reverting.')
+        await loadGames()
       }
       return
     }
@@ -693,7 +725,12 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     if (destination.droppableId === 'trash') {
       // Optimistic delete
       setAllGames((prev) => prev.filter((g) => g.id !== movedItem.id))
-      await window.api.deleteGame(movedItem.id)
+      try {
+        await window.api.deleteGame(movedItem.id)
+      } catch (err: any) {
+        addNotification('Delete Failed', 'Could not delete the game. Reverting.')
+        await loadGames()
+      }
       return
     }
 
@@ -702,7 +739,12 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     // Optimistic: update the tier field in allGames
     setAllGames((prev) => prev.map((g) => (g.id === movedItem.id ? { ...g, tier: newTier } : g)))
 
-    await window.api.updateGameTier(movedItem.id, newTier)
+    try {
+      await window.api.updateGameTier(movedItem.id, newTier)
+    } catch (err: any) {
+      addNotification('Move Failed', 'Could not move the game. Reverting.')
+      await loadGames()
+    }
   }
 
   const handleAIImport = async () => {
@@ -713,26 +755,36 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         return
       }
       setIsImporting(true)
-      await window.api.analyzeImage(imagePath, geminiKey)
-      await loadGames()
-      setIsImporting(false)
-      setShowImportModal(false)
-      addNotification('AI Import Complete', 'Successfully imported games from your screenshot.')
-      window.api.showNotification(
-        'AI Import Complete',
-        'Successfully imported games from your screenshot.'
-      )
+      try {
+        await window.api.analyzeImage(imagePath, geminiKey)
+        await loadGames()
+        addNotification('AI Import Complete', 'Successfully imported games from your screenshot.')
+        window.api.showNotification(
+          'AI Import Complete',
+          'Successfully imported games from your screenshot.'
+        )
+      } catch (err: any) {
+        addNotification('AI Import Failed', err.message || 'An error occurred during image analysis.')
+      } finally {
+        setIsImporting(false)
+        setShowImportModal(false)
+      }
     }
   }
 
   const handleTextImport = async () => {
     if (!importText.trim()) return
     setIsImporting(true)
-    await window.api.bulkImportText(importText)
-    await loadGames()
-    setIsImporting(false)
-    setShowImportModal(false)
-    setImportText('')
+    try {
+      await window.api.bulkImportText(importText)
+      await loadGames()
+      setImportText('')
+    } catch (err: any) {
+      addNotification('Import Failed', err.message || 'An error occurred during text import.')
+    } finally {
+      setIsImporting(false)
+      setShowImportModal(false)
+    }
   }
 
   const value = {

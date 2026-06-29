@@ -158,10 +158,15 @@ const AIOracle = () => {
                 setOraclePhase('Analyzing your gaming tastes...')
                 setTimeout(() => setOraclePhase('Consulting the Oracle...'), 2000)
                 setTimeout(() => setOraclePhase('Searching the multiverse of games...'), 4500)
-                const result = await window.api.getAIRecommendations('', deepCuts)
-                setOracleLoading(false)
-                if (result.error) setOracleError(result.error)
-                else setOracleRecs(result.recommendations)
+                try {
+                  const result = await window.api.getAIRecommendations('', deepCuts)
+                  if (result.error) setOracleError(result.error)
+                  else setOracleRecs(result.recommendations)
+                } catch (err: any) {
+                  setOracleError(err.message || 'A network or API error occurred.')
+                } finally {
+                  setOracleLoading(false)
+                }
               }}
               className="group relative px-10 py-4 bg-gradient-to-r from-secondary-600 to-pink-600 text-white font-bold text-lg rounded-2xl shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_40px_rgba(168,85,247,0.5)] transition-all overflow-hidden flex justify-center items-center gap-3 w-full"
             >
@@ -217,10 +222,15 @@ const AIOracle = () => {
                 setOracleError(null)
                 setOraclePhase('Analyzing your gaming tastes and vibe...')
                 setTimeout(() => setOraclePhase('Searching the multiverse...'), 3000)
-                const result = await window.api.getAIRecommendations(vibeText, deepCuts)
-                setOracleLoading(false)
-                if (result.error) setOracleError(result.error)
-                else setOracleRecs(result.recommendations)
+                try {
+                  const result = await window.api.getAIRecommendations(vibeText, deepCuts)
+                  if (result.error) setOracleError(result.error)
+                  else setOracleRecs(result.recommendations)
+                } catch (err: any) {
+                  setOracleError(err.message || 'A network or API error occurred.')
+                } finally {
+                  setOracleLoading(false)
+                }
               }}
               disabled={!vibeText.trim()}
               className="w-full px-6 py-3.5 bg-white/5 hover:bg-white/10 disabled:opacity-50 text-white font-bold rounded-xl border border-white/10 transition flex items-center justify-center gap-2"
@@ -257,10 +267,15 @@ const AIOracle = () => {
                   setOracleError(null)
                   setOraclePhase('Consulting the Oracle again...')
                   setTimeout(() => setOraclePhase('Searching the multiverse...'), 3000)
-                  const result = await window.api.getAIRecommendations(vibeText, deepCuts)
-                  setOracleLoading(false)
-                  if (result.error) setOracleError(result.error)
-                  else setOracleRecs(result.recommendations)
+                  try {
+                    const result = await window.api.getAIRecommendations(vibeText, deepCuts)
+                    if (result.error) setOracleError(result.error)
+                    else setOracleRecs(result.recommendations)
+                  } catch (err: any) {
+                    setOracleError(err.message || 'A network or API error occurred.')
+                  } finally {
+                    setOracleLoading(false)
+                  }
                 }}
                 className="flex items-center gap-2 px-5 py-2.5 font-bold text-secondary-300 hover:text-secondary-200 bg-secondary-500/10 hover:bg-secondary-500/20 border border-secondary-500/20 rounded-xl transition"
               >
@@ -370,10 +385,15 @@ const AIOracle = () => {
                 setOracleLoading(true)
                 setOracleError(null)
                 setOraclePhase('Calculating Compatibility Matrix...')
-                const result = await window.api.getAICompatibility(advisorTarget)
-                setOracleLoading(false)
-                if (result.error) setOracleError(result.error)
-                else setAdvisorResult(result)
+                try {
+                  const result = await window.api.getAICompatibility(advisorTarget)
+                  if (result.error) setOracleError(result.error)
+                  else setAdvisorResult(result)
+                } catch (err: any) {
+                  setOracleError(err.message || 'A network or API error occurred.')
+                } finally {
+                  setOracleLoading(false)
+                }
               }}
               disabled={!advisorTarget.trim()}
               className="px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl disabled:opacity-50 transition shadow-[0_0_20px_rgba(5,150,105,0.3)] flex items-center gap-2"
@@ -470,10 +490,15 @@ const AIOracle = () => {
               setOracleError(null)
               setOraclePhase('Scanning your dusty backlog...')
               setTimeout(() => setOraclePhase('Therapist is making a diagnosis...'), 2500)
-              const result = await window.api.getAIBacklogCure()
-              setOracleLoading(false)
-              if (result.error) setOracleError(result.error)
-              else setTherapistResult(result)
+              try {
+                const result = await window.api.getAIBacklogCure()
+                if (result.error) setOracleError(result.error)
+                else setTherapistResult(result)
+              } catch (err: any) {
+                setOracleError(err.message || 'A network or API error occurred.')
+              } finally {
+                setOracleLoading(false)
+              }
             }}
             className="group relative px-10 py-5 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-black text-xl rounded-2xl shadow-[0_0_40px_rgba(245,158,11,0.3)] hover:shadow-[0_0_50px_rgba(245,158,11,0.5)] transition-all flex items-center gap-3 hover:scale-105"
           >
@@ -535,10 +560,15 @@ const AIOracle = () => {
                     setOracleError(null)
                     setOraclePhase('Scanning your dusty backlog again...')
                     setTimeout(() => setOraclePhase('Therapist is making a new diagnosis...'), 2500)
-                    const result = await window.api.getAIBacklogCure()
-                    setOracleLoading(false)
-                    if (result.error) setOracleError(result.error)
-                    else setTherapistResult(result)
+                    try {
+                      const result = await window.api.getAIBacklogCure()
+                      if (result.error) setOracleError(result.error)
+                      else setTherapistResult(result)
+                    } catch (err: any) {
+                      setOracleError(err.message || 'A network or API error occurred.')
+                    } finally {
+                      setOracleLoading(false)
+                    }
                   }}
                   className="px-6 py-3.5 flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold rounded-xl border border-amber-500/20 transition"
                 >

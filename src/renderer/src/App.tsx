@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { DragDropContext } from '@hello-pangea/dnd'
 import { GlobalProvider, useGlobal } from './context/GlobalContext'
 import { useGamepad } from './hooks/useGamepad'
@@ -12,6 +12,7 @@ import TrayMenu from './components/TrayMenu'
 import { FTUEWizard } from './components/FTUEWizard'
 import { VideoGuideModal } from './components/VideoGuideModal'
 import { InteractiveTour } from './components/InteractiveTour'
+import { WifiOff } from 'lucide-react'
 
 // Pages
 import TierList from './pages/TierList'
@@ -37,6 +38,21 @@ const AppContent = () => {
     setRunTour,
     activeVideoGuide
   } = useGlobal()
+
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   useEffect(() => {
     // Check FTUE on boot
@@ -128,6 +144,16 @@ const AppContent = () => {
               </button>
             </div>
           )}
+          
+          {!isOnline && (
+            <div className="w-full bg-red-900/40 border-b border-red-500/50 backdrop-blur-md px-4 py-2 flex items-center justify-center gap-3 z-40 shrink-0">
+              <WifiOff size={18} className="text-red-400" />
+              <span className="text-red-200 font-medium text-sm">
+                You are currently offline. Cloud sync, AI Oracle, and Discover features may be unavailable.
+              </span>
+            </div>
+          )}
+          
           <Header />
           {renderPage()}
         </main>

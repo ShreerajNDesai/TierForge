@@ -52,12 +52,30 @@ export const InteractiveTour: React.FC = () => {
           },
         },
         {
+          element: '#tour-library-container',
+          popover: {
+            title: 'Library Views & Mosaic',
+            description: 'Toggle between Row and Grid views, and export a beautiful image mosaic of your entire collection to share online.',
+            side: 'top',
+            align: 'center',
+          },
+        },
+        {
           element: '#tour-oracle',
           popover: {
             title: 'AI Oracle',
             description: "Once you've ranked a few games, come here. The AI will analyze your tastes and recommend exactly what you should play next based on your vibe.",
             side: 'right',
             align: 'start',
+          },
+        },
+        {
+          element: '#tour-oracle-chat',
+          popover: {
+            title: 'Vibe Search',
+            description: "Describe what you want to play in plain English (e.g. 'relaxing sci-fi under 10 hours') and the Oracle will find your perfect match.",
+            side: 'top',
+            align: 'center',
           },
         },
         {
@@ -70,12 +88,30 @@ export const InteractiveTour: React.FC = () => {
           },
         },
         {
+          element: '#tour-discover-filters',
+          popover: {
+            title: 'Advanced Genre Filters',
+            description: 'Filter the IGDB database by specific genres and platforms to uncover hidden gems.',
+            side: 'bottom',
+            align: 'center',
+          },
+        },
+        {
           element: '#tour-rankings',
           popover: {
             title: 'Global Rankings',
             description: 'See Global Rankings to discover the most universally acclaimed masterpieces across the TierForge network.',
             side: 'right',
             align: 'start',
+          },
+        },
+        {
+          element: '#tour-rankings-board',
+          popover: {
+            title: 'Top 100 Leaderboards',
+            description: 'Click any game on the podium to instantly add it to your backlog. Use the filters above to see top RPGs, Shooters, etc.',
+            side: 'top',
+            align: 'center',
           },
         },
         {
@@ -88,26 +124,44 @@ export const InteractiveTour: React.FC = () => {
           },
         },
         {
+          element: '#tour-statistics-charts',
+          popover: {
+            title: 'Gaming Identity Profile',
+            description: 'The AI will analyze your completion rate and favorite genres to generate a personalized Gamer Identity profile.',
+            side: 'bottom',
+            align: 'center',
+          },
+        },
+        {
           element: '#tour-settings',
           popover: {
-            title: 'API Settings',
-            description: 'Finally, drop your free API keys here to unlock rich metadata, Twitch integration, and AI vision capabilities.',
+            title: 'Settings',
+            description: 'Configure your TierForge experience.',
             side: 'right',
             align: 'start',
+          },
+        },
+        {
+          element: '#tour-settings-keys',
+          popover: {
+            title: 'API Keys',
+            description: 'Drop your free Gemini and IGDB/Twitch API keys here to unlock rich metadata, AI Vision, and the Oracle features.',
+            side: 'top',
+            align: 'center',
           },
         },
       ],
       onNextClick: (_element, _step, { state, driver: d }) => {
         const idx = state.activeIndex
 
-        // Switch tabs right before proceeding to the next step
+        // Switch tabs right before proceeding to the next step when jumping to a new sidebar section
         if (idx === 1) setActiveTab('tierlist')
         if (idx === 2) setActiveTab('library')
-        if (idx === 3) setActiveTab('oracle')
-        if (idx === 4) setActiveTab('discover')
-        if (idx === 5) setActiveTab('rankings')
-        if (idx === 6) setActiveTab('statistics')
-        if (idx === 7) setActiveTab('settings')
+        if (idx === 4) setActiveTab('oracle')
+        if (idx === 6) setActiveTab('discover')
+        if (idx === 8) setActiveTab('rankings')
+        if (idx === 10) setActiveTab('statistics')
+        if (idx === 12) setActiveTab('settings')
 
         // Wait a tiny bit for React to render the new tab, then advance driver
         setTimeout(() => {

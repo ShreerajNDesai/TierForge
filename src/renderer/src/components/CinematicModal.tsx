@@ -20,6 +20,64 @@ import {
 import { TransientScroll } from './TransientScroll'
 import Tilt from 'react-parallax-tilt'
 import { useGlobal } from '../context/GlobalContext'
+import { driver } from 'driver.js'
+
+const CinematicModalTour: React.FC = () => {
+  useEffect(() => {
+    const checkAndRunTour = async () => {
+      if (window.api && window.api.getSetting) {
+        const seen = await window.api.getSetting('has_seen_cinematic_tour')
+        if (seen === 'true') return
+
+        // Slight delay to ensure modal is fully rendered and animated in
+        setTimeout(() => {
+          const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            overlayColor: 'rgba(5, 7, 10, 0.85)',
+            popoverClass: 'driver-theme-tierforge',
+            steps: [
+              {
+                element: '#tour-modal-play',
+                popover: {
+                  title: 'Launch Center',
+                  description: 'Launch your game directly from here. We automatically track your playtime and backup your local save files to the cloud.',
+                  side: 'bottom',
+                  align: 'center',
+                },
+              },
+              {
+                element: '#tour-modal-time',
+                popover: {
+                  title: 'HowLongToBeat',
+                  description: 'See exactly how long it takes to beat the main story, extras, or completionist runs before you commit.',
+                  side: 'top',
+                  align: 'start',
+                },
+              },
+              {
+                element: '#tour-modal-timeline',
+                popover: {
+                  title: 'AI Lore Timeline',
+                  description: 'Confused about the canon play order? Our AI scans the franchise lore and builds a precise chronological timeline for you to follow.',
+                  side: 'top',
+                  align: 'center',
+                },
+              }
+            ],
+            onDestroyStarted: (_element, _step, { driver: d }) => {
+              d.destroy()
+              window.api.saveSetting('has_seen_cinematic_tour', 'true')
+            }
+          })
+          driverObj.drive()
+        }, 800)
+      }
+    }
+    checkAndRunTour()
+  }, [])
+  return null
+}
 
 const CinematicModal = () => {
   const {
@@ -60,6 +118,8 @@ const CinematicModal = () => {
   const [steamDetails, setSteamDetails] = useState<any>(null)
   const [achievements, setAchievements] = useState<any>(null)
   const [isUninstalling, setIsUninstalling] = useState(false)
+  const [isLaunching, setIsLaunching] = useState(false)
+  const [isLinking, setIsLinking] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string
     message: string
@@ -126,6 +186,7 @@ const CinematicModal = () => {
 
   return (
     <div className="fixed inset-0 z-[200] flex overflow-hidden">
+      <CinematicModalTour />
       {/* Background Layer */}
       {(bgMode === 'video' || isVideoMode) && currentVideoId && !videoError ? (
         <div className="absolute inset-0 pointer-events-none bg-black overflow-hidden flex justify-center items-center">
@@ -207,16 +268,34 @@ const CinematicModal = () => {
                 </button>
               ) : (
                 <button
-                  onClick={() =>
-                    window.api.launchGame(
-                      selectedGame.executable_path,
-                      selectedGame.id.toString(),
-                      selectedGame.title
-                    )
-                  }
-                  className="w-full py-3.5 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex justify-center items-center gap-3 tracking-widest uppercase border border-primary-400/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10"
+                  id="tour-modal-play"
+                  onClick={async () => {
+                    if (isLaunching) return
+                    setIsLaunching(true)
+                    try {
+                      await window.api.launchGame(
+                        selectedGame.executable_path,
+                        selectedGame.id.toString(),
+                        selectedGame.title
+                      )
+                    } catch (err) {
+                      setAlertDialog({
+                        title: 'Launch Error',
+                        message: 'Failed to launch the game. The executable might have been moved or deleted.'
+                      })
+                    } finally {
+                      setIsLaunching(false)
+                    }
+                  }}
+                  disabled={isLaunching}
+                  className="w-full py-3.5 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex justify-center items-center gap-3 tracking-widest uppercase border border-primary-400/50 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:bg-white/10"
                 >
-                  <Gamepad2 size={22} /> Play Game
+                  {isLaunching ? (
+                    <RefreshCw size={22} className="animate-spin" />
+                  ) : (
+                    <Gamepad2 size={22} />
+                  )}
+                  {isLaunching ? 'Launching...' : 'Play Game'}
                 </button>
               ))}
 
@@ -229,30 +308,55 @@ const CinematicModal = () => {
                     </div>
                     <button
                       onClick={async () => {
-                        const newPath = await window.api.setCustomSavePath(selectedGame.id.toString(), true)
-                        if (newPath) {
-                          setGameDetails((prev: any) => ({ ...prev, custom_save_path: newPath }))
-                          loadGames()
+                        if (isLinking) return
+                        setIsLinking(true)
+                        try {
+                          const newPath = await window.api.setCustomSavePath(selectedGame.id.toString(), true)
+                          if (newPath) {
+                            setGameDetails((prev: any) => ({ ...prev, custom_save_path: newPath }))
+                            loadGames()
+                          }
+                        } catch (err) {
+                          setAlertDialog({
+                            title: 'Link Save Failed',
+                            message: 'An error occurred while linking the save folder. The folder might be protected.'
+                          })
+                        } finally {
+                          setIsLinking(false)
                         }
                       }}
-                      className="px-4 py-2.5 bg-black/40 border border-white/20 hover:border-primary-500/50 hover:bg-primary-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                      disabled={isLinking}
+                      className="px-4 py-2.5 bg-black/40 border border-white/20 hover:border-primary-500/50 hover:bg-primary-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                       title="Change Save Folder"
                     >
-                      Edit
+                      {isLinking ? <RefreshCw size={14} className="animate-spin" /> : 'Edit'}
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={async () => {
-                      const newPath = await window.api.setCustomSavePath(selectedGame.id.toString(), false)
-                      if (newPath) {
-                        setGameDetails((prev: any) => ({ ...prev, custom_save_path: newPath }))
-                        loadGames()
+                      if (isLinking) return
+                      setIsLinking(true)
+                      try {
+                        const newPath = await window.api.setCustomSavePath(selectedGame.id.toString(), false)
+                        if (newPath) {
+                          setGameDetails((prev: any) => ({ ...prev, custom_save_path: newPath }))
+                          loadGames()
+                        }
+                      } catch (err) {
+                        setAlertDialog({
+                          title: 'Link Save Failed',
+                          message: 'An error occurred while linking the save folder. The folder might be protected.'
+                        })
+                      } finally {
+                        setIsLinking(false)
                       }
                     }}
-                    className="w-full py-2.5 bg-black/40 border border-white/20 hover:border-primary-500/50 hover:bg-primary-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center gap-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                    disabled={isLinking}
+                    className="w-full py-2.5 bg-black/40 border border-white/20 hover:border-primary-500/50 hover:bg-primary-500/10 text-slate-300 font-semibold text-sm rounded-xl flex justify-center items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                   >
-                    <Cloud size={16} /> Link Save Folder
+                    {isLinking ? <RefreshCw size={16} className="animate-spin" /> : <Cloud size={16} />} 
+                    {isLinking ? 'Linking...' : 'Link Save Folder'}
                   </button>
                 )}
               </div>
@@ -407,7 +511,7 @@ const CinematicModal = () => {
               {selectedGame.title}
             </h2>
 
-            <div className="flex items-center gap-4 text-xl font-medium text-white/70 mb-12">
+            <div className="flex items-center gap-4 text-xl font-medium text-white/70 mb-6">
               <span className="bg-white/10 px-3 py-1 rounded-lg border border-white/10 backdrop-blur-sm">
                 {gameDetails ? gameDetails.year : '...'}
               </span>
@@ -426,7 +530,7 @@ const CinematicModal = () => {
 
             {/* Platforms */}
             {gameDetails?.platforms && gameDetails.platforms.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-8">
+              <div className="flex flex-wrap gap-2 mb-6">
                 {gameDetails.platforms.map((platform: string, idx: number) => {
                   const isPC = /PC|Windows|Mac|Linux/i.test(platform)
                   const isConsole = /PlayStation|Xbox|Nintendo|Switch/i.test(platform)
@@ -451,7 +555,7 @@ const CinematicModal = () => {
             <div className="flex-1 flex flex-col gap-6 max-w-5xl">
               {/* Time to Beat */}
               {timeToBeat && (
-                <div className="flex gap-4 mb-2">
+                <div id="tour-modal-time" className="flex gap-4">
                   {timeToBeat.main > 0 && (
                     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 flex items-center gap-3 shadow-sm">
                       <Clock className="text-primary-400" size={18} />
@@ -523,8 +627,8 @@ const CinematicModal = () => {
                 )}
 
               {/* Details Grid */}
-              <div className="bg-black/40 border border-white/10 backdrop-blur-xl rounded-2xl p-7 shadow-inner">
-                <div className="grid grid-cols-5 gap-8 mb-8">
+              <div className="bg-black/40 border border-white/10 backdrop-blur-xl rounded-2xl p-6 shadow-inner">
+                <div className="grid grid-cols-5 gap-6 mb-6">
                   <div>
                     <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">
                       Main Developers
@@ -559,7 +663,7 @@ const CinematicModal = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-8 pt-7 border-t border-white/5">
+                <div className="grid grid-cols-4 gap-6 pt-6 border-t border-white/5">
                   <div>
                     <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Themes</h4>
                     <p className="text-[14px] font-bold text-slate-200 leading-snug">
@@ -646,7 +750,7 @@ const CinematicModal = () => {
 
               {/* Steam Achievements */}
               {achievements && achievements.total > 0 && (
-                <div className="bg-black/30 border border-white/10 backdrop-blur-md rounded-2xl p-6 shadow-inner mb-6">
+                <div className="bg-black/30 border border-white/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
                   <h3 className="text-sm font-bold text-white/70 tracking-wide mb-4">
                     Steam Achievements ({achievements.unlocked} / {achievements.total})
                   </h3>
@@ -747,7 +851,7 @@ const CinematicModal = () => {
               )}
 
               {/* Series Timeline & AI Canon Order */}
-              <div className="mt-4">
+              <div id="tour-modal-timeline" className="mt-4">
                 {!aiTimeline && (
                   <div className="flex items-center justify-end mb-4">
                     <button
