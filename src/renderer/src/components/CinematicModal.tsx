@@ -128,6 +128,7 @@ const CinematicModal = () => {
     onConfirm: () => void
   } | null>(null)
   const [alertDialog, setAlertDialog] = useState<{ title: string; message: string } | null>(null)
+  const [customLinks, setCustomLinks] = useState<{name: string, url: string}[]>([])
 
   const gameplayVideoRaw = gameDetails?.videos?.find((v: any) =>
     v.name.toLowerCase().includes('gameplay')
@@ -163,6 +164,12 @@ const CinematicModal = () => {
           }
         })
         .catch((err) => console.error('Failed to check cached timeline:', err))
+
+      // Check for valid custom web integrations
+      window.api
+        .checkCustomLinks(selectedGame.title)
+        .then((validLinks) => setCustomLinks(validLinks || []))
+        .catch((err) => console.error('Failed to check custom links:', err))
     }
   }, [selectedGame])
 
@@ -1026,6 +1033,27 @@ const CinematicModal = () => {
                         </div>
                       )
                     })}
+                  </div>
+                </div>
+              )}
+
+              {/* External Resources */}
+              {customLinks.length > 0 && (
+                <div className="mt-2">
+                  <h3 className="text-lg font-bold text-white/80 mb-4 flex items-center gap-2">
+                    <ExternalLink size={18} className="text-emerald-400" /> External Resources
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {customLinks.map((link, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => window.api.openExternal(link.url)}
+                        className="px-4 py-2.5 bg-black/40 border border-white/10 hover:border-emerald-500/50 hover:bg-white/10 backdrop-blur-md rounded-xl text-sm font-bold text-slate-200 hover:text-white transition-all hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] flex items-center gap-2"
+                      >
+                        {link.name}
+                        <ExternalLink size={14} className="text-slate-500" />
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}

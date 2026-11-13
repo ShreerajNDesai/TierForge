@@ -62,6 +62,7 @@ const api = {
     ipcRenderer.invoke('clear-rankings-cache', categoryId),
   getAIPlayOrder: (gameId: string, gameTitle: string, forceRefresh: boolean = false) =>
     ipcRenderer.invoke('get-ai-play-order', gameId, gameTitle, forceRefresh),
+  checkCustomLinks: (gameTitle: string) => ipcRenderer.invoke('check-custom-links', gameTitle),
   checkCachedTimeline: (gameId: string, gameTitle: string) =>
     ipcRenderer.invoke('check-cached-timeline', gameId, gameTitle),
   syncSteam: (steamId: string, apiKey: string) => ipcRenderer.invoke('sync-steam', steamId, apiKey),

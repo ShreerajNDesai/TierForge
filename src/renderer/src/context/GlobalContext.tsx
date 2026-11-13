@@ -244,6 +244,11 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     window.api.saveSetting('app_theme', theme)
   }
 
+  const loadGames = async () => {
+    const dbGames = await window.api.getAllGames()
+    setAllGames(dbGames)
+  }
+
   useEffect(() => {
     window.api.getSetting('app_theme').then((theme: string | null) => {
       if (theme) {
@@ -372,11 +377,6 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     window.addEventListener('contextmenu', handleRightClick)
     return () => window.removeEventListener('contextmenu', handleRightClick)
   }, [showImportModal, isImporting, selectedGame, isStatusDropdownOpen, searchResults, searchQuery])
-
-  const loadGames = async () => {
-    const dbGames = await window.api.getAllGames()
-    setAllGames(dbGames)
-  }
 
   // ===== DERIVED STATE (useMemo) =====
   const data = useMemo(() => {

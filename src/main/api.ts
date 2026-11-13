@@ -983,7 +983,7 @@ export async function getGameDeals(gameTitle: string) {
 export async function syncSteamLibrary(steamId: string, apiKey: string) {
   try {
     const res = await fetch(
-      `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${apiKey}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1&format=json`
+      `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${apiKey}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1&format=json`
     )
     const data: any = await res.json()
     if (data.response && data.response.games) {

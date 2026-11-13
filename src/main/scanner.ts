@@ -48,14 +48,37 @@ function findExecutable(dirPath: string): string {
 export function scanLocalGames(): { name: string; path: string }[] {
   const games: Map<string, { name: string; path: string }> = new Map()
 
-  // 1. Scan Steam
+  // 1. Scan Steam (including secondary library drives defined in libraryfolders.vdf)
+  const steamPaths = new Set<string>()
   if (fs.existsSync(STEAM_PATH)) {
+    steamPaths.add(STEAM_PATH)
     try {
-      const files = fs.readdirSync(STEAM_PATH)
+      const vdfPath = path.join(STEAM_PATH, 'libraryfolders.vdf')
+      if (fs.existsSync(vdfPath)) {
+        const vdfContent = fs.readFileSync(vdfPath, 'utf-8')
+        const matches = vdfContent.matchAll(/"path"\s+"([^"]+)"/g)
+        for (const match of matches) {
+          const rawLib = match[1].replace(/\\\\/g, '\\')
+          const steamApps = path.join(rawLib, 'steamapps')
+          if (fs.existsSync(steamApps)) {
+            steamPaths.add(steamApps)
+          }
+        }
+      }
+    } catch {
+      // Ignore VDF parse errors
+    }
+  } else {
+    console.warn(`Steam path not found at: ${STEAM_PATH}`)
+  }
+
+  for (const sPath of steamPaths) {
+    try {
+      const files = fs.readdirSync(sPath)
       for (const file of files) {
         if (file.startsWith('appmanifest_') && file.endsWith('.acf')) {
           const appId = file.replace('appmanifest_', '').replace('.acf', '')
-          const filePath = path.join(STEAM_PATH, file)
+          const filePath = path.join(sPath, file)
           const content = fs.readFileSync(filePath, 'utf-8')
 
           // Match the "name" field
@@ -72,10 +95,8 @@ export function scanLocalGames(): { name: string; path: string }[] {
         }
       }
     } catch (error) {
-      console.error('Error scanning Steam directory:', error)
+      console.error(`Error scanning Steam directory ${sPath}:`, error)
     }
-  } else {
-    console.warn(`Steam path not found at: ${STEAM_PATH}`)
   }
 
   // 2. Scan other common directories

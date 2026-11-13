@@ -108,7 +108,7 @@ export class PluginManager {
         try {
           // CRITICAL NODE FIX: Clear require cache for reloading fresh changes
           delete require.cache[require.resolve(pluginPath)]
-          let rawPlugin = require(pluginPath)
+          const rawPlugin = require(pluginPath)
           // Handle ES module default exports wrapping
           const plugin = rawPlugin.default || rawPlugin
 

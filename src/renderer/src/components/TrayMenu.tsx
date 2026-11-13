@@ -10,6 +10,11 @@ export default function TrayMenu() {
   })
   const [showAllGames, setShowAllGames] = useState(false)
 
+  const loadData = async () => {
+    const res = await window.api.getTrayData()
+    setData(res)
+  }
+
   useEffect(() => {
     loadData()
     const removeListener = window.api.onSettingUpdated(
@@ -27,11 +32,6 @@ export default function TrayMenu() {
       if (removeListener) removeListener()
     }
   }, [])
-
-  const loadData = async () => {
-    const res = await window.api.getTrayData()
-    setData(res)
-  }
 
   const handleLaunch = async (path: string, gameId: string, title: string) => {
     await window.api.launchGame(path, gameId, title)

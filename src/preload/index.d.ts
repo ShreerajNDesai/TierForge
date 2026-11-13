@@ -45,6 +45,7 @@ declare global {
       getScrapedRankings: (category: string) => Promise<any[]>
       getCachedRankings: (categoryId: string) => Promise<any[]>
       clearRankingsCache: (categoryId: string) => Promise<boolean>
+      checkCustomLinks: (gameTitle: string) => Promise<{name: string, url: string, notFoundText?: string, isSearchUrl?: boolean}[]>
       getAIPlayOrder: (gameId: string, gameTitle: string, forceRefresh?: boolean) => Promise<any[]>
       checkCachedTimeline: (gameId: string, gameTitle: string) => Promise<any[] | null>
       showNotification: (title: string, body: string) => Promise<boolean>

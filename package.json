@@ -1,10 +1,18 @@
 {
   "name": "tierforge",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "A modern desktop game launcher, library organizer, tier list maker, and backlog tracker powered by Electron, React, and Gemini AI.",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Shreeraj N Desai",
+  "license": "MIT",
+  "homepage": "https://github.com/ShreerajNDesai/TierForge",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ShreerajNDesai/TierForge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ShreerajNDesai/TierForge/issues"
+  },
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",

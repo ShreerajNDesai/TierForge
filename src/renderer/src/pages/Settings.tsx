@@ -18,7 +18,9 @@ import {
   Puzzle,
   PlayCircle,
   Video,
-  Compass
+  Compass,
+  Trash2,
+  Edit2
 } from 'lucide-react'
 import { useGlobal } from '../context/GlobalContext'
 import { TransientScroll } from '../components/TransientScroll';
@@ -70,6 +72,13 @@ const Settings = () => {
   const [appVersion, setAppVersion] = useState<string>('Loading...')
   const [plugins, setPlugins] = useState<any[]>([])
   const [pluginStatus, setPluginStatus] = useState<string>('')
+  
+  const [customLinks, setCustomLinks] = useState<{name: string, url: string, notFoundText?: string, isSearchUrl?: boolean}[]>([])
+  const [newSiteName, setNewSiteName] = useState('')
+  const [newSiteUrl, setNewSiteUrl] = useState('')
+  const [newSiteNotFoundText, setNewSiteNotFoundText] = useState('')
+  const [newSiteIsSearchUrl, setNewSiteIsSearchUrl] = useState(false)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
 
   const { updateStatus, updateProgress, appTheme, changeTheme } = useGlobal()
 
@@ -90,6 +99,15 @@ const Settings = () => {
       })
       window.api.getSetting('discord_rpc').then((val) => {
         setDiscordRpcEnabled(val !== 'false')
+      })
+      window.api.getSetting('custom_web_links').then((val) => {
+        if (val) {
+          try {
+            setCustomLinks(JSON.parse(val))
+          } catch (e) {
+            console.error('Failed to parse custom web links', e)
+          }
+        }
       })
     }
 
@@ -753,6 +771,156 @@ const Settings = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Custom Integrations */}
+        <div className="bg-[#121620] border border-slate-700/60 rounded-3xl p-8 shadow-xl">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-3 mb-2">
+              <Compass size={22} className="text-emerald-400" />
+              Custom Web Integrations
+            </h2>
+            <p className="text-sm text-slate-400">
+              Define custom base URLs for your favorite sites. These will appear in the Cinematic Modal. 
+              Use <code className="bg-black/30 px-2 py-0.5 rounded text-emerald-400 font-mono">{"{{slug}}"}</code> (hyphenated lowercase) or <code className="bg-black/30 px-2 py-0.5 rounded text-secondary-400 font-mono">{"{{search}}"}</code> (URL-encoded) in your template.
+            </p>
+            <p className="text-xs text-slate-500 mt-2">
+              Example: <code>https://en.wikipedia.org/wiki/{"{{search}}"}</code> or <code>https://pcgamingwiki.com/wiki/{"{{slug}}"}</code>
+              <br/><br/>
+              <strong>Note on ID-based sites:</strong> If a site uses random ID numbers in its URLs (like <code>site.com/123-game-name</code>), do not use slugs. Instead, find the site's search URL (e.g., <code>site.com/?s=</code>) and use <code>{"{{search}}"}</code>. Check the 'Skip Ping Test' box, as search pages never return 404 errors.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex gap-4 items-start">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Site Name (e.g. PCGamingWiki)"
+                  value={newSiteName}
+                  onChange={(e) => setNewSiteName(e.target.value)}
+                  className="w-full bg-[#0B0E14] border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors shadow-inner text-sm"
+                />
+              </div>
+              <div className="flex-[2]">
+                <input
+                  type="text"
+                  placeholder="URL Template (e.g. https://pcgamingwiki.com/wiki/{{slug}})"
+                  value={newSiteUrl}
+                  onChange={(e) => setNewSiteUrl(e.target.value)}
+                  className="w-full bg-[#0B0E14] border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors shadow-inner font-mono text-sm"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-4 items-start">
+              <div className="flex-[3] flex flex-col gap-3">
+                <input
+                  type="text"
+                  placeholder="Not Found Text (Optional - e.g. 'PAGE CAN'T BE FOUND')"
+                  value={newSiteNotFoundText}
+                  onChange={(e) => setNewSiteNotFoundText(e.target.value)}
+                  className="w-full bg-[#0B0E14] border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors shadow-inner text-sm font-mono"
+                  disabled={newSiteIsSearchUrl}
+                />
+                <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer w-max">
+                  <input
+                    type="checkbox"
+                    checked={newSiteIsSearchUrl}
+                    onChange={(e) => {
+                      setNewSiteIsSearchUrl(e.target.checked)
+                      if (e.target.checked) setNewSiteNotFoundText('')
+                    }}
+                    className="w-4 h-4 rounded border-slate-700 bg-[#0B0E14] text-emerald-500 focus:ring-emerald-500/30 focus:ring-offset-0"
+                  />
+                  This is a Search URL (Skip Ping Test)
+                </label>
+              </div>
+              <button
+                onClick={() => {
+                  if (newSiteName.trim() && newSiteUrl.trim()) {
+                    const updated = [...customLinks]
+                    const notFoundText = newSiteNotFoundText.trim() || undefined
+                    
+                    if (editingIndex !== null) {
+                      updated[editingIndex] = { name: newSiteName.trim(), url: newSiteUrl.trim(), notFoundText, isSearchUrl: newSiteIsSearchUrl }
+                      setEditingIndex(null)
+                    } else {
+                      updated.push({ name: newSiteName.trim(), url: newSiteUrl.trim(), notFoundText, isSearchUrl: newSiteIsSearchUrl })
+                    }
+                    setCustomLinks(updated)
+                    window.api.saveSetting('custom_web_links', JSON.stringify(updated))
+                    setNewSiteName('')
+                    setNewSiteUrl('')
+                    setNewSiteNotFoundText('')
+                    setNewSiteIsSearchUrl(false)
+                  }
+                }}
+                disabled={!newSiteName.trim() || !newSiteUrl.trim()}
+                className="flex-1 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30 px-6 py-3 rounded-xl font-bold transition disabled:opacity-50 h-[46px]"
+              >
+                {editingIndex !== null ? 'Save Edit' : 'Add Link'}
+              </button>
+            </div>
+          </div>
+
+          {customLinks.length > 0 && (
+            <div className="space-y-3">
+              {customLinks.map((link, idx) => (
+                <div key={idx} className="flex justify-between items-center bg-[#0B0E14] border border-white/5 rounded-xl p-4 group hover:border-white/10 transition">
+                  <div className="flex items-center gap-4 truncate">
+                    <Compass size={18} className="text-slate-400 shrink-0" />
+                    <div className="truncate flex flex-col justify-center">
+                      <div className="flex items-center gap-4">
+                        <span className="font-bold text-slate-200">{link.name}</span>
+                        <span className="font-mono text-xs text-slate-500 truncate">{link.url}</span>
+                      </div>
+                      {link.isSearchUrl ? (
+                        <span className="font-mono text-[10px] text-cyan-400/80 truncate mt-1">
+                          Search Mode: Direct Routing (Ping Test Skipped)
+                        </span>
+                      ) : link.notFoundText && (
+                        <span className="font-mono text-[10px] text-red-400/80 truncate mt-1">
+                          Validation: Fails if page contains "{link.notFoundText}"
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingIndex(idx)
+                        setNewSiteName(link.name)
+                        setNewSiteUrl(link.url)
+                        setNewSiteNotFoundText(link.notFoundText || '')
+                        setNewSiteIsSearchUrl(link.isSearchUrl || false)
+                      }}
+                      className="text-slate-500 hover:text-emerald-400 transition shrink-0 opacity-0 group-hover:opacity-100 p-2"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const updated = customLinks.filter((_, i) => i !== idx)
+                        setCustomLinks(updated)
+                        window.api.saveSetting('custom_web_links', JSON.stringify(updated))
+                        if (editingIndex === idx) {
+                          setEditingIndex(null)
+                          setNewSiteName('')
+                          setNewSiteUrl('')
+                          setNewSiteNotFoundText('')
+                          setNewSiteIsSearchUrl(false)
+                        }
+                      }}
+                      className="text-slate-500 hover:text-red-400 transition shrink-0 opacity-0 group-hover:opacity-100 p-2"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Extensions & Plugins */}

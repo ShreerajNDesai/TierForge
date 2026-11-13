@@ -136,16 +136,6 @@ export function initDB() {
     /* Column might already exist */
   }
 
-  // One-time cache clear for Discover category overhaul
-  try {
-    db.prepare(
-      'DELETE FROM rankings_cache WHERE category_id IN ("discover_trending", "discover_masterpieces", "highly_rated")'
-    ).run()
-    db.exec('DELETE FROM rankings_cache') // Wipe cache to fix hallucinated Steam Tag IDs and IMDb removal
-  } catch (e) {
-    /* Table might not exist yet */
-  }
-
   console.log('Database initialized at:', dbPath)
 }
 

@@ -6,7 +6,8 @@ import {
   dialog,
   Notification,
   Tray,
-  nativeImage
+  nativeImage,
+  net
 } from 'electron'
 import { join, basename } from 'path'
 import { exec } from 'child_process'
@@ -72,13 +73,13 @@ import { backupGameSave, getExeNameFromManifest, findGameSavePath } from './ludu
 import { pluginManager } from './plugins/PluginManager'
 
 export async function getValidDriveToken(): Promise<string | null> {
-  const clientId = GDRIVE_CLIENT_ID
-  const clientSecret = GDRIVE_CLIENT_SECRET
+  const clientId = getSetting('gdrive_client_id') || GDRIVE_CLIENT_ID
+  const clientSecret = getSetting('gdrive_client_secret') || GDRIVE_CLIENT_SECRET
   const refreshToken = getSetting('gdrive_refresh_token')
   const expiry = Number(getSetting('gdrive_token_expiry') || '0')
   let accessToken = getSetting('gdrive_access_token')
 
-  if (!accessToken || !refreshToken) return null
+  if (!accessToken || !refreshToken || !clientSecret) return null
 
   // Refresh if expired or about to expire
   if (Date.now() > expiry - 60000) {
@@ -822,8 +823,19 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('open-external', async (_, url: string) => {
-    await shell.openExternal(url)
-    return true
+    try {
+      if (!url || typeof url !== 'string') return false
+      const trimmed = url.trim()
+      if (/^(https?|steam|ms-settings|mailto):/i.test(trimmed)) {
+        await shell.openExternal(trimmed)
+        return true
+      }
+      console.warn(`Blocked untrusted external URL scheme: ${trimmed}`)
+      return false
+    } catch (err) {
+      console.error('Failed to open external URL:', err)
+      return false
+    }
   })
 
   ipcMain.handle('get-global-rankings', async () => {
@@ -1059,11 +1071,15 @@ app.whenReady().then(() => {
   // --- Google Drive API Backup ---
   ipcMain.handle('google-drive-auth', async () => {
     try {
-      const clientId = GDRIVE_CLIENT_ID
-      const clientSecret = GDRIVE_CLIENT_SECRET
+      const clientId = getSetting('gdrive_client_id') || GDRIVE_CLIENT_ID
+      const clientSecret = getSetting('gdrive_client_secret') || GDRIVE_CLIENT_SECRET
       const redirectUri = GDRIVE_REDIRECT_URI
       if (!clientId || !clientSecret)
-        return { success: false, message: 'Google Drive is not configured for this build.' }
+        return {
+          success: false,
+          message:
+            'Google Drive is not configured. Please set GDRIVE_CLIENT_SECRET in your .env file or Settings.'
+        }
 
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(GDRIVE_SCOPE)}&access_type=offline&prompt=consent`
 
@@ -1261,6 +1277,77 @@ app.whenReady().then(() => {
     saveSetting('gdrive_refresh_token', '')
     saveSetting('gdrive_token_expiry', '')
     return true
+  })
+
+  ipcMain.handle('check-custom-links', async (_, gameTitle: string) => {
+    try {
+      const savedLinksJson = getSetting('custom_web_links')
+      if (!savedLinksJson) return []
+
+      const customLinks = JSON.parse(savedLinksJson) as { name: string; url: string; notFoundText?: string; isSearchUrl?: boolean }[]
+      if (!Array.isArray(customLinks) || customLinks.length === 0) return []
+
+      const slug = gameTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      const search = encodeURIComponent(gameTitle)
+
+      const validLinks: { name: string; url: string; notFoundText?: string; isSearchUrl?: boolean }[] = []
+
+      // Run ping tests concurrently
+      const promises = customLinks.map(async (link) => {
+        if (!link.url || !link.name) return
+        const targetUrl = link.url.replace(/\{\{slug\}\}/g, slug).replace(/\{\{search\}\}/g, search)
+        
+        // Direct Search Routing (Skip Ping Test)
+        if (link.isSearchUrl) {
+          validLinks.push({ name: link.name, url: targetUrl, notFoundText: link.notFoundText, isSearchUrl: true })
+          return
+        }
+
+        try {
+          // Use AbortController for a 6000ms timeout
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 6000)
+
+          const res = await net.fetch(targetUrl, { 
+            method: 'GET', // Some sites block HEAD
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            signal: controller.signal 
+          })
+          clearTimeout(timeout)
+
+          // 404 means the page definitely doesn't exist (e.g. Wiki slug missing).
+          // 403 or 503 usually means Cloudflare/DDoS protection is blocking our automated fetch.
+          if (res.status !== 404) {
+            if (link.notFoundText && link.notFoundText.trim() !== '') {
+              // Advanced Validation: Check if the HTML contains the Not Found Text (case-insensitive)
+              const html = await res.text()
+              const searchStr = link.notFoundText.trim().toLowerCase()
+              
+              if (!html.toLowerCase().includes(searchStr)) {
+                validLinks.push({ name: link.name, url: targetUrl, notFoundText: link.notFoundText })
+              }
+            } else {
+              validLinks.push({ name: link.name, url: targetUrl, notFoundText: link.notFoundText })
+            }
+          }
+        } catch (e: any) {
+          // If it timed out or threw an error, only push if strict validation (notFoundText) is NOT enabled.
+          if (!link.notFoundText || link.notFoundText.trim() === '') {
+            if (e.name === 'AbortError' || link.url.includes('{{search}}')) {
+              validLinks.push({ name: link.name, url: targetUrl, notFoundText: link.notFoundText })
+            }
+          }
+        }
+      })
+
+      await Promise.all(promises)
+      return validLinks
+    } catch (err) {
+      console.error('Failed to check custom links:', err)
+      return []
+    }
   })
 
   createWindow()
