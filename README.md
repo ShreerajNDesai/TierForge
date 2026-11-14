@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <img src="screenshots/01-library-overview.png" alt="TierForge Library Overview" width="95%" />
+  <img src="screenshots/01-library-overview-grid.png" alt="TierForge Library Overview" width="95%" />
 </p>
 
 ---
