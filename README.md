@@ -32,10 +32,11 @@ Organize your entire gaming universe. Scan local drives, sync Steam, launch titl
 | ![Library](screenshots/01-library-overview.png) | ![Import Hub](screenshots/01-library-import-hub.png) |
 | *Library view with 'Currently Playing', 'Completed', and Backlog suggestions* | *AI Vision screenshot import, bulk text import, & Steam account sync* |
 
-| 📤 Export Hub (Tier Lists & Mosaics) |
-| :---: |
-| ![Export Hub](screenshots/01-library-export-hub.png) |
-| *One-click exports for high-resolution tier lists and library mosaics* |
+<p align="center">
+  <img src="screenshots/01-library-export-hub.png" alt="Export Hub" width="280" />
+  <br />
+  <em>📤 <strong>Export Hub</strong>: One-click exports for high-resolution tier lists and library mosaics.</em>
+</p>
 
 ---
 
@@ -92,10 +93,11 @@ Deep analytics of your gaming habits, release timelines, and real-time hardware 
 | ![Gamer Card](screenshots/06-statistics-gamer-card.png) | ![Release Timeline](screenshots/06-statistics-release-timeline.png) |
 | *Completion rates, library health bars, genre radar, and studio loyalty* | *Decade timeline of your collection, eras analysis, and completed trophies* |
 
-| 💻 Live System Monitor & Session HUD |
-| :---: |
-| ![System Monitor](screenshots/06-system-monitor-hud.png) |
-| *Real-time CPU, RAM, disk space, session uptime, and library completion tracking* |
+<p align="center">
+  <img src="screenshots/06-system-monitor-hud.png" alt="Live System Monitor & Session HUD" width="340" />
+  <br />
+  <em>💻 <strong>Live System Monitor & Session HUD</strong>: Real-time CPU, RAM, disk space, session uptime, and library completion tracking.</em>
+</p>
 
 ---
 
