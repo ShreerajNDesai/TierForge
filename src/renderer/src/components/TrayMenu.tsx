@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Gamepad2, Play, Search, Cloud, AppWindow, MessageSquare, ChevronRight } from 'lucide-react'
 
 export default function TrayMenu() {
+  const containerRef = useRef<HTMLDivElement>(null)
   const [data, setData] = useState<any>({
     recentGames: [],
     installedGames: [],
@@ -16,7 +17,25 @@ export default function TrayMenu() {
   }
 
   useEffect(() => {
+    if (!containerRef.current) return
+    const reportHeight = () => {
+      if (containerRef.current) {
+        const height = Math.ceil(containerRef.current.getBoundingClientRect().height)
+        if (height > 50) {
+          window.api.resizeTrayWindow(height)
+        }
+      }
+    }
+    reportHeight()
+    const observer = new ResizeObserver(reportHeight)
+    observer.observe(containerRef.current)
+    return () => observer.disconnect()
+  }, [data, showAllGames])
+
+  useEffect(() => {
     loadData()
+    const handleFocus = () => loadData()
+    window.addEventListener('focus', handleFocus)
     const removeListener = window.api.onSettingUpdated(
       (updateData: { key: string; value: string }) => {
         if (updateData.key === 'discord_rpc') {
@@ -29,6 +48,7 @@ export default function TrayMenu() {
       }
     )
     return () => {
+      window.removeEventListener('focus', handleFocus)
       if (removeListener) removeListener()
     }
   }, [])
@@ -78,7 +98,10 @@ export default function TrayMenu() {
   }
 
   return (
-    <div className="w-full h-full bg-[#0B0E14]/90 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col p-2 text-sm text-slate-300 shadow-2xl overflow-hidden no-scrollbar selection:bg-primary-500/30">
+    <div
+      ref={containerRef}
+      className="w-[320px] max-w-[320px] h-fit bg-[#0B0E14]/95 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col p-2 text-sm text-slate-300 shadow-2xl overflow-hidden no-scrollbar selection:bg-primary-500/30"
+    >
       {!showAllGames ? (
         <>
           {data.recentGames.length > 0 && (
@@ -185,10 +208,10 @@ export default function TrayMenu() {
           </div>
         </>
       ) : (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-[380px]">
           <button
             onClick={() => setShowAllGames(false)}
-            className="px-3 py-2 flex items-center gap-2 hover:bg-white/10 hover:text-white rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white mb-2"
+            className="px-3 py-2 flex items-center gap-2 hover:bg-white/10 hover:text-white rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white mb-2 shrink-0"
           >
             <ChevronRight size={16} className="rotate-180" />
             <span className="font-medium">Back</span>

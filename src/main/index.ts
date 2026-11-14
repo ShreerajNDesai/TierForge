@@ -7,7 +7,8 @@ import {
   Notification,
   Tray,
   nativeImage,
-  net
+  net,
+  screen
 } from 'electron'
 import { join, basename } from 'path'
 import { exec } from 'child_process'
@@ -128,10 +129,14 @@ function showAndRestoreMainWindow() {
   }
 }
 
+const TRAY_WIDTH = 320
+
 function createTrayWindow(): void {
   trayWindow = new BrowserWindow({
-    width: 320,
-    height: 450,
+    width: TRAY_WIDTH,
+    height: 340,
+    minWidth: TRAY_WIDTH,
+    maxWidth: TRAY_WIDTH,
     show: false,
     frame: false,
     transparent: true,
@@ -153,6 +158,65 @@ function createTrayWindow(): void {
   trayWindow.on('blur', () => {
     trayWindow?.hide()
   })
+}
+
+function positionTrayWindow(targetHeight?: number): void {
+  if (!tray || !trayWindow) return
+
+  const cursor = screen.getCursorScreenPoint()
+  const trayBounds = tray.getBounds()
+  const hasValidTrayBounds = trayBounds && trayBounds.width > 0 && trayBounds.height > 0
+
+  const targetX = hasValidTrayBounds && trayBounds.x > 0 ? trayBounds.x + trayBounds.width / 2 : cursor.x
+  const targetY = hasValidTrayBounds && trayBounds.y > 0 ? trayBounds.y : cursor.y
+
+  const display = screen.getDisplayNearestPoint({ x: targetX, y: targetY })
+  const workArea = display.workArea
+  const bounds = display.bounds
+
+  const currentBounds = trayWindow.getBounds()
+  const trayHeight = targetHeight ? Math.round(targetHeight) : currentBounds.height
+
+  // Center horizontally over tray icon or cursor, clamped within work area
+  let xPos = Math.round(targetX - TRAY_WIDTH / 2)
+  if (xPos < workArea.x + 8) xPos = workArea.x + 8
+  if (xPos + TRAY_WIDTH > workArea.x + workArea.width - 8) {
+    xPos = workArea.x + workArea.width - TRAY_WIDTH - 8
+  }
+
+  // Calculate vertical position relative to taskbar
+  let yPos: number
+  const isTaskbarAtTop =
+    workArea.y > bounds.y || (hasValidTrayBounds && trayBounds.y < bounds.y + bounds.height / 2)
+
+  if (isTaskbarAtTop) {
+    const taskbarBottom =
+      hasValidTrayBounds && trayBounds.y > 0
+        ? trayBounds.y + trayBounds.height + 4
+        : workArea.y > bounds.y
+          ? workArea.y
+          : bounds.y + 48
+    yPos = Math.round(taskbarBottom + 8)
+  } else {
+    // Taskbar at bottom: anchor strictly above tray icon or taskbar edge
+    const taskbarTop =
+      hasValidTrayBounds && trayBounds.y > 0
+        ? trayBounds.y - 6
+        : workArea.height < bounds.height
+          ? workArea.y + workArea.height
+          : bounds.y + bounds.height - 48
+    yPos = Math.round(taskbarTop - trayHeight - 8)
+  }
+
+  // Avoid redundant setBounds calls that cause scaleFactor feedback loops
+  if (
+    Math.abs(currentBounds.x - xPos) > 1 ||
+    Math.abs(currentBounds.y - yPos) > 1 ||
+    Math.abs(currentBounds.width - TRAY_WIDTH) > 2 ||
+    Math.abs(currentBounds.height - trayHeight) > 2
+  ) {
+    trayWindow.setBounds({ x: xPos, y: yPos, width: TRAY_WIDTH, height: trayHeight }, false)
+  }
 }
 
 function createWindow(): void {
@@ -281,26 +345,7 @@ app.whenReady().then(() => {
     if (trayWindow.isVisible()) {
       trayWindow.hide()
     } else {
-      const { x, y, width, height } = tray.getBounds()
-      const trayWidth = trayWindow.getBounds().width
-      const trayHeight = trayWindow.getBounds().height
-      const { screen } = require('electron')
-      const primaryDisplay = screen.getPrimaryDisplay()
-      const workArea = primaryDisplay.workArea
-
-      // Calculate x position to center above tray icon
-      let xPos = Math.round(x + width / 2 - trayWidth / 2)
-      // Keep within screen bounds
-      if (xPos < workArea.x) xPos = workArea.x
-      if (xPos + trayWidth > workArea.x + workArea.width)
-        xPos = workArea.x + workArea.width - trayWidth
-
-      // Calculate y position above tray
-      let yPos = Math.round(y - trayHeight - 10)
-      // If taskbar is at top, put below
-      if (yPos < workArea.y) yPos = Math.round(y + height + 10)
-
-      trayWindow.setPosition(xPos, yPos, false)
+      positionTrayWindow()
       trayWindow.show()
       trayWindow.focus()
     }
@@ -458,6 +503,13 @@ app.whenReady().then(() => {
       backlogGames,
       discordEnabled
     }
+  })
+
+  ipcMain.handle('resize-tray-window', (_, contentHeight: number) => {
+    if (!trayWindow) return false
+    const targetHeight = Math.min(Math.max(Math.round(contentHeight) + 2, 160), 550)
+    positionTrayWindow(targetHeight)
+    return true
   })
 
   ipcMain.handle('hide-tray-window', () => {
