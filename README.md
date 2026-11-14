@@ -16,6 +16,113 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
 </p>
 
+<p align="center">
+  <img src="screenshots/01-library-overview.png" alt="TierForge Library Overview" width="95%" />
+</p>
+
+---
+
+## 📸 Visual Showcase & Feature Tour
+
+### 🕹️ 1. Library & Game Management
+Organize your entire gaming universe. Scan local drives, sync Steam, launch titles, and track playtime.
+
+| 🎮 Library Overview & Quick Play | 📥 Multi-Source Import Hub |
+| :---: | :---: |
+| ![Library](screenshots/01-library-overview.png) | ![Import Hub](screenshots/01-library-import-hub.png) |
+| *Library view with 'Currently Playing', 'Completed', and Backlog suggestions* | *AI Vision screenshot import, bulk text import, & Steam account sync* |
+
+| 📤 Export Hub (Tier Lists & Mosaics) |
+| :---: |
+| ![Export Hub](screenshots/01-library-export-hub.png) |
+| *One-click exports for high-resolution tier lists and library mosaics* |
+
+---
+
+### 🏆 2. Interactive Tier List Maker
+Rank your games with interactive physics, customizable tiers, and ready-to-share exports.
+
+| 🗂️ Drag-and-Drop Tier List Canvas | 🖼️ Exported High-Res Graphic |
+| :---: | :---: |
+| ![Interactive Tier List](screenshots/02-tier-list-interactive.png) | ![Exported Tier List](screenshots/02-tier-list-exported.png) |
+| *Smooth drag & drop organization across S, A, B, C, D, F, and Dropped tiers* | *Crystal clear exported PNG ready for Twitter, Discord, and Reddit* |
+
+---
+
+### 🎬 3. Cinematic Game View
+Immersive full-screen backdrop modals with live trailers, screenshots, specs, and cloud saves.
+
+| 📖 Overview, Lore & Tech Specs | 📸 Gallery, Franchises & Save Linking |
+| :---: | :---: |
+| ![Cinematic Modal Overview](screenshots/03-cinematic-modal-overview.png) | ![Cinematic Modal Gallery](screenshots/03-cinematic-modal-gallery.png) |
+| *Trailers, age ratings, HowLongToBeat stats, engine details, & storyline* | *Screenshot lightbox, canon play order generator, and linked cloud save status* |
+
+---
+
+### 🔮 4. AI Oracle (Powered by Gemini 2.5)
+Combat backlog paralysis with intelligent, personalized gaming insights.
+
+| ✨ Tailored Recommendations & Vibe Search | 🩺 The Backlog Therapist |
+| :---: | :---: |
+| ![AI Recommendations](screenshots/04-ai-oracle-recommendations.png) | ![Backlog Therapist](screenshots/04-ai-oracle-backlog-therapist.png) |
+| *Deep cuts, hidden indie gems, and mood-based conversational search* | *One-click cure for decision paralysis: tells you exactly what to play tonight* |
+
+---
+
+### 🧭 5. Discover Hub & Global Leaderboards
+Live IGDB feeds, curated genre collections, and critic leaderboards.
+
+| 🔥 Trending & Popular Games | 💎 Curated Indie Masterpieces |
+| :---: | :---: |
+| ![Trending Games](screenshots/05-discover-trending.png) | ![Indie Showcase](screenshots/05-discover-indie.png) |
+| *Real-time trending titles with instant one-click library additions* | *Discover acclaimed indie classics and rising hits* |
+
+| 🏆 Global Hall of Fame |
+| :---: |
+| ![Global Rankings](screenshots/05-rankings-hall-of-fame.png) |
+| *Critic podium and leaderboards across Steam, Metacritic, and IGDB* |
+
+---
+
+### 📊 6. Player Statistics & Live HUD
+Deep analytics of your gaming habits, release timelines, and real-time hardware telemetry.
+
+| 🪪 My Gamer Card & AI Profile | 📈 Release Eras Timeline & Trophy Cabinet |
+| :---: | :---: |
+| ![Gamer Card](screenshots/06-statistics-gamer-card.png) | ![Release Timeline](screenshots/06-statistics-release-timeline.png) |
+| *Completion rates, library health bars, genre radar, and studio loyalty* | *Decade timeline of your collection, eras analysis, and completed trophies* |
+
+| 💻 Live System Monitor & Session HUD |
+| :---: |
+| ![System Monitor](screenshots/06-system-monitor-hud.png) |
+| *Real-time CPU, RAM, disk space, session uptime, and library completion tracking* |
+
+---
+
+### ⚙️ 7. Cloud Saves, Integrations & Extensibility
+Complete control over backup folders, Google Drive sync, and plugin architectures.
+
+| ☁️ Google Drive Cloud Save Sync | 🔌 Web Integrations & Plugin Engine |
+| :---: | :---: |
+| ![Cloud Backup](screenshots/07-settings-cloud-backup.png) | ![Plugins & Integrations](screenshots/07-settings-plugins-integrations.png) |
+| *Automated save backups, Google Drive connection, and API key management* | *Custom URL templates (PCGamingWiki, repacks) and modular plugin manager* |
+
+| ⚙️ General Preferences & Audio Controls |
+| :---: |
+| ![General Settings](screenshots/07-settings-general.png) |
+| *Cinematic backdrop video modes, default audio, and Discord Rich Presence* |
+
+---
+
+### 🕹️ 8. Windows Tray Quick-Launcher
+Access your gaming dashboard instantly from the Windows system tray without opening the full UI.
+
+<p align="center">
+  <img src="screenshots/08-desktop-tray-menu.png" alt="Desktop Tray Quick Launcher" width="340px" />
+  <br />
+  <em>Quick launch recent games, roll a random backlog title ("Surprise Me!"), toggle Discord RPC, scan your PC, and force cloud backups with zero friction.</em>
+</p>
+
 ---
 
 ## 🌟 Features

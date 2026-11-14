@@ -86,6 +86,7 @@ const api = {
   disconnectDrive: () => ipcRenderer.invoke('disconnect-drive'),
   setCustomSavePath: (gameId: string, forceManual: boolean = false) => ipcRenderer.invoke('set-custom-save-path', gameId, forceManual),
   getTrayData: () => ipcRenderer.invoke('get-tray-data'),
+  resizeTrayWindow: (height: number) => ipcRenderer.invoke('resize-tray-window', height),
   hideTrayWindow: () => ipcRenderer.invoke('hide-tray-window'),
   quitApp: () => ipcRenderer.invoke('quit-app'),
   showMainWindow: () => ipcRenderer.invoke('show-main-window'),

@@ -84,6 +84,7 @@ declare global {
         backlogGames: any[]
         discordEnabled: boolean
       }>
+      resizeTrayWindow: (height: number) => Promise<boolean>
       hideTrayWindow: () => Promise<void>
       quitApp: () => Promise<void>
       showMainWindow: () => Promise<void>
