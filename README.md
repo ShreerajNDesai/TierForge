@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/ShreerajNDesai/TierForge/releases/latest"><img src="https://img.shields.io/github/v/release/ShreerajNDesai/TierForge?color=blue&label=Latest%20Release" alt="Latest Release" /></a>
   <img src="https://img.shields.io/badge/Electron-39-47848F?logo=electron&logoColor=white" alt="Electron" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
@@ -161,7 +162,19 @@ Access your gaming dashboard instantly from the Windows system tray without open
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### 📥 Download the App (Windows)
+
+Ready to run TierForge without building from source? Download the latest pre-compiled binaries:
+
+- 💽 **[Download Windows Installer (`.exe`)](https://github.com/ShreerajNDesai/TierForge/releases/latest/download/tierforge-1.0.0-setup.exe)** — Complete setup wizard with desktop shortcut and Start Menu integration.
+- 📦 **[Download Portable Standalone (`.zip`)](https://github.com/ShreerajNDesai/TierForge/releases/latest/download/TierForge-1.0.0-win.zip)** — Zero installation required. Simply unzip and run `TierForge.exe`.
+- 🏷️ **[View All Releases & Full Changelog](https://github.com/ShreerajNDesai/TierForge/releases)**
+
+---
+
+### 💻 Developer Setup & Building from Source
+
+#### Prerequisites
 - [Node.js](https://nodejs.org/) (version **20.x** or **22.x** recommended)
 - `npm` (comes with Node.js)
 - Windows, macOS, or Linux
